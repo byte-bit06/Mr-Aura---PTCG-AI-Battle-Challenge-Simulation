@@ -195,21 +195,26 @@ def agent(obs_dict: dict) -> list[int]:
 
         # ── Energy Attachment Protocols ───────────────────────────────────────
         elif o_type == 11:
-            target_area = o.get("toArea") or o.get("inPlayIndex")
+            in_play_area = o.get("inPlayArea")
+            in_play_idx = o.get("inPlayIndex", 0)
+            
             target_energy = 0
             target_id = None
             
-            if target_area in {0, 'active'} and info.get("my_active"):
+            # AreaType enum in engine: ACTIVE = 3, BENCH = 4
+            is_active_target = (in_play_area in {3, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
+            
+            if is_active_target and info.get("my_active"):
                 target_energy = info["my_active_energy"]
                 target_id = info["my_active_id"]
-            elif isinstance(target_area, int) and 0 <= target_area < len(info["my_bench"]):
-                b = info["my_bench"][target_area]
+            elif isinstance(in_play_idx, int) and 0 <= in_play_idx < len(info["my_bench"]):
+                b = info["my_bench"][in_play_idx]
                 target_energy = len(b.get("energies", []))
                 target_id = b.get("id")
                 
-            # Rule: Stop attaching if max expensive attack is powered up (>= 3 energies)
+            # HARD BAN: Stop attaching if max attack requirement (3 energies) is met!
             if target_energy >= 3:
-                score = -50000.0
+                score = -999999.0 # HARD BAN (Never waste 4th+ energy!)
             else:
                 optimal_id = info.get("optimal_active")
                 is_grass = (cid == GrassEnergy)
