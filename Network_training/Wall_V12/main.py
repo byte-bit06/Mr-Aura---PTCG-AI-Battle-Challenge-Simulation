@@ -46,12 +46,10 @@ my_deck = load_deck()
 _load_card_database()
 
 try:
-    from cg.api import all_card_data, search_step
+    from cg.api import all_card_data
     _CG_CARD_TABLE = {c.cardId: c for c in all_card_data()}
-    HAS_CG_API = True
 except Exception:
     _CG_CARD_TABLE = {}
-    HAS_CG_API = False
 
 def is_card_ex(cid):
     if not cid: return False
@@ -106,7 +104,7 @@ EarthenVessel = 1227
 Iono = 1182
 Arven = 1219
 
-# ── Archetype Signature Engine for Opponent Deck Identification ───────────────
+# ── Archetype Signature Engine ───────────────────────────────────────────────
 _BUILTIN_TEMPLATES = [
     ("Alakazam_ex", Counter([741, 742, 743, 65, 66, 305, 1079, 1081, 1086, 1097, 1129, 1152, 1182, 1184, 1197, 1225, 1227, 1231, 1247, 5, 19])),
     ("Lucario_ex", Counter([677, 678, 673, 674, 675, 676, 1102, 1123, 1141, 1142, 1152, 1159, 1182, 1192, 1227, 1252, 6])),
@@ -229,32 +227,192 @@ def extract_board_info(obs_dict):
         "opp_prizes": len(opp_player.get("prize", [])),
     }
 
-# ── 1-Ply / 2-Ply Minimax Lookahead Simulation Engine ────────────────────────
-def evaluate_leaf_score(obs_dict, my_idx):
-    cur = obs_dict.get("current", {})
-    players = cur.get("players", [])
-    if len(players) < 2: return 0.0
+# ==============================================================================
+# ARCHITECTURAL REFACTOR: 4 STRICT SEQUENTIAL LAYERS
+# ==============================================================================
+
+# ── LAYER 1: Hard Stops & Safety Layer (Disqualification Filter) ──────────────
+def is_disqualified(option, info):
+    o_type = option.get("type", -1)
+    cid = option.get("cardId") or option.get("id") or option.get("cardIdActive")
     
-    me = players[my_idx]
-    opp = players[1 - my_idx]
+    opp_is_ex = info.get("opp_is_ex", False)
+    opp_has_ability = info.get("opp_has_ability", False)
+    opp_archetype = info.get("opp_archetype", "Unknown")
+    my_active_id = info.get("my_active_id")
+    bench_count = len(info.get("my_bench", []))
+    turn = info.get("turn", 1)
+    opp_prizes = info.get("opp_prizes", 6)
+
+    # Hard Stop 1.1: If opp_is_ex, hard ban deploying, playing, or energizing Kangaskhan or Ogerpon into active
+    if opp_is_ex or "Alakazam" in opp_archetype:
+        if cid in {Ogerpon, Kangaskhan} and o_type in {6, 11, 14, 15}:
+            # If deploying to active or energizing non-immune card vs EX -> DISQUALIFY
+            if o_type == 6 and cid == Ogerpon: return True
+            if o_type == 6 and cid == Kangaskhan: return True
+            if o_type == 11:
+                in_play_area = option.get("inPlayArea")
+                in_play_idx = option.get("inPlayIndex", 0)
+                is_active = (in_play_area in {3, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
+                if is_active and my_active_id in {Ogerpon, Kangaskhan}: return True
+
+    # Hard Stop 1.2: If energy count >= 3, lock attachment to absolute negative block (DISQUALIFY)
+    if o_type == 11:
+        in_play_area = option.get("inPlayArea")
+        in_play_idx = option.get("inPlayIndex", 0)
+        is_active = (in_play_area in {3, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
+        
+        target_energy = 0
+        if is_active and info.get("my_active"):
+            target_energy = info["my_active_energy"]
+        elif isinstance(in_play_idx, int) and 0 <= in_play_idx < len(info["my_bench"]):
+            b = info["my_bench"][in_play_idx]
+            target_energy = len(b.get("energies", []) or [])
+            
+        if target_energy >= 3:
+            return True # DISQUALIFY over-saturated energy attachment!
+
+    # Hard Stop 1.3: If attack target possesses damage immunity that nullifies active attacker, DISQUALIFY attack
+    if o_type == 15:
+        if opp_is_ex and my_active_id in {Ogerpon, Kangaskhan}:
+            return True # DISQUALIFY nullified attack into EX!
+
+    # Hard Stop 1.4: Prohibit playing non-wall basic Pokémon (Kangaskhan) late game or when bench is full
+    if o_type == 6 and cid == Kangaskhan:
+        if turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability or "Alakazam" in opp_archetype:
+            return True
+        if bench_count >= 2:
+            return True
+
+    # Hard Stop 1.5: Dragapult bench hard-cap (max 1 bench)
+    if ("Dragapult" in opp_archetype or info.get("opp_active_id") == 121) and o_type == 6 and cid in {Kangaskhan, Ogerpon, Dwebble}:
+        if bench_count >= 1:
+            return True
+
+    return False
+
+# ── LAYER 2: Core Wall-Matching Engine (Type-Driven Priority) ──────────────────
+def score_wall_matching(option, info):
+    o_type = option.get("type", -1)
+    cid = option.get("cardId") or option.get("id") or option.get("cardIdActive")
     
-    my_prizes = len(me.get("prize", []) or [])
-    opp_prizes = len(opp.get("prize", []) or [])
+    opp_is_ex = info.get("opp_is_ex", False)
+    opp_has_ability = info.get("opp_has_ability", False)
+    opp_archetype = info.get("opp_archetype", "Unknown")
+    my_active_id = info.get("my_active_id")
     
-    my_act = (me.get("active") or [{}])[0]
-    opp_act = (opp.get("active") or [{}])[0]
-    
-    my_hp = my_act.get("hp", 0) if isinstance(my_act, dict) else 0
-    opp_hp = opp_act.get("hp", 0) if isinstance(opp_act, dict) else 0
-    
-    my_e = len(my_act.get("energies", []) or []) if isinstance(my_act, dict) else 0
-    opp_e = len(opp_act.get("energies", []) or []) if isinstance(opp_act, dict) else 0
-    
-    # Formula: 1000*(OppPrizesLeft - MyPrizesLeft) + (MyHP - OppHP) + 5*(MyEnergy - OppEnergy)
-    score = 1000.0 * (opp_prizes - my_prizes) + (my_hp - opp_hp) + 5.0 * (my_e - opp_e)
+    score = 0.0
+
+    # Case A: Opponent is an EX Pokémon -> Maximize preference for Crustle
+    if opp_is_ex:
+        if cid == Crustle:
+            if o_type in {6, 7}: score += 4000.0 # Evolve to Crustle
+            elif o_type == 11: score += 3500.0 # Energy to Crustle
+        elif cid == Dwebble and o_type == 6:
+            score += 3000.0 # Prepare Crustle base
+
+    # Case B: Opponent has an Ability (Non-EX) -> Maximize preference for Ogerpon ex
+    elif opp_has_ability:
+        if cid == Ogerpon:
+            if o_type == 6: score += 4500.0 # Deploy Ogerpon
+            elif o_type == 11: score += 4000.0 # Energy to Ogerpon
+        elif cid == Crustle:
+            score += 2000.0
+
+    # Case C: Opponent is Neither (Non-EX, No Ability) -> Suppress immunity walls, favor disruption
+    else:
+        if cid == BossOrders and o_type == 6:
+            score += 5000.0 # Pivot opponent bench EX/Ability into active!
+        elif cid == Xerosic and o_type == 6:
+            score += 4800.0 # Hand disruption!
+        elif cid == Kangaskhan and info.get("turn", 1) <= 2:
+            score += 3500.0 # Kangaskhan draw/attack vs non-EX
+
     return score
 
-# ── Main Agent Function ────────────────────────────────────────────────────────
+# ── LAYER 3: Resource, Bench, & Energy Distribution Layer ─────────────────────
+def score_resource_distribution(option, info):
+    o_type = option.get("type", -1)
+    cid = option.get("cardId") or option.get("id") or option.get("cardIdActive")
+    
+    my_active_id = info.get("my_active_id")
+    my_active_energy = info.get("my_active_energy", 0)
+    bench_count = len(info.get("my_bench", []))
+    hand_size = info.get("hand_size", 7)
+    my_active_hp = info.get("my_active_hp", 999)
+    turn = info.get("turn", 1)
+    is_second = info.get("is_second", False)
+    
+    score = 0.0
+
+    # 3.1: Emergency 0-Bench Survival Protocol
+    if bench_count == 0:
+        if o_type == 6 and cid in {Dwebble, Crustle}:
+            score += 6000.0 # Highest priority: bench backup!
+        elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, Arven}:
+            score += 5500.0
+        elif my_active_hp <= 100 and cid == HerosCape:
+            score += 7000.0 # Survival HP boost!
+
+    # 3.2: Turn 1 Going Second Fast Acceleration
+    elif turn == 1 and is_second and o_type in {6, 13} and cid in {NestBall, BuddyPuffin, Arven, UltraBall}:
+        score += 5800.0
+
+    # 3.3: Route Energy to Bench Walls when Active is Saturated (2+ Energy)
+    elif o_type == 11:
+        in_play_area = option.get("inPlayArea")
+        in_play_idx = option.get("inPlayIndex", 0)
+        is_active_target = (in_play_area in {3, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
+        
+        if my_active_energy >= 2 and is_active_target:
+            score += 500.0 # Active almost ready
+        elif not is_active_target:
+            score += 2500.0 # Route energy to bench wall!
+        else:
+            score += 2000.0
+
+    # 3.4: Item & Supporter Resource Management
+    elif o_type == 6 and cid == HerosCape:
+        score += 4200.0
+    elif o_type == 6 and cid == Iono and info.get("opp_hand_count", 0) >= 4:
+        score += 3800.0
+    elif o_type == 6 and hand_size < 4 and cid in {Lillie, Petrel, Arven}:
+        score += 3000.0
+
+    return score
+
+# ── LAYER 4: Corrected Delta-Based Lookahead Evaluation ─────────────────────
+def calculate_action_delta(option, info):
+    o_type = option.get("type", -1)
+    cid = option.get("cardId") or option.get("id") or option.get("cardIdActive")
+    
+    # Differential state score change resulting from this specific action
+    delta = 0.0
+    
+    # Immediate KO / Attack execution delta
+    if o_type == 15:
+        opp_hp = info.get("opp_active_hp", 999)
+        if opp_hp <= 90:
+            delta += 3000.0 # Action results in immediate KO!
+        else:
+            delta += 1500.0 # Action deals damage
+
+    # Evolution state delta (Dwebble -> Crustle increases max HP + immunity)
+    elif o_type in {6, 7} and cid == Crustle:
+        delta += 2000.0
+
+    # Switching out of danger delta
+    elif o_type == 6 and cid == SwitchCard:
+        if info.get("opp_is_ex") and info.get("my_active_id") in {Ogerpon, Kangaskhan}:
+            delta += 4000.0 # Switch pulls non-immune card out of danger!
+
+    # Ascension attack delta
+    elif o_type == 15 and info.get("my_active_id") == Dwebble:
+        delta += 2500.0 # Enables immediate free evolution search
+
+    return delta
+
+# ── Main Agent Entry Point ─────────────────────────────────────────────────────
 def agent(obs_dict: dict) -> list[int]:
     select_data = obs_dict.get("select")
     if select_data is None: return my_deck
@@ -263,23 +421,17 @@ def agent(obs_dict: dict) -> list[int]:
     
     info = extract_board_info(obs_dict)
     hand = info.get("hand", [])
-    turn = info.get("turn", 1)
-    is_second = info.get("is_second", False)
     
-    opp_is_ex = info.get("opp_is_ex", False)
-    opp_has_ability = info.get("opp_has_ability", False)
-    opp_archetype = info.get("opp_archetype", "Unknown")
-    opp_deck_count = info.get("opp_deck_count", 30)
-    opp_prizes = info.get("opp_prizes", 6)
-    my_active_hp = info.get("my_active_hp", 999)
-    
-    # ── RULE 2: Strict Opening Lead Protocols ─────────────────────────────
+    # ── Opening Lead / Setup Context Override ──────────────────────────────────
     context = select_data.get("context", "")
     if "SETUP" in str(context).upper() or "ACTIVE" in str(context).upper() or "PROMOTE" in str(context).upper() or "RETREAT" in str(context).upper():
+        opp_is_ex = info.get("opp_is_ex", False)
+        opp_archetype = info.get("opp_archetype", "Unknown")
+        is_second = info.get("is_second", False)
         holding_crustle = (Crustle in hand)
         
         if opp_is_ex or "Alakazam" in opp_archetype:
-            lead_priority = [Crustle, Dwebble] # HARD BAN Kangaskhan & Ogerpon vs EX!
+            lead_priority = [Crustle, Dwebble] # Hard Ban Kangaskhan/Ogerpon vs EX!
         elif is_second and holding_crustle:
             lead_priority = [Dwebble, Kangaskhan, Crustle, Ogerpon]
         else:
@@ -297,199 +449,33 @@ def agent(obs_dict: dict) -> list[int]:
             return [idx]
         return [0]
 
-    # ── Option Scoring Engine ─────────────────────────────────────────────────
-    scored_options = []
-    
-    my_active_id = info.get("my_active_id")
-    bench_count = len(info.get("my_bench", []))
-    opp_hand = info.get("opp_hand_count", 0)
-    hand_size = info.get("hand_size", len(hand))
-    opp_active_id = info.get("opp_active_id")
+    # ── 4-LAYER SEQUENTIAL SCORING PIPELINE ────────────────────────────────────
+    valid_candidates = []
 
     for idx, o in enumerate(options):
-        o_type = o.get("type", -1)
-        cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
-        score = 0.0
+        # ── LAYER 1: Hard Stops & Safety Layer (Disqualification Filter) ──────
+        if is_disqualified(o, info):
+            continue # ABSOLUTE DISQUALIFICATION: Filter option completely out!
 
-        # ── EMERGENCY 0-BENCH SURVIVAL PROTOCOL ──────────────────────────────
-        if bench_count == 0:
-            if o_type == 6 and cid in {Dwebble, Kangaskhan, Ogerpon}:
-                if opp_is_ex and cid in {Ogerpon, Kangaskhan}:
-                    score = -999999999.0
-                elif (turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability) and cid == Kangaskhan:
-                    score = -999999999.0
-                else:
-                    score = 3000000.0
-                    
-            elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, Arven}:
-                score = 2900000.0
-                
-            elif my_active_hp <= 100 and o_type in {6, 12} and cid == HerosCape:
-                score = 3200000.0
+        # ── LAYER 2: Core Wall-Matching Engine (Type-Driven Priority) ──────────
+        s2 = score_wall_matching(o, info)
 
-        # ── TURN 1 GOING SECOND ACCELERATION ENGINE ───────────────────────────
-        elif turn == 1 and is_second and o_type in {6, 13} and cid in {NestBall, BuddyPuffin, Arven, UltraBall}:
-            score = 3100000.0 # Instant Turn 1 setup acceleration!
+        # ── LAYER 3: Resource, Bench, & Energy Distribution Layer ─────────────
+        s3 = score_resource_distribution(o, info)
 
-        # ── DRAGAPULT 0-BENCH IMMUNITY DENIAL PROTOCOL ───────────────────────
-        elif ("Dragapult" in opp_archetype or opp_active_id == 121) and o_type == 6 and cid in {Kangaskhan, Ogerpon, Dwebble}:
-            if bench_count >= 1:
-                score = -999999999.0 # HARD BAN additional bench Pokémon vs Dragapult!
+        # ── LAYER 4: Corrected Delta-Based Lookahead Evaluation ───────────────
+        s4 = calculate_action_delta(o, info)
 
-        # ── RULE 3: Bench Liability & Late-Game Guardrails ───────────────────
-        elif o_type == 6 and cid == Kangaskhan:
-            if turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability or "Alakazam" in opp_archetype:
-                score = -999999999.0
-            elif bench_count >= 2:
-                score = -999999999.0
-            else:
-                score = 600000.0
+        # Total score bounded within clean [-10,000.0 to +10,000.0] range
+        total_score = max(-10000.0, min(10000.0, s2 + s3 + s4))
+        valid_candidates.append((total_score, idx))
 
-        elif o_type == 6 and cid in {Dwebble, Ogerpon}:
-            if opp_is_ex and cid == Ogerpon:
-                score = -999999999.0
-            elif bench_count >= 2:
-                score = -50000.0
-            elif cid in {Dwebble, Crustle}:
-                score = 800000.0
-            else:
-                score = 500000.0
+    # If all options were disqualified, fall back safely to option 0
+    if not valid_candidates:
+        return [0]
 
-        # ── DYNAMIC COUNTER: Anti-Alakazam Hand Disruption ───────────────────
-        elif o_type == 6 and cid == Iono:
-            if "Alakazam" in opp_archetype and opp_hand >= 4:
-                score = 2600000.0
-            elif opp_deck_count <= 15:
-                score = 2200000.0
-            elif opp_hand >= 5:
-                score = 1800000.0
-            else:
-                score = 850000.0
-
-        # ── DYNAMIC COUNTER: Anti-Iono / Non-EX Disruption ───────────────────
-        elif o_type == 6 and cid == Xerosic:
-            if "Iono" in opp_archetype or (not opp_is_ex and not opp_has_ability):
-                score = 2400000.0
-            elif opp_deck_count <= 15 or opp_hand >= 6:
-                score = 2000000.0
-            else:
-                score = 300000.0
-
-        # ── Hero's Cape Attachment ─────────────────────────────────────────────
-        elif o_type in {6, 12} and cid == HerosCape:
-            if "Dragapult" in opp_archetype or opp_active_id == 121:
-                score = 2700000.0
-            else:
-                score = 1700000.0
-
-        # ── Dwebble Ascension Attack Override ─────────────────────────────────
-        elif o_type == 15 and my_active_id == Dwebble:
-            score = 2000000.0
-
-        # ── Evolution Protocol (Dwebble -> Crustle) ───────────────────────────
-        elif o_type in {6, 7} and cid == Crustle:
-            if "Dragapult" in opp_archetype or opp_active_id == 121:
-                score = 2600000.0
-            else:
-                score = 1400000.0
-
-        # ── RULE 4: Energy Saturation & Resource Management ─────────────────
-        elif o_type == 11:
-            in_play_area = o.get("inPlayArea")
-            in_play_idx = o.get("inPlayIndex", 0)
-            
-            target_energy = 0
-            target_id = None
-            target_has_grass = False
-            
-            is_active_target = (in_play_area in {3, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
-            
-            if is_active_target and info.get("my_active"):
-                target_energy = info["my_active_energy"]
-                target_id = info["my_active_id"]
-                target_energies = info.get("my_active", {}).get("energies", [])
-                target_has_grass = any(e == GrassEnergy or (isinstance(e, dict) and e.get("id") == GrassEnergy) for e in target_energies)
-            elif isinstance(in_play_idx, int) and 0 <= in_play_idx < len(info["my_bench"]):
-                b = info["my_bench"][in_play_idx]
-                target_energies = b.get("energies", [])
-                target_energy = len(target_energies)
-                target_id = b.get("id")
-                target_has_grass = any(e == GrassEnergy or (isinstance(e, dict) and e.get("id") == GrassEnergy) for e in target_energies)
-                
-            max_energy_cap = 3
-            
-            if target_energy >= max_energy_cap:
-                score = -999999999.0
-            elif opp_is_ex and target_id in {Ogerpon, Kangaskhan}:
-                score = -999999999.0
-            else:
-                optimal_id = info.get("optimal_active")
-                is_grass = (cid == GrassEnergy)
-                
-                if target_id == Dwebble and is_active_target:
-                    score = 1900000.0
-                else:
-                    if target_energy == 2: base_e = 1320000.0
-                    elif target_energy == 1: base_e = 1310000.0
-                    else: base_e = 1300000.0
-                    
-                    if target_id in {Crustle, Dwebble} and not target_has_grass and is_grass:
-                        base_e += 25000.0
-                    elif is_grass:
-                        base_e += 15000.0
-                        
-                    if target_id == optimal_id: base_e += 10000.0
-                    elif target_id in {Crustle, Dwebble}: base_e += 5000.0
-                    score = base_e
-
-        # ── RULE 5: Advanced Attack & Immunity Cross-Checks ───────────────────
-        elif o_type == 15:
-            if opp_is_ex and my_active_id in {Ogerpon, Kangaskhan}:
-                score = -999999999.0
-            elif not opp_is_ex and not opp_has_ability and my_active_id == Kangaskhan and info.get("my_active_energy", 0) >= 3:
-                score = 1600000.0
-            else:
-                score = 1100000.0
-
-        # ── Boss's Orders Non-EX Pivot ───────────────────────────────────────
-        elif o_type == 6 and cid == BossOrders:
-            if "Iono" in opp_archetype or (not opp_is_ex and not opp_has_ability):
-                score = 2600000.0
-            else:
-                score = 500000.0
-
-        # ── Mid-Game Switch & Pivot Logic ─────────────────────────────────────
-        elif o_type == 6 and cid == SwitchCard:
-            current_active_id = info.get("my_active_id")
-            optimal_id = info.get("optimal_active")
-            
-            if opp_is_ex and current_active_id in {Ogerpon, Kangaskhan}:
-                score = 2500000.0
-            elif current_active_id == Kangaskhan and (any(b.get("id") == Crustle and len(b.get("energies", [])) >= 2 for b in info["my_bench"])):
-                score = 1800000.0
-            else:
-                bench_has_prepared_wall = False
-                for b in info.get("my_bench", []):
-                    b_id = b.get("id")
-                    if b_id == optimal_id or (b_id == Crustle and len(b.get("energies", [])) >= 2):
-                        bench_has_prepared_wall = True
-                        break
-                
-                if current_active_id != optimal_id and bench_has_prepared_wall:
-                    score = 1500000.0
-                else:
-                    score = -10000.0
-
-        else:
-            score = 1.0
-            
-        # ── Add Minimax Lookahead Leaf Score Bonus ─────────────────────────────
-        leaf_bonus = evaluate_leaf_score(obs_dict, info.get("my_idx", 0))
-        score += leaf_bonus
-        
-        scored_options.append((score, idx))
-
-    scored_options.sort(key=lambda x: x[0], reverse=True)
+    # Sort valid candidates strictly by total score on a normalized scale
+    valid_candidates.sort(key=lambda x: x[0], reverse=True)
     count = min(select_data.get("maxCount", 1), max(select_data.get("minCount", 1), 1))
-    best_indices = [s[1] for s in scored_options[:count]]
+    best_indices = [s[1] for s in valid_candidates[:count]]
     return best_indices
