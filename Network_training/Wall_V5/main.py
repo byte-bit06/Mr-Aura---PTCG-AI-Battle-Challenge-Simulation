@@ -21,13 +21,16 @@ def _load_card_database():
             except: pass
 
 def load_deck():
-    dir_path = os.path.dirname(__file__)
-    local_deck = os.path.join(dir_path, "deck.csv")
-    if os.path.exists(local_deck):
-        try:
-            with open(local_deck) as f:
-                return [int(line) for line in f if line.strip()]
-        except: pass
+    try:
+        dir_path = os.path.dirname(__file__)
+        local_deck = os.path.join(dir_path, "deck.csv")
+        if os.path.exists(local_deck):
+            try:
+                with open(local_deck) as f:
+                    return [int(line) for line in f if line.strip()]
+            except: pass
+    except NameError:
+        pass  # __file__ not defined in Kaggle sandbox
     for p in ["deck.csv", "/kaggle_simulations/agent/deck.csv"]:
         if os.path.exists(p):
             try:
