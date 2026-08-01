@@ -15,6 +15,7 @@ import dragapult_agent
 import abomasnow_agent
 import mcts_lucario_agent
 import archaludon_cinderace_agent
+import alakazam_agent
 import Wall_V1.main as v1_module
 import Wall_V2.main as v2_module
 import Wall_V3.main as v3_module
@@ -29,6 +30,7 @@ opponents = {
     'Wall_V1': v1_module.agent,
     'Wall_V2': v2_module.agent,
     'Wall_V3': v3_module.agent,
+    'Alakazam ex V21': alakazam_agent.agent,
 }
 
 if not os.path.exists('replays'):
