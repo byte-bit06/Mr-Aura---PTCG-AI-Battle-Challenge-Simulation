@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import csv
+from collections import Counter
 
 # ── Card Database & Deck Loader ───────────────────────────────────────────────
 _CARD_DB = {}
@@ -114,6 +115,57 @@ EarthenVessel = 1227
 Iono = 1182
 Arven = 1219
 
+# ── Archetype Signature Engine for Opponent Deck Identification ───────────────
+_BUILTIN_TEMPLATES = [
+    ("Alakazam_ex", Counter([741, 742, 743, 65, 66, 305, 1079, 1081, 1086, 1097, 1129, 1152, 1182, 1184, 1197, 1225, 1227, 1231, 1247, 5, 19])),
+    ("Lucario_ex", Counter([677, 678, 673, 674, 675, 676, 1102, 1123, 1141, 1142, 1152, 1159, 1182, 1192, 1227, 1252, 6])),
+    ("Dragapult_ex", Counter([119, 120, 121, 1122, 1147, 1079, 1182, 1219, 1227, 18, 5])),
+    ("Archaludon", Counter([169, 190, 1122, 1147, 1219, 1227, 1])),
+    ("Iono_Deck", Counter([265, 1182, 1219, 1122, 1147, 14, 20])),
+]
+
+_TEMPLATES = []
+for _d in ("/kaggle_simulations/agent/top20_decks", "top20_decks", "../top20_decks"):
+    if os.path.isdir(_d):
+        for _fn in sorted(os.listdir(_d)):
+            if not _fn.endswith(".csv"): continue
+            try:
+                with open(os.path.join(_d, _fn)) as _f:
+                    _ids = [int(x) for x in _f.read().split() if x.strip()][:60]
+                if len(_ids) == 60:
+                    _TEMPLATES.append((_fn, Counter(_ids), _ids))
+            except Exception: pass
+        break
+
+if not _TEMPLATES:
+    for name, cnt in _BUILTIN_TEMPLATES:
+        _TEMPLATES.append((name, cnt, list(cnt.elements())))
+
+def _op_visible(current, opp_idx):
+    opp = current["players"][opp_idx]
+    seen = Counter()
+    for c in opp.get("discard", []) or []:
+        if isinstance(c, dict) and "id" in c: seen[c["id"]] += 1
+    for p in (opp.get("active", []) or []) + (opp.get("bench", []) or []):
+        if not p or not isinstance(p, dict): continue
+        if "id" in p: seen[p["id"]] += 1
+        for c in p.get("energyCards", []) or []:
+            if isinstance(c, dict) and "id" in c: seen[c["id"]] += 1
+        for c in p.get("tools", []) or []:
+            if isinstance(c, dict) and "id" in c: seen[c["id"]] += 1
+    return seen
+
+def _identify_opp_archetype(op_seen):
+    if not op_seen: return "Unknown"
+    op_mons = set(op_seen.keys())
+    best_name, best_score = "Unknown", 0
+    for name, cnt, _ in _TEMPLATES:
+        sig = set(cnt.keys())
+        overlap = len(sig & op_mons)
+        if overlap > best_score:
+            best_name, best_score = name, overlap
+    return best_name
+
 # ── State Extraction Helper ────────────────────────────────────────────────────
 def extract_board_info(obs_dict):
     current = obs_dict.get("current")
@@ -144,13 +196,20 @@ def extract_board_info(obs_dict):
     opp_has_ability = any(card_has_ability(cid) for cid in opp_all_ids)
     turn = current.get("turn", 1)
 
+    # ── ARCHETYPE IDENTIFICATION ALGORITHM ─────────────────────────────────
+    op_seen = _op_visible(current, opp_idx)
+    opp_archetype = _identify_opp_archetype(op_seen)
+
+    # Override EX / Ability based on Archetype Match
+    if "Alakazam" in opp_archetype or "Lucario" in opp_archetype or "Dragapult" in opp_archetype or "Archaludon" in opp_archetype:
+        opp_is_ex = True
+
     # ── RULE 1: Precision Wall-Matching Logic ─────────────────────────────
     if opp_is_ex:
         optimal_active = Crustle # Enemy is ex -> Crustle immunity wall
     elif opp_has_ability:
         optimal_active = Ogerpon # Enemy has Ability -> Cornerstone Mask Ogerpon ex
     else:
-        # Non-EX with NO Ability -> Do NOT rely on immunity walls!
         optimal_active = Kangaskhan if (turn <= 2 and (Kangaskhan in hand or any(b.get("id") == Kangaskhan for b in my_bench))) else Crustle
 
     opp_hand_raw = opp_player.get("hand")
@@ -175,6 +234,7 @@ def extract_board_info(obs_dict):
         "opp_bench": opp_bench,
         "opp_is_ex": opp_is_ex,
         "opp_has_ability": opp_has_ability,
+        "opp_archetype": opp_archetype,
         "opp_hand_count": opp_hand_count,
         "opp_deck_count": opp_deck_count,
         "optimal_active": optimal_active,
@@ -195,6 +255,7 @@ def agent(obs_dict: dict) -> list[int]:
     
     opp_is_ex = info.get("opp_is_ex", False)
     opp_has_ability = info.get("opp_has_ability", False)
+    opp_archetype = info.get("opp_archetype", "Unknown")
     opp_deck_count = info.get("opp_deck_count", 30)
     opp_prizes = info.get("opp_prizes", 6)
     my_active_hp = info.get("my_active_hp", 999)
@@ -205,8 +266,8 @@ def agent(obs_dict: dict) -> list[int]:
         is_second = info.get("is_second", False)
         holding_crustle = (Crustle in hand)
         
-        if opp_is_ex:
-            lead_priority = [Crustle, Dwebble] # HARD BAN Kangaskhan & Ogerpon vs EX!
+        if opp_is_ex or "Alakazam" in opp_archetype:
+            lead_priority = [Crustle, Dwebble] # HARD BAN Kangaskhan & Ogerpon vs EX / Alakazam!
         elif is_second and holding_crustle:
             lead_priority = [Dwebble, Kangaskhan, Crustle, Ogerpon]
         else:
@@ -220,7 +281,7 @@ def agent(obs_dict: dict) -> list[int]:
         
         for idx, o in enumerate(options):
             cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
-            if opp_is_ex and cid in {Ogerpon, Kangaskhan}: continue # HARD BAN Ogerpon/Kangaskhan vs EX!
+            if opp_is_ex and cid in {Ogerpon, Kangaskhan}: continue
             return [idx]
         return [0]
 
@@ -259,8 +320,8 @@ def agent(obs_dict: dict) -> list[int]:
 
         # ── RULE 3: Bench Liability & Late-Game Guardrails ───────────────────
         elif o_type == 6 and cid == Kangaskhan:
-            if turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability:
-                score = -999999999.0 # HARD BAN Kangaskhan late game / vs EX / vs Ability!
+            if turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability or "Alakazam" in opp_archetype:
+                score = -999999999.0 # HARD BAN Kangaskhan!
             elif bench_count >= 2:
                 score = -999999999.0
             else:
@@ -276,18 +337,21 @@ def agent(obs_dict: dict) -> list[int]:
             else:
                 score = 500000.0
 
-        # ── Anti-Alakazam Hand Disruption & Deck-Out Acceleration ─────────────
+        # ── DYNAMIC COUNTER: Anti-Alakazam Hand Disruption ───────────────────
         elif o_type == 6 and cid == Iono:
-            if opp_deck_count <= 15:
+            if "Alakazam" in opp_archetype and opp_hand >= 4:
+                score = 2600000.0 # TARGET COUNTER: Shuffle Alakazam's hand into deck!
+            elif opp_deck_count <= 15:
                 score = 2200000.0
             elif opp_hand >= 5:
                 score = 1800000.0
             else:
                 score = 850000.0
 
+        # ── DYNAMIC COUNTER: Anti-Iono / Non-EX Disruption ───────────────────
         elif o_type == 6 and cid == Xerosic:
-            if not opp_is_ex and not opp_has_ability:
-                score = 2300000.0 # Disruption vs Non-EX non-ability opponents!
+            if "Iono" in opp_archetype or (not opp_is_ex and not opp_has_ability):
+                score = 2400000.0 # TARGET COUNTER vs Non-EX / Iono deck!
             elif opp_deck_count <= 15 or opp_hand >= 6:
                 score = 2000000.0
             else:
@@ -299,10 +363,10 @@ def agent(obs_dict: dict) -> list[int]:
             elif cid == Petrel: score = 1450000.0
             elif cid == Arven: score = 1400000.0
 
-        # ── Hero's Cape Attachment (Anti-Dragapult Bench Protection) ─────────
+        # ── DYNAMIC COUNTER: Anti-Dragapult Hero's Cape Attachment ────────────
         elif o_type in {6, 12} and cid == HerosCape:
-            if opp_active_id == 121: # Dragapult ex
-                score = 2500000.0 # Protect benched Dwebble from Phantom Dive snipe!
+            if "Dragapult" in opp_archetype or opp_active_id == 121:
+                score = 2700000.0 # TARGET COUNTER: Immunize benched Dwebble from Phantom Dive!
             else:
                 score = 1700000.0
 
@@ -310,10 +374,10 @@ def agent(obs_dict: dict) -> list[int]:
         elif o_type == 15 and my_active_id == Dwebble:
             score = 2000000.0 # Execute Ascension IMMEDIATELY!
 
-        # ── Evolution Protocol (Dwebble -> Crustle) ───────────────────────────
+        # ── DYNAMIC COUNTER: Anti-Dragapult Evolution Protocol ───────────────
         elif o_type in {6, 7} and cid == Crustle:
-            if opp_active_id == 121: # Dragapult ex
-                score = 2400000.0 # Evolve benched Dwebble to Crustle (150 HP) vs Dragapult!
+            if "Dragapult" in opp_archetype or opp_active_id == 121:
+                score = 2600000.0 # TARGET COUNTER: Evolve benched Dwebble to Crustle (150 HP)!
             else:
                 score = 1400000.0
 
@@ -345,7 +409,7 @@ def agent(obs_dict: dict) -> list[int]:
             if target_energy >= max_energy_cap:
                 score = -999999999.0 # HARD LOCK TO ZERO!
             elif opp_is_ex and target_id in {Ogerpon, Kangaskhan}:
-                score = -999999999.0 # HARD BAN energy on Ogerpon/Kangaskhan vs EX!
+                score = -999999999.0 # HARD BAN!
             else:
                 optimal_id = info.get("optimal_active")
                 is_grass = (cid == GrassEnergy)
@@ -371,7 +435,7 @@ def agent(obs_dict: dict) -> list[int]:
             if opp_is_ex and my_active_id in {Ogerpon, Kangaskhan}:
                 score = -999999999.0 # Nullified! Force immediate SwitchCard pivot!
             elif not opp_is_ex and not opp_has_ability and my_active_id == Kangaskhan and info.get("my_active_energy", 0) >= 3:
-                score = 1600000.0 # Attack with Kangaskhan vs Non-EX non-ability opponents!
+                score = 1600000.0
             else:
                 score = 1100000.0
 
@@ -380,10 +444,10 @@ def agent(obs_dict: dict) -> list[int]:
             if opp_deck_count <= 15: score = 400000.0
             else: score = 850000.0
 
-        # ── Boss's Orders Gate (Drag EX/Ability Pokémon into Active vs Non-EX) ──
+        # ── DYNAMIC COUNTER: Boss's Orders Non-EX Pivot ───────────────────────
         elif o_type == 6 and cid == BossOrders:
-            if not opp_is_ex and not opp_has_ability:
-                score = 2500000.0 # Drag EX/Ability Pokémon from opp bench into Active to force immunity lock!
+            if "Iono" in opp_archetype or (not opp_is_ex and not opp_has_ability):
+                score = 2600000.0 # TARGET COUNTER: Drag EX/Ability target from opp bench to force immunity lock!
             elif not check_boss_conditions(info):
                 score = -999999999.0
             else:
@@ -395,9 +459,9 @@ def agent(obs_dict: dict) -> list[int]:
             optimal_id = info.get("optimal_active")
             
             if opp_is_ex and current_active_id in {Ogerpon, Kangaskhan}:
-                score = 2500000.0 # EMERGENCY SWITCH: Pull non-immune card OUT of Active vs EX!
+                score = 2500000.0 # EMERGENCY SWITCH!
             elif current_active_id == Kangaskhan and (any(b.get("id") == Crustle and len(b.get("energies", [])) >= 2 for b in info["my_bench"])):
-                score = 1800000.0 # Pivot Kangaskhan to prepared Crustle wall!
+                score = 1800000.0
             else:
                 bench_has_prepared_wall = False
                 for b in info.get("my_bench", []):
