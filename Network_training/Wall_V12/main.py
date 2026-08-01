@@ -129,8 +129,6 @@ def extract_board_info(obs_dict):
     elif opp_has_ability:
         optimal_active = Ogerpon # Enemy has Ability -> Cornerstone Mask Ogerpon ex
     else:
-        # Non-EX with NO Ability -> Do NOT rely on immunity walls!
-        # Use Kangaskhan for early draw / attack or Crustle for raw 120 HP damage.
         optimal_active = Kangaskhan if (turn <= 3 and (Kangaskhan in hand or any(b.get("id") == Kangaskhan for b in my_bench))) else Crustle
 
     opp_hand_raw = opp_player.get("hand")
@@ -177,6 +175,7 @@ def agent(obs_dict: dict) -> list[int]:
     opp_has_ability = info.get("opp_has_ability", False)
     opp_deck_count = info.get("opp_deck_count", 30)
     opp_prizes = info.get("opp_prizes", 6)
+    my_active_hp = info.get("my_active_hp", 999)
     
     # ── GUARDRAIL 2: Strict Opening Lead Protocols ─────────────────────────
     context = select_data.get("context", "")
@@ -185,10 +184,8 @@ def agent(obs_dict: dict) -> list[int]:
         holding_crustle = (Crustle in hand)
         
         if is_second and holding_crustle:
-            # Going Second + Holding Crustle -> Lead Dwebble for immediate Turn 2 evolution
             lead_priority = [Dwebble, Kangaskhan, Crustle, Ogerpon]
         else:
-            # Going First (or Going Second WITHOUT Crustle) -> ALWAYS lead Kangaskhan for card draw
             lead_priority = [Kangaskhan, Crustle, Ogerpon, Dwebble]
             
         for lead_choice in lead_priority:
@@ -217,8 +214,27 @@ def agent(obs_dict: dict) -> list[int]:
         cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
         score = 0.0
 
+        # ── EMERGENCY 0-BENCH SURVIVAL PROTOCOL (BENCH-OUT PREVENTION) ────────
+        if bench_count == 0:
+            if o_type == 6 and cid in {Dwebble, Kangaskhan, Ogerpon}:
+                if opp_is_ex and cid == Ogerpon:
+                    score = -999999.0 # HARD BAN Ogerpon vs EX
+                elif turn >= 3 and cid == Kangaskhan:
+                    score = -999999.0 # HARD BAN late-game Kangaskhan
+                else:
+                    score = 3000000.0 # ABSOLUTE MAX PRIORITY: Place Bench Backup to avoid instant defeat!
+                    
+            elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, Arven}:
+                score = 2900000.0 # ABSOLUTE MAX PRIORITY: Search deck for Bench Backup!
+                
+            elif my_active_hp <= 100 and o_type in {6, 12} and cid == HerosCape:
+                score = 3200000.0 # ABSOLUTE MAX PRIORITY: Attach Hero's Cape (+50 HP) to survive KO!
+                
+            elif my_active_hp <= 100 and o_type == 6 and cid in {JumboIceCream, CommunityCenter}:
+                score = 3100000.0 # ABSOLUTE MAX PRIORITY: Heal Active to survive KO!
+
         # ── GUARDRAIL 3: Bench Liability & Late-Game Guardrails ───────────────
-        if o_type == 6 and cid == Kangaskhan:
+        elif o_type == 6 and cid == Kangaskhan:
             if turn >= 3 or opp_prizes <= 4:
                 score = -999999.0 # HARD BAN late-game Kangaskhan benching!
             elif bench_count >= 2:
@@ -229,8 +245,6 @@ def agent(obs_dict: dict) -> list[int]:
         elif o_type == 6 and cid in {Dwebble, Ogerpon}:
             if opp_is_ex and cid == Ogerpon:
                 score = -999999.0 # HARD BAN (Ogerpon is a 2-prize target vs EX!)
-            elif bench_count == 0:
-                score = 1650000.0 # Emergency bench protection
             elif bench_count >= 2:
                 score = -50000.0 # Clean bench guardrail (max 2 bench Pokémon)
             elif cid in {Dwebble, Crustle}:
