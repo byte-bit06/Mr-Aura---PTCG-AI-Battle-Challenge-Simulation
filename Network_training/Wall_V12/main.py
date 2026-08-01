@@ -50,24 +50,34 @@ try:
 except Exception:
     _CG_CARD_TABLE = {}
 
-# Known Ability and EX Card Sets for 100% Accuracy
-_KNOWN_ABILITY_CARDS = {66, 140, 169, 305, 1102, 1141, 1192, 1252}
-_KNOWN_EX_CARDS = {121, 169, 190, 414, 434, 678, 741, 742, 743, 1102, 1252}
-
 def is_card_ex(cid):
     if not cid: return False
-    if cid in _KNOWN_EX_CARDS: return True
     c = _CG_CARD_TABLE.get(cid)
-    if c: return getattr(c, 'ex', False) or getattr(c, 'megaEx', False)
-    if cid in _CARD_DB: return str(_CARD_DB[cid].get("EX", "false")).lower() == "true"
+    if c:
+        if getattr(c, 'ex', False) or getattr(c, 'megaEx', False) or getattr(c, 'isEx', False):
+            return True
+        name = getattr(c, 'name', '') or ''
+        if ' ex' in name.lower() or ' mega ' in name.lower():
+            return True
+    if cid in _CARD_DB:
+        row = _CARD_DB[cid]
+        val = str(row.get("EX", "")).strip().lower()
+        if val == "true": return True
+        card_name = str(row.get("Card Name", "")).lower()
+        if " ex" in card_name or " mega " in card_name: return True
     return False
 
 def card_has_ability(cid):
     if not cid: return False
-    if cid in _KNOWN_ABILITY_CARDS: return True
     c = _CG_CARD_TABLE.get(cid)
-    if c: return len(getattr(c, 'abilities', [])) > 0 or getattr(c, 'ability', None) is not None
-    if cid in _CARD_DB: return len(_CARD_DB[cid].get("Abilities", [])) > 0
+    if c:
+        abilities = getattr(c, 'abilities', None) or getattr(c, 'ability', None)
+        if abilities: return True
+    if cid in _CARD_DB:
+        row = _CARD_DB[cid]
+        abilities_str = str(row.get("Abilities", "")).strip()
+        if abilities_str and abilities_str != "[]" and abilities_str.lower() != "none":
+            return True
     return False
 
 def get_retreat_cost(cid):
