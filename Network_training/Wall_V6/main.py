@@ -42,6 +42,26 @@ def load_deck():
 my_deck = load_deck()
 _load_card_database()
 
+try:
+    from cg.api import all_card_data
+    _CG_CARD_TABLE = {c.cardId: c for c in all_card_data()}
+except Exception:
+    _CG_CARD_TABLE = {}
+
+def is_card_ex(cid):
+    if not cid: return False
+    c = _CG_CARD_TABLE.get(cid)
+    if c: return getattr(c, 'ex', False) or getattr(c, 'megaEx', False)
+    if cid in _CARD_DB: return str(_CARD_DB[cid].get("EX", "false")).lower() == "true"
+    return False
+
+def card_has_ability(cid):
+    if not cid: return False
+    c = _CG_CARD_TABLE.get(cid)
+    if c: return len(getattr(c, 'abilities', [])) > 0 or getattr(c, 'ability', None) is not None
+    if cid in _CARD_DB: return len(_CARD_DB[cid].get("Abilities", [])) > 0
+    return False
+
 # ── Card Constants ─────────────────────────────────────────────────────────────
 Dwebble = 344
 Crustle = 345
@@ -89,19 +109,21 @@ def extract_board_info(obs_dict):
     opp_bench = [b for b in opp_player.get("bench", []) if b]
     
     opp_active_id = opp_active.get("id") if opp_active else None
-    opp_is_ex = False
-    opp_has_ability = False
-    
-    if opp_active_id and opp_active_id in _CARD_DB:
-        opp_is_ex = str(_CARD_DB[opp_active_id].get("EX", "false")).lower() == "true"
-        opp_has_ability = len(_CARD_DB[opp_active_id].get("Abilities", [])) > 0
+    opp_is_ex = is_card_ex(opp_active_id)
+    opp_has_ability = card_has_ability(opp_active_id)
 
-    # Rule 3: Strict Immunity Validation for Ogerpon ex
-    # Only use Ogerpon ex if opponent Active HAS an Ability AND is NOT an EX!
-    # Crustle is ALWAYS safer vs EX/non-Ability hitters (denies 2-prize KOs)
-    optimal_active = Crustle
-    if opp_has_ability and not opp_is_ex:
+    # ── Passive Ability Immunity Rules ─────────────────────────────────────────
+    # 1. Crustle (345) Ability "Mysterious Rock Inn": AUTOMATICALLY prevents ALL damage from ALL Pokémon ex!
+    # 2. Ogerpon ex (117) Ability "Cornerstone Stance": AUTOMATICALLY prevents ALL damage from Pokémon with Abilities!
+    # 
+    # RULE: If opponent is an EX -> ALWAYS lead CRUSTLE! Crustle is 100% immune and gives 1 prize if KO'd.
+    #       If opponent is NON-EX with an Ability -> Lead OGERPON EX!
+    if opp_is_ex:
+        optimal_active = Crustle
+    elif opp_has_ability:
         optimal_active = Ogerpon
+    else:
+        optimal_active = Crustle
 
     turn = current.get("turn", 1)
     opp_hand_raw = opp_player.get("hand")
@@ -190,42 +212,35 @@ def agent(obs_dict: dict) -> list[int]:
         cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
         score = 0.0
 
-        # ── Rule 4: Emergency Triple-Bench Protection ─────────────────────────
+        # ── Rule 4: Emergency Triple-Bench Protection (0 Bench) ───────────────
         if o_type == 6 and cid in {Dwebble, Ogerpon}:
             if bench_count == 0:
-                score = 1600000.0 # EMERGENCY BENCH (Highest priority in game!)
+                score = 1650000.0 # EMERGENCY BENCH (Highest priority on empty bench!)
             elif bench_count == 1:
-                score = 600000.0  # High backup priority
+                score = 500000.0  # Backup priority
             else:
                 score = 150000.0
 
         # ── Rule 1: Anti-Alakazam Hand Disruption Protocol (Iono Emergency) ───
         elif o_type == 6 and cid == Iono:
             if opp_hand >= 6:
-                score = 1500000.0 # Emergency Iono to shuffle 12-card hand into deck!
+                score = 1600000.0 # Emergency Iono to shuffle 12-card hand into deck!
             else:
                 score = 850000.0
 
         # ── Hero's Cape Attachment ─────────────────────────────────────────────
         elif o_type in {6, 12} and cid == HerosCape:
-            score = 1400000.0 # Instant tool priority!
+            score = 1700000.0 # Instant tool priority!
+
+        # ── Rule 2: Active Dwebble Ascension Attack & Energy ──────────────────
+        elif o_type == 15 and my_active_id == Dwebble:
+            score = 1500000.0 # Execute Ascension attack to pull Crustle from deck!
 
         # ── Evolution Protocol (Dwebble -> Crustle) ───────────────────────────
         elif o_type in {6, 7} and cid == Crustle:
-            score = 1350000.0
+            score = 1400000.0 # Instant evolution!
 
-        # ── Deck Search Items (Nest Ball, Ultra Ball, Heavy Ball, Arven) ───────
-        elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, EarthenVessel, Arven}:
-            score = 850000.0
-
-        # ── Boss's Orders Gate ────────────────────────────────────────────────
-        elif o_type == 6 and cid == BossOrders:
-            if not check_boss_conditions(info):
-                score = -999999.0 # HARD BAN
-            else:
-                score = 500000.0
-
-        # ── Rule 5 & Energy Attachment Protocols ──────────────────────────────
+        # ── Energy Attachment Protocols (ALWAYS attach 1 Energy per turn!) ─────
         elif o_type == 11:
             in_play_area = o.get("inPlayArea")
             in_play_idx = o.get("inPlayIndex", 0)
@@ -252,24 +267,38 @@ def agent(obs_dict: dict) -> list[int]:
                 is_grass = (cid in {GrassEnergy, MistEnergy})
                 
                 # Rule 2: Active Dwebble Ascension Energy Priority
-                if target_id == Dwebble and target_area_is_active(is_active_target) and Crustle not in hand:
+                if target_id == Dwebble and is_active_target and (345 not in hand):
                     score = 1480000.0 # Attach 1 energy to Dwebble to fire Ascension attack!
                 else:
-                    if target_energy == 2: base_e = 110000.0
-                    elif target_energy == 1: base_e = 90000.0
-                    else: base_e = 70000.0
+                    if target_energy == 2: base_e = 1320000.0 # Closest to attacking!
+                    elif target_energy == 1: base_e = 1310000.0 # 2 steps away
+                    else: base_e = 1300000.0 # 0 energy
                     
                     if is_grass: base_e += 15000.0
                     if target_id == optimal_id: base_e += 10000.0
                     elif target_id in {Crustle, Dwebble, Ogerpon}: base_e += 5000.0
                     score = base_e
 
+        # ── Attack Protocol (Superb Scissors / Ogerpon) ──────────────────────
+        elif o_type == 15:
+            score = 1100000.0 # Always attack every turn!
+
+        # ── Deck Search Items (Nest Ball, Ultra Ball, Heavy Ball, Arven) ───────
+        elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, EarthenVessel, Arven}:
+            score = 850000.0
+
+        # ── Boss's Orders Gate ────────────────────────────────────────────────
+        elif o_type == 6 and cid == BossOrders:
+            if not check_boss_conditions(info):
+                score = -999999.0 # HARD BAN
+            else:
+                score = 500000.0
+
         # ── Mid-Game Switch & Pivot Logic ─────────────────────────────────────
         elif o_type == 6 and cid == SwitchCard:
             current_active_id = info.get("my_active_id")
             optimal_id = info.get("optimal_active")
             
-            # Rule 2 Switch Protocol: Only switch if ready Crustle/Ogerpon is ALREADY on bench
             bench_has_prepared_wall = False
             for b in info.get("my_bench", []):
                 b_id = b.get("id")
@@ -297,14 +326,6 @@ def agent(obs_dict: dict) -> list[int]:
         # ── Disruption Supporters & Control ──────────────────────────────────
         elif o_type == 6 and cid in {Xerosic, Morty, TRFactory}:
             score = 200000.0
-
-        # ── Attack Protocol (Rule 2 Ascension / Superb Scissors) ─────────────
-        elif o_type == 15:
-            # Rule 2: Ascension Attack Priority (Direct Deck Evolution)
-            if my_active_id == Dwebble:
-                score = 1490000.0 # Execute Ascension attack to pull Crustle from deck and evolve!
-            else:
-                score = 700000.0 # Always attack every turn!
 
         else:
             score = 1.0

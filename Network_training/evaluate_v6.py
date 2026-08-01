@@ -29,7 +29,6 @@ opponents = {
     'Abomasnow ex': abomasnow_agent.agent,
     'MCTS Lucario': mcts_lucario_agent.agent,
     'Archaludon Cinderace': archaludon_cinderace_agent.agent,
-    'Wall_V5': v5_module.agent,
 }
 
 if not os.path.exists('replays'):
