@@ -52,7 +52,7 @@ except Exception:
 
 # Known Ability and EX Card Sets for 100% Accuracy
 _KNOWN_ABILITY_CARDS = {66, 140, 169, 305, 1102, 1141, 1192, 1252}
-_KNOWN_EX_CARDS = {121, 169, 190, 414, 434, 678, 743, 1102, 1252}
+_KNOWN_EX_CARDS = {121, 169, 190, 414, 434, 678, 741, 742, 743, 1102, 1252}
 
 def is_card_ex(cid):
     if not cid: return False
@@ -195,7 +195,9 @@ def agent(obs_dict: dict) -> list[int]:
         is_second = info.get("is_second", False)
         holding_crustle = (Crustle in hand)
         
-        if is_second and holding_crustle:
+        if opp_is_ex:
+            lead_priority = [Crustle, Dwebble] # HARD BAN Kangaskhan & Ogerpon vs EX!
+        elif is_second and holding_crustle:
             lead_priority = [Dwebble, Kangaskhan, Crustle, Ogerpon]
         else:
             lead_priority = [Kangaskhan, Crustle, Ogerpon, Dwebble]
@@ -208,7 +210,7 @@ def agent(obs_dict: dict) -> list[int]:
         
         for idx, o in enumerate(options):
             cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
-            if opp_is_ex and cid == Ogerpon: continue # HARD BAN Ogerpon vs EX!
+            if opp_is_ex and cid in {Ogerpon, Kangaskhan}: continue # HARD BAN Ogerpon/Kangaskhan vs EX!
             return [idx]
         return [0]
 
@@ -229,8 +231,8 @@ def agent(obs_dict: dict) -> list[int]:
         # ── EMERGENCY 0-BENCH SURVIVAL PROTOCOL ──────────────────────────────
         if bench_count == 0:
             if o_type == 6 and cid in {Dwebble, Kangaskhan, Ogerpon}:
-                if opp_is_ex and cid == Ogerpon:
-                    score = -999999999.0 # HARD BAN Ogerpon vs EX
+                if opp_is_ex and cid in {Ogerpon, Kangaskhan}:
+                    score = -999999999.0 # HARD BAN vs EX
                 elif (turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability) and cid == Kangaskhan:
                     score = -999999999.0 # HARD BAN late-game Kangaskhan
                 else:
@@ -247,9 +249,8 @@ def agent(obs_dict: dict) -> list[int]:
 
         # ── RULE 3: Bench Liability & Late-Game Guardrails ───────────────────
         elif o_type == 6 and cid == Kangaskhan:
-            # HARD BAN Kangaskhan on turn >= 3, or when prizes <= 4, or when opp has EX/Ability!
             if turn >= 3 or opp_prizes <= 4 or opp_is_ex or opp_has_ability:
-                score = -999999999.0
+                score = -999999999.0 # HARD BAN Kangaskhan late game / vs EX / vs Ability!
             elif bench_count >= 2:
                 score = -999999999.0
             else:
@@ -276,7 +277,7 @@ def agent(obs_dict: dict) -> list[int]:
 
         elif o_type == 6 and cid == Xerosic:
             if not opp_is_ex and not opp_has_ability:
-                score = 2100000.0 # Disruption vs Non-EX non-ability opponents!
+                score = 2300000.0 # Disruption vs Non-EX non-ability opponents!
             elif opp_deck_count <= 15 or opp_hand >= 6:
                 score = 2000000.0
             else:
@@ -288,9 +289,12 @@ def agent(obs_dict: dict) -> list[int]:
             elif cid == Petrel: score = 1450000.0
             elif cid == Arven: score = 1400000.0
 
-        # ── Hero's Cape Attachment ─────────────────────────────────────────────
+        # ── Hero's Cape Attachment (Anti-Dragapult Bench Protection) ─────────
         elif o_type in {6, 12} and cid == HerosCape:
-            score = 1700000.0
+            if opp_active_id == 121: # Dragapult ex
+                score = 2500000.0 # Protect benched Dwebble from Phantom Dive snipe!
+            else:
+                score = 1700000.0
 
         # ── Dwebble Ascension Attack Override ─────────────────────────────────
         elif o_type == 15 and my_active_id == Dwebble:
@@ -299,7 +303,7 @@ def agent(obs_dict: dict) -> list[int]:
         # ── Evolution Protocol (Dwebble -> Crustle) ───────────────────────────
         elif o_type in {6, 7} and cid == Crustle:
             if opp_active_id == 121: # Dragapult ex
-                score = 1700000.0 # Anti-Dragapult Bench Protection!
+                score = 2400000.0 # Evolve benched Dwebble to Crustle (150 HP) vs Dragapult!
             else:
                 score = 1400000.0
 
@@ -326,12 +330,12 @@ def agent(obs_dict: dict) -> list[int]:
                 target_id = b.get("id")
                 target_has_grass = any(e == GrassEnergy or (isinstance(e, dict) and e.get("id") == GrassEnergy) for e in target_energies)
                 
-            max_energy_cap = 3 # Hard 3-energy cap!
+            max_energy_cap = 3
             
             if target_energy >= max_energy_cap:
-                score = -999999999.0 # HARD LOCK TO ZERO (Saturation guardrail)!
-            elif opp_is_ex and target_id == Ogerpon:
-                score = -999999999.0 # HARD BAN (Don't attach energy to Ogerpon vs EX!)
+                score = -999999999.0 # HARD LOCK TO ZERO!
+            elif opp_is_ex and target_id in {Ogerpon, Kangaskhan}:
+                score = -999999999.0 # HARD BAN energy on Ogerpon/Kangaskhan vs EX!
             else:
                 optimal_id = info.get("optimal_active")
                 is_grass = (cid == GrassEnergy)
@@ -354,32 +358,34 @@ def agent(obs_dict: dict) -> list[int]:
 
         # ── RULE 5: Advanced Attack & Immunity Cross-Checks ───────────────────
         elif o_type == 15:
-            if opp_is_ex and my_active_id == Ogerpon:
-                score = -999999999.0 # Nullified! Force immediate pivot (SwitchCard) instead of attacking into zero damage!
+            if opp_is_ex and my_active_id in {Ogerpon, Kangaskhan}:
+                score = -999999999.0 # Nullified! Force immediate SwitchCard pivot!
             elif not opp_is_ex and not opp_has_ability and my_active_id == Kangaskhan and info.get("my_active_energy", 0) >= 3:
                 score = 1600000.0 # Attack with Kangaskhan vs Non-EX non-ability opponents!
             else:
-                score = 1100000.0 # Standard attack!
+                score = 1100000.0
 
         # ── Deck Search Items ─────────────────────────────────────────────────
         elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, EarthenVessel, Arven}:
-            if opp_deck_count <= 15: score = 400000.0 # Preserve deck size during deck-out phase!
+            if opp_deck_count <= 15: score = 400000.0
             else: score = 850000.0
 
-        # ── Boss's Orders Gate ────────────────────────────────────────────────
+        # ── Boss's Orders Gate (Drag EX/Ability Pokémon into Active vs Non-EX) ──
         elif o_type == 6 and cid == BossOrders:
             if not opp_is_ex and not opp_has_ability:
-                score = 2200000.0 # Disruption vs Non-EX Non-Ability opponents!
-            else:
+                score = 2500000.0 # Drag EX/Ability Pokémon from opp bench into Active to force immunity lock!
+            elif not check_boss_conditions(info):
                 score = -999999999.0
+            else:
+                score = 500000.0
 
         # ── Mid-Game Switch & Pivot Logic ─────────────────────────────────────
         elif o_type == 6 and cid == SwitchCard:
             current_active_id = info.get("my_active_id")
             optimal_id = info.get("optimal_active")
             
-            if opp_is_ex and current_active_id == Ogerpon:
-                score = 2500000.0 # EMERGENCY SWITCH: Pull Ogerpon OUT of Active vs EX!
+            if opp_is_ex and current_active_id in {Ogerpon, Kangaskhan}:
+                score = 2500000.0 # EMERGENCY SWITCH: Pull non-immune card OUT of Active vs EX!
             elif current_active_id == Kangaskhan and (any(b.get("id") == Crustle and len(b.get("energies", [])) >= 2 for b in info["my_bench"])):
                 score = 1800000.0 # Pivot Kangaskhan to prepared Crustle wall!
             else:
