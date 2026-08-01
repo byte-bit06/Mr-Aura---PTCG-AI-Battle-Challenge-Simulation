@@ -30,7 +30,6 @@ opponents = {
     'MCTS Lucario': mcts_lucario_agent.agent,
     'Archaludon Cinderace': archaludon_cinderace_agent.agent,
     'Wall_V5': v5_module.agent,
-    'Wall_V3': v3_module.agent,
 }
 
 if not os.path.exists('replays'):
