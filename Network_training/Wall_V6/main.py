@@ -104,7 +104,8 @@ def extract_board_info(obs_dict):
         optimal_active = Ogerpon
 
     turn = current.get("turn", 1)
-    opp_hand_count = opp_player.get("handCount", len(opp_player.get("hand", [])))
+    opp_hand_raw = opp_player.get("hand")
+    opp_hand_count = opp_player.get("handCount") if opp_player.get("handCount") is not None else len(opp_hand_raw if opp_hand_raw else [])
     
     return {
         "my_idx": my_idx,
