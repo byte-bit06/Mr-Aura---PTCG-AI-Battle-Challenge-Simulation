@@ -37,9 +37,14 @@ An empirical audit of **Wall V5** replay logs (both local gauntlet matches and K
 
 ### Rule 2: Active Pivot & Lead Guard (No Stranded Dwebbles)
 * **Problem**: Dwebble (60 HP) gets stuck in Active on Turn 2+ if Crustle isn't drawn yet, becoming a free prize target.
-* **New Rule**:
-  1. If Active is Dwebble and `turn >= 2`, playing **Switch (14)** or evolving into **Crustle (345)** is rated **`score = 1,450,000.0`**.
-  2. If Dwebble cannot evolve and no Switch is in hand, energy attachment prioritizes retreat cost over attacking.
+* **Exact Switch Target**:
+  - Playing **Switch (14)** is ONLY valid if a **prepared wall (Crustle or Ogerpon ex)** is on the bench!
+  - **NEVER** switch from Dwebble into another Dwebble!
+  - If opponent is an EX / standard hitter → Switch Dwebble out for **benched Crustle (345)**.
+  - If opponent has an Ability (non-EX) → Switch Dwebble out for **benched Ogerpon ex (117)**.
+* **Exact Energy Retreat Target**:
+  - If Dwebble cannot evolve into Crustle AND no Switch card is in hand, attach 1 Energy directly to **Active Dwebble**.
+  - **Why?**: Dwebble has a Retreat Cost of 1 Energy. Attaching 1 Energy to Active Dwebble enables a **manual Retreat action** to immediately promote benched **Crustle** or **Ogerpon ex** into the Active spot!
 
 ---
 
