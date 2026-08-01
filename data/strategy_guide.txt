@@ -12,3 +12,9 @@
 ## Rules of Thumb
 - Never retreat unless...
 - Always prioritize attaching energy to...
+
+
+--- Learned Winner Strategy Insights ---
+- Always prioritize energy placement on benched primary attackers before executing active attacks.
+- Timing evolutionary leaps (e.g. Riolu -> Mega Lucario ex) with immediate prize knockouts maximizes win probability.
+- Maintain continuous attack momentum; avoid empty turns without damage or setups.
