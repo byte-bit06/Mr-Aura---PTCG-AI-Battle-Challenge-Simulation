@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+replays/
+data/dagger_dataset.jsonl
+*.json
+!Network_training/*.json
+!optimized_weights.json
+submission.tar.gz

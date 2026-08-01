@@ -1,0 +1,37 @@
+{
+    "base_evolve_score": 80000.0,
+    "base_play_score": 60000.0,
+    "base_attach_score": 40000.0,
+    "base_retreat_score": 20000.0,
+    "base_attack_score": 1000.0,
+
+    "play_poffin_dwebble_bonus": 5000.0,
+    "heal_jumbo_ice_cream_bonus": 5000.0,
+    "play_lillie_draw_bonus": 4000.0,
+    "play_morty_draw_bonus": 2000.0,
+    "play_factory_petrel_combo_bonus": 6000.0,
+    "play_boss_orders_disrupt_bonus": 4500.0,
+    "play_xerosic_disrupt_bonus": 3000.0,
+    "play_colress_tenacity_bonus": 3500.0,
+    "play_hilda_bonus": 3000.0,
+    "use_community_center_bonus": 2000.0,
+    "play_pokegear_bonus": 1000.0,
+
+    "play_kangaskhan_active_bonus": 5000.0,
+    "evolve_dwebble_bonus": 5000.0,
+    "attach_energy_ogerpon_bonus": 2000.0,
+    "attach_hero_cape_crustle_bonus": 4000.0,
+
+    "attack_lethal_bonus": 5000.0,
+
+    "panic_heal_multiplier": 2.5,
+    "late_game_disrupt_multiplier": 2.0,
+    "retreat_cost_penalty": 0.0,
+    "retreat_crustle_penalty": 0.0,
+    "switch_to_crustle_ex_bonus": 8000.0,
+    "switch_to_ogerpon_ability_bonus": 8000.0,
+    "switch_to_wall_bonus": 5000.0,
+    "attach_energy_saturation_penalty": -50000.0,
+    "attach_bench_wall_bonus": 8000.0,
+    "play_kangaskhan_late_game_penalty": -100000.0
+}

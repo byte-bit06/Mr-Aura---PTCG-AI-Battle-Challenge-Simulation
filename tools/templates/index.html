@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAgger Live Annotator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            font-family: monospace;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 12px;
+        }
+
+        /* LEFT SIDEBAR */
+        #left-bar {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            box-sizing: border-box;
+            background-color: #444;
+            border-right: 2px solid #222;
+        }
+        
+        .panel {
+            background-color: white;
+            border: 1px solid black;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 5px;
+        }
+        .panel-header {
+            background-color: #93C47D;
+            text-align: center;
+            font-weight: bold;
+            padding: 2px;
+            border-bottom: 1px solid black;
+            color: black;
+        }
+        .panel-content {
+            padding: 5px;
+            overflow-y: auto;
+            flex-grow: 1;
+            color: black;
+        }
+
+        #log-panel { flex-grow: 2; min-height: 200px; }
+        #select-panel { height: 150px; }
+        #action-panel { height: 150px; }
+
+        /* CENTER PLAYMAT */
+        #center-bar {
+            flex-grow: 1;
+            background-color: #93C47D;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        #playmat {
+            width: 700px;
+            height: 600px;
+            border: 2px solid white;
+            position: relative;
+        }
+
+        /* Pokeball */
+        .pokeball {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 6px solid white;
+            border-radius: 50%;
+            box-sizing: border-box;
+        }
+        .pokeball::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -6px;
+            right: -6px;
+            height: 6px;
+            background: white;
+            transform: translateY(-50%);
+        }
+        .pokeball::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border-radius: 50%;
+            border: 6px solid white;
+            background-color: #93C47D;
+        }
+
+        /* Player Labels */
+        .player-label {
+            position: absolute;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        #lbl-p2 { top: 80px; left: 160px; color: #ff6b6b; text-shadow: 1px 1px 0px white; }
+        #lbl-p1 { bottom: 80px; left: 160px; color: #4dabf7; text-shadow: 1px 1px 0px white; }
+
+        /* Stats */
+        .stats-label {
+            position: absolute;
+            font-family: sans-serif;
+            color: black;
+            font-size: 14px;
+        }
+        #stats-p2 { top: 200px; left: 20px; }
+        #stats-p1 { bottom: 200px; right: 20px; text-align: left; }
+
+        /* Bench Dashes */
+        .bench-row {
+            position: absolute;
+            left: 150px;
+            display: flex;
+            gap: 10px;
+        }
+        #bench-p2 { top: 60px; }
+        #bench-p1 { bottom: 60px; }
+        
+        .bench-dash {
+            width: 50px;
+            border-bottom: 4px solid white;
+            height: 4px;
+        }
+        .bench-card {
+            width: 50px;
+            height: 70px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.2);
+            color: black;
+            font-size: 9px;
+            padding: 2px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Active Spots */
+        .active-spot {
+            position: absolute;
+            width: 60px;
+            height: 85px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.2);
+            left: 320px;
+            color: black;
+            font-size: 10px;
+            padding: 2px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #active-p2 { top: 150px; }
+        #active-p1 { bottom: 150px; }
+
+        /* Prizes */
+        .prizes {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+        }
+        #prizes-p2 { right: -60px; top: -10px; }
+        #prizes-p1 { left: -60px; bottom: -10px; }
+        
+        .prize-card {
+            width: 50px;
+            height: 70px;
+            border: 2px solid white;
+            background: transparent;
+            margin-bottom: -30px;
+        }
+
+        /* RIGHT SIDEBAR */
+        #right-bar {
+            width: 350px;
+            background-color: #444;
+            padding: 5px;
+            box-sizing: border-box;
+            border-left: 2px solid #222;
+        }
+        #obs-panel {
+            height: 100%;
+        }
+        #obs-pre {
+            font-family: monospace;
+            font-size: 10px;
+            white-space: pre-wrap;
+            margin: 0;
+            color: black;
+        }
+
+        /* Form elements */
+        .option-radio {
+            margin-bottom: 2px;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
+            height: 60px;
+            box-sizing: border-box;
+            resize: none;
+            margin-bottom: 5px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+        button {
+            flex: 1;
+            padding: 5px;
+            font-family: monospace;
+            cursor: pointer;
+            border: 1px solid black;
+            background: #e0e0e0;
+        }
+        button:hover { background: #d0d0d0; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .hidden { display: none !important; }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Sidebar -->
+    <div id="left-bar">
+        <div class="panel" id="log-panel">
+            <div class="panel-header">Log</div>
+            <div class="panel-content" id="log-content">
+                Waiting for engine...
+            </div>
+        </div>
+
+        <div class="panel" id="select-panel">
+            <div class="panel-header">Select</div>
+            <div class="panel-content" id="select-content">
+                <!-- Radio options injected here -->
+            </div>
+        </div>
+
+        <div class="panel" id="action-panel">
+            <div class="panel-header">Selected Action</div>
+            <div class="panel-content">
+                <textarea id="reasoning" placeholder="Reasoning (Optional)"></textarea>
+                <div class="btn-group">
+                    <button id="btn-submit" disabled>Submit</button>
+                    <button id="btn-proceed" disabled>Proceed (No Comment)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Playmat -->
+    <div id="center-bar">
+        <div id="overlay">Processing Kaggle Engine...</div>
+
+        <div id="playmat">
+            <div class="pokeball"></div>
+            
+            <div class="player-label" id="lbl-p2">Player 2</div>
+            <div class="player-label" id="lbl-p1">Player 1</div>
+
+            <div class="stats-label" id="stats-p2">
+                Time <span id="time-p2">600</span><br><br>
+                <span style="font-size:16px;">Discard <span id="discard-p2">0</span></span><br>
+                <span style="font-size:16px;">Deck <span id="deck-p2">60</span></span>
+            </div>
+
+            <div class="stats-label" id="stats-p1">
+                Time <span id="time-p1">600</span><br><br>
+                <span style="font-size:16px;">Discard <span id="discard-p1">0</span></span><br>
+                <span style="font-size:16px;">Deck <span id="deck-p1">60</span></span>
+            </div>
+
+            <!-- Benches -->
+            <div class="bench-row" id="bench-p2">
+                <div class="bench-dash"></div><div class="bench-dash"></div><div class="bench-dash"></div><div class="bench-dash"></div><div class="bench-dash"></div>
+            </div>
+            <div class="bench-row" id="bench-p1">
+                <div class="bench-dash"></div><div class="bench-dash"></div><div class="bench-dash"></div><div class="bench-dash"></div><div class="bench-dash"></div>
+            </div>
+
+            <!-- Actives -->
+            <div class="active-spot" id="active-p2" style="display:none;"></div>
+            <div class="active-spot" id="active-p1" style="display:none;"></div>
+
+            <!-- Prizes -->
+            <div class="prizes" id="prizes-p2"></div>
+            <div class="prizes" id="prizes-p1"></div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div id="right-bar">
+        <div class="panel" id="obs-panel">
+            <div class="panel-header">Observation</div>
+            <div class="panel-content">
+                <pre id="obs-pre">{}</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedActionIdx = null;
+        let lastTurn = -1;
+
+        function buildCardHtml(card) {
+            if (!card || !card.name || card.name === 'None') return '';
+            return `
+                <div style="font-weight:bold; font-size:9px;">${card.name.substring(0, 10)}</div>
+                <div style="color:red;">${card.hp - card.damage}/${card.hp} HP</div>
+                <div style="color:green;">${card.energy} E</div>
+            `;
+        }
+
+        async function pollState() {
+            try {
+                const res = await fetch('/state');
+                const data = await res.json();
+                
+                if (data.status === 'processing') {
+                    document.getElementById('overlay').style.display = 'flex';
+                } else if (data.status === 'waiting_for_human') {
+                    if (data.turn !== lastTurn) {
+                        lastTurn = data.turn;
+                        selectedActionIdx = null;
+                        document.getElementById('reasoning').value = '';
+                        document.getElementById('btn-submit').disabled = true;
+                        document.getElementById('btn-proceed').disabled = true;
+                        
+                        renderBoard(data);
+                        renderOptions(data.options);
+                        
+                        document.getElementById('obs-pre').textContent = JSON.stringify(data.raw_obs, null, 2);
+                        document.getElementById('log-content').innerHTML = `Turn ${data.turn}<br>Waiting for input...`;
+
+                        document.getElementById('overlay').style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                console.error("Connection error");
+            }
+        }
+
+        function renderBoard(data) {
+            const b = data.board;
+            
+            // P2 (Opponent)
+            document.getElementById('deck-p2').innerText = b.opp_deck || 0;
+            document.getElementById('discard-p2').innerText = b.opp_discard || 0;
+            
+            if (b.opp_active && b.opp_active.name && b.opp_active.name !== 'None') {
+                document.getElementById('active-p2').style.display = 'flex';
+                document.getElementById('active-p2').innerHTML = buildCardHtml(b.opp_active);
+            } else {
+                document.getElementById('active-p2').style.display = 'none';
+            }
+
+            let p2BenchHtml = '';
+            for(let i=0; i<5; i++) {
+                if(b.opp_bench[i] && b.opp_bench[i].name !== 'None') {
+                    p2BenchHtml += `<div class="bench-card">${buildCardHtml(b.opp_bench[i])}</div>`;
+                } else {
+                    p2BenchHtml += `<div class="bench-dash"></div>`;
+                }
+            }
+            document.getElementById('bench-p2').innerHTML = p2BenchHtml;
+
+            let p2PrizesHtml = '';
+            for(let i=0; i<(b.opp_prizes||6); i++) p2PrizesHtml += `<div class="prize-card"></div>`;
+            document.getElementById('prizes-p2').innerHTML = p2PrizesHtml;
+
+
+            // P1 (Us)
+            document.getElementById('deck-p1').innerText = b.my_deck || 0;
+            document.getElementById('discard-p1').innerText = b.my_discard || 0;
+            
+            if (b.my_active && b.my_active.name && b.my_active.name !== 'None') {
+                document.getElementById('active-p1').style.display = 'flex';
+                document.getElementById('active-p1').innerHTML = buildCardHtml(b.my_active);
+            } else {
+                document.getElementById('active-p1').style.display = 'none';
+            }
+
+            let p1BenchHtml = '';
+            for(let i=0; i<5; i++) {
+                if(b.my_bench[i] && b.my_bench[i].name !== 'None') {
+                    p1BenchHtml += `<div class="bench-card">${buildCardHtml(b.my_bench[i])}</div>`;
+                } else {
+                    p1BenchHtml += `<div class="bench-dash"></div>`;
+                }
+            }
+            document.getElementById('bench-p1').innerHTML = p1BenchHtml;
+
+            let p1PrizesHtml = '';
+            for(let i=0; i<(b.my_prizes||6); i++) p1PrizesHtml += `<div class="prize-card"></div>`;
+            document.getElementById('prizes-p1').innerHTML = p1PrizesHtml;
+        }
+
+        function renderOptions(options) {
+            const container = document.getElementById('select-content');
+            container.innerHTML = '';
+            
+            options.forEach(opt => {
+                const label = document.createElement('label');
+                label.className = 'option-radio';
+                label.innerHTML = `
+                    <input type="radio" name="action_opt" value="${opt.id}" onchange="selectOption(${opt.id})">
+                    ${opt.text} ${opt.is_heuristic ? '(AI)' : ''}
+                    <br>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        function selectOption(id) {
+            selectedActionIdx = id;
+            document.getElementById('btn-submit').disabled = false;
+            document.getElementById('btn-proceed').disabled = false;
+        }
+
+        async function submitAction(reasoning) {
+            if (selectedActionIdx === null) return;
+            
+            document.getElementById('btn-submit').disabled = true;
+            document.getElementById('btn-proceed').disabled = true;
+            document.getElementById('overlay').style.display = 'flex';
+            
+            await fetch('/action', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action_index: selectedActionIdx,
+                    reasoning: reasoning
+                })
+            });
+            pollState();
+        }
+
+        document.getElementById('btn-submit').onclick = () => {
+            submitAction(document.getElementById('reasoning').value.trim());
+        };
+
+        document.getElementById('btn-proceed').onclick = () => {
+            submitAction("");
+        };
+
+        setInterval(pollState, 1000);
+        pollState();
+    </script>
+</body>
+</html>
