@@ -35,16 +35,16 @@ An empirical audit of **Wall V5** replay logs (both local gauntlet matches and K
 
 ---
 
-### Rule 2: Active Pivot & Lead Guard (No Stranded Dwebbles)
-* **Problem**: Dwebble (60 HP) gets stuck in Active on Turn 2+ if Crustle isn't drawn yet, becoming a free prize target.
-* **Exact Switch Target**:
-  - Playing **Switch (14)** is ONLY valid if a **prepared wall (Crustle or Ogerpon ex)** is on the bench!
-  - **NEVER** switch from Dwebble into another Dwebble!
-  - If opponent is an EX / standard hitter → Switch Dwebble out for **benched Crustle (345)**.
-  - If opponent has an Ability (non-EX) → Switch Dwebble out for **benched Ogerpon ex (117)**.
-* **Exact Energy Retreat Target**:
-  - If Dwebble cannot evolve into Crustle AND no Switch card is in hand, attach 1 Energy directly to **Active Dwebble**.
-  - **Why?**: Dwebble has a Retreat Cost of 1 Energy. Attaching 1 Energy to Active Dwebble enables a **manual Retreat action** to immediately promote benched **Crustle** or **Ogerpon ex** into the Active spot!
+### Rule 2: Active Dwebble Ascension Attack Protocol (Direct Deck Evolution)
+* **Dwebble's Key Move**: Dwebble (Card ID 344) has the attack **Ascension** (1 Energy requirement)!
+* **Move Effect**: *"Search your deck for a card that evolves from this Pokémon (Crustle) and put it onto this Pokémon to evolve it. Then, shuffle your deck."*
+* **Ascension Tactical Priority (`score = 1,480,000.0`)**:
+  - If Active is Dwebble (344) and Crustle is NOT in hand:
+    1. Attach 1 Energy (Grass or Mist) to **Active Dwebble**.
+    2. Execute **Ascension** attack immediately!
+  - **Why this is superior to switching**: Ascension searches the deck for **Crustle (345)** and evolves Active Dwebble into Crustle on the spot — without needing Crustle in hand or burning a Switch card!
+* **Switch Protocol (Backup only)**:
+  - Play **Switch (14)** ONLY if a ready wall (**Crustle or Ogerpon ex**) is ALREADY on the bench and opponent presents an immediate lethal threat. NEVER switch from Dwebble into another Dwebble!
 
 ---
 
