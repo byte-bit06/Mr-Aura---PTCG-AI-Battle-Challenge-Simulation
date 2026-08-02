@@ -303,8 +303,20 @@ def extract_board_info(obs_dict):
     opp_active_list = opp_player.get("active", [])
     opp_active = opp_active_list[0] if len(opp_active_list) > 0 else None
     
-    my_bench = [b for b in my_player.get("bench", []) if b]
-    opp_bench = [b for b in opp_player.get("bench", []) if b]
+    my_bench_raw = my_player.get("bench") or my_player.get("benchArea") or my_player.get("benched") or []
+    opp_bench_raw = opp_player.get("bench") or opp_player.get("benchArea") or opp_player.get("benched") or []
+    
+    my_bench = []
+    for b in my_bench_raw:
+        if not b: continue
+        if isinstance(b, dict): my_bench.append(b)
+        elif isinstance(b, (int, float)): my_bench.append({"id": int(b), "hp": 200, "energies": []})
+
+    opp_bench = []
+    for b in opp_bench_raw:
+        if not b: continue
+        if isinstance(b, dict): opp_bench.append(b)
+        elif isinstance(b, (int, float)): opp_bench.append({"id": int(b), "hp": 200, "energies": []})
     
     opp_active_id = opp_active.get("id") if opp_active else None
     opp_is_ex = is_card_ex(opp_active_id)
