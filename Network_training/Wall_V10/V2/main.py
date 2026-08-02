@@ -697,11 +697,11 @@ def agent(obs_dict: dict) -> list[int]:
                     if cid == Crustle:
                         r_score = 10000.0  # TOP PRIORITY: Immune Wall Crustle!
                         log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Crustle Immunity Priority 10000.0 (Opponent is EX!)")
-                    elif cid == Dwebble:
-                        r_score = 8000.0   # Dwebble can evolve into Crustle!
-                        log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Dwebble Priority 8000.0 (Can evolve to Crustle Wall!)")
                     elif cid == Ogerpon:
-                        r_score = 500.0
+                        r_score = 7500.0   # Ogerpon ex is 210 HP wall!
+                        log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Ogerpon ex Wall Priority 7500.0 (High HP Wall!)")
+                    elif cid == Dwebble:
+                        r_score = 500.0    # Low priority basic
                     elif cid == Kangaskhan:
                         r_score = -500.0   # HARD PENALTY: Do not feed free prize cards to EX opponent!
                         log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Kangaskhan ex PENALIZED (-500.0): Prevents feeding free prize cards to EX opponent!")
@@ -714,11 +714,11 @@ def agent(obs_dict: dict) -> list[int]:
                         r_score = 10000.0  # TOP PRIORITY: Immune Wall Ogerpon ex!
                         log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Ogerpon ex Immunity Priority 10000.0 (Opponent has Ability!)")
                     elif cid == Crustle:
-                        r_score = 8000.0
+                        r_score = 8000.0   # Crustle 150 HP wall
                     elif cid == Dwebble:
-                        r_score = 5000.0
+                        r_score = 500.0
                     elif cid == Kangaskhan:
-                        r_score = -500.0   # HARD PENALTY: Prevents feeding free prize cards to Ability opponent!
+                        r_score = -500.0   # HARD PENALTY: Prevents feeding free prize cards!
                         log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Kangaskhan ex PENALIZED (-500.0): Prevents feeding free prize cards!")
                     else:
                         r_score = 50.0
@@ -729,22 +729,22 @@ def agent(obs_dict: dict) -> list[int]:
                         log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Dwebble Priority 1500.0 (Going 2nd with Crustle in hand!)")
                     elif cid == Crustle:
                         r_score = 1400.0
+                    elif cid == Ogerpon:
+                        r_score = 1200.0
                     elif cid == Kangaskhan:
                         r_score = 1000.0
-                    elif cid == Ogerpon:
-                        r_score = 300.0
                     else:
                         r_score = 50.0
                 else:
-                    if cid == Kangaskhan:
+                    if cid == Crustle:
+                        r_score = 2000.0
+                    elif cid == Ogerpon:
+                        r_score = 1500.0
+                    elif cid == Kangaskhan:
                         r_score = 1000.0 # Default Lead with Kangaskhan ex to use draw ability!
                         log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Kangaskhan ex Lead Priority 1000.0 (Draw Ability Starter!)")
-                    elif cid == Crustle:
-                        r_score = 800.0
                     elif cid == Dwebble:
                         r_score = 500.0
-                    elif cid == Ogerpon:
-                        r_score = 300.0
                     else:
                         r_score = 50.0
 
@@ -952,23 +952,10 @@ def agent(obs_dict: dict) -> list[int]:
                 log_rule_execution(f"  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── BRANCH 8B: SWITCH CARD PROTECTION (DO NOT WASTE TURN ACTIONS ON UNNECESSARY SWITCHING!) ──
+            # ── BRANCH 8B: SWITCH CARD HARD BAN (ENFORCING NEVER SWITCH/RETREAT RULE) ──
             elif cid == SwitchCard:
-                is_special_condition = any([
-                    _get_val(my_active, "poisoned") if isinstance(my_active, dict) else False,
-                    _get_val(my_active, "burned") if isinstance(my_active, dict) else False,
-                    _get_val(my_active, "asleep") if isinstance(my_active, dict) else False,
-                    _get_val(my_active, "confused") if isinstance(my_active, dict) else False,
-                    _get_val(my_active, "paralyzed") if isinstance(my_active, dict) else False
-                ])
-                needs_switch = (is_special_condition or (opp_is_ex and my_active_id != Crustle and benched_wall_takes_zero))
-                if not needs_switch:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): Active is fine and needs energy, no unnecessary switching!")
-                    score = -float('inf')
-                else:
-                    score = 850.0
-                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard Allowed -> Score 850.0")
-                    has_useful_pre_attack_action = True
+                log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): User Rule — Never switch or retreat!")
+                score = -float('inf')
 
             # ── BRANCH 9: FOCUSED ENERGY ATTACHMENT & STRICT ENERGY MANAGEMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
