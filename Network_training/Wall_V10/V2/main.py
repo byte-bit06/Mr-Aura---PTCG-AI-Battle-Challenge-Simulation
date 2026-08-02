@@ -34,7 +34,7 @@ def log_rule_execution(msg):
 # Clear old log file on start
 try:
     with open(RULE_LOG_FILE, "w", encoding="utf-8") as f:
-        f.write("=== WALL_V10 V2 STRICT RULE EXECUTION VERIFICATION LOG ===\n\n")
+        f.write("=== WALL_V10 V2 IF-STATEMENT & STRATEGIC RULE EXECUTION LOG ===\n\n")
 except Exception:
     pass
 
@@ -221,7 +221,7 @@ W = _load_weights()
 
 w_prize   = W.get("W_PRIZE_MULT", 1050.0) / 1000.0
 w_energy  = W.get("W_ENERGY_BASE", 8500.0) / 10000.0
-w_evolve  = W.get("W_EVOLVE_BASE", 9500.0) / 10000.0
+w_evolve  = W.get("W_EVOLVE_BASE", 9500.0) / 1000.0
 w_trainer = W.get("W_TRAINER_BASE", 10500.0) / 10000.0
 w_pokemon = W.get("W_POKEMON_BASE", 20000.0) / 20000.0
 w_attack  = W.get("W_ATTACK_SCORE", 1250.0) / 1000.0
@@ -362,7 +362,7 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
     
     # HARD BAN: Never promote Kangaskhan ex to active in late game!
     if cid == Kangaskhan and not is_early_game:
-        log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Active Promotion HARD BANNED (-inf)")
+        log_rule_execution(f"  [IF EXECUTED] rank_active_candidate -> Late-game Kangaskhan Active Promotion HARD BANNED (-inf)")
         return -float('inf')
     
     energy_norm = min(energy_count / 3.0, 1.0)
@@ -383,8 +383,10 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
 
 def score_discard_option(cid, hand, bench_and_active_ids):
     if cid in {BossOrders, Lillie, Petrel, Hilda, Colress, Morty, Xerosic}:
+        log_rule_execution(f"  [IF EXECUTED] score_discard_option -> Key Supporter Discard Protection Penalty (-10.0)")
         return W.get("W_DISCARD_KEY_SUPPORTER", -10.0)
     if cid == Crustle and Dwebble in bench_and_active_ids:
+        log_rule_execution(f"  [IF EXECUTED] score_discard_option -> Crustle Evolution Discard Protection Penalty (-10.0)")
         return W.get("W_DISCARD_KEY_EVO", -10.0)
     if cid in {Ogerpon, Kangaskhan} and cid not in bench_and_active_ids:
         return W.get("W_DISCARD_KEY_EVO", -10.0)
@@ -401,18 +403,18 @@ def score_discard_option(cid, hand, bench_and_active_ids):
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
     # ── 1. DWEBBLE SEARCH PRIORITY (POKÉMON SEARCH - Buddy Poffin / Ultra Ball) ──
     if cid == Dwebble and dwebble_in_play < 2:
-        log_rule_execution(f"  [RULE APPLIED] Early Dwebble Search Priority: Dwebble (Card #344) assigned MAX Score 100,000.0!")
+        log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 1: Dwebble (Card #344) matched with dwebble_in_play={dwebble_in_play} (<2) -> MAX Score 100,000.0 assigned!")
         return 100000.0  # Absolute MAX priority for Dwebble!
 
     # ── 2. LILLIE SEARCH PRIORITY (POKÉGEAR 3.0 / SUPPORTER SEARCH) ──
     if cid == Lillie:
-        log_rule_execution(f"  [RULE APPLIED] Pokégear / Supporter Search: Lillie's Determination (Card #1227) assigned TOP Score 80,000.0!")
+        log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 2: Lillie (Card #1227) matched -> TOP Pokégear/Supporter Score 80,000.0 assigned!")
         return 80000.0   # Absolute MAX priority for Lillie!
 
     # ── 3. CRUSTLE EVOLUTION SEARCH ──
     if cid == Crustle:
         if Dwebble in bench_and_active_ids:
-            log_rule_execution(f"  [RULE APPLIED] Crustle Evolution Search Priority: Crustle assigned Score 50,000.0!")
+            log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 3: Crustle matched with benched Dwebble -> Score 50,000.0 assigned!")
             return 50000.0
         return -1000.0
 
@@ -420,6 +422,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
     if cid in SUPPORTERS_SET:
         if cid == BossOrders:
             return 100.0
+        log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 4: Fallback Supporter ({get_card_name(cid)}) matched -> Score 500.0 assigned")
         return 500.0
 
     # ── 5. OGERPON SEARCH LIMIT ──
@@ -427,7 +430,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
         if opp_has_ability or bench_and_active_ids.count(Ogerpon) < 1:
             return 20000.0
         if bench_and_active_ids.count(Ogerpon) >= 2:
-            log_rule_execution(f"  [RULE APPLIED] Ogerpon Search Limit HARD BANNED (-inf): Already 2 Ogerpon in play!")
+            log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 5: 3rd Ogerpon Search HARD BANNED (-inf)")
             return -float('inf')
         return -100.0
 
@@ -435,7 +438,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
     if cid == Kangaskhan:
         if not is_early_game:
             if bench_count < 2: return 1000.0
-            log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Search HARD BANNED (-inf)")
+            log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 6: Late-Game Kangaskhan Search HARD BANNED (-inf)")
             return -float('inf')
         return 2000.0
 
@@ -489,6 +492,7 @@ def agent(obs_dict: dict) -> list[int]:
         info = extract_board_info(obs_dict)
         context = select_data.get("context", "")
         context_str = str(context).upper()
+        raw_context_val = select_data.get("context")
 
         turn_num = info.get("turn", 1)
         my_prizes = info.get("my_prizes", 6)
@@ -525,9 +529,10 @@ def agent(obs_dict: dict) -> list[int]:
         has_setup_pieces = any(c in {Dwebble, Ogerpon, BuddyPuffin, UltraBall} for c in hand)
         must_attach_opening_energy = (turn_num <= 2 and not has_setup_pieces)
 
-        # Robust Detection of Deck Search / Card Selection Modal
+        # Robust Detection of Deck Search / Card Selection Modal across all integer & string contexts
         is_search_modal = (
             current.get("looking") is not None or
+            raw_context_val in {5, 7, 8, 12, 19} or
             any(kw in context_str for kw in ["SEARCH", "DECK", "LOOKING", "CHOOSE", "SELECT", "POFFIN", "FETCH", "FIND", "VIEW", "BALL"]) or
             select_data.get("reason") is not None
         )
@@ -566,10 +571,10 @@ def agent(obs_dict: dict) -> list[int]:
             if bid == Ogerpon and opp_has_ability: benched_wall_takes_zero = True
 
         active_name = get_card_name(my_active_id)
-        log_rule_execution(f"\n[Turn {turn_num} STEP] Active: {active_name} (HP: {my_hp}/{my_max_hp}, E: {my_energy}) | Bench: {bench_count} | Dwebble in Play: {dwebble_in_play} | Context: {context_str}")
+        log_rule_execution(f"\n[Turn {turn_num} DECISION STEP] Active: {active_name} (HP: {my_hp}/{my_max_hp}, E: {my_energy}) | Bench: {bench_count} | Dwebble in Play: {dwebble_in_play} | Context: {context_str} (Raw: {raw_context_val})")
 
         # Active Promotion Rank Function (Setup / Active Promotion Phase)
-        if ("SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str) and not is_search_modal:
+        if ("SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str or raw_context_val == 1) and not is_search_modal:
             best_idx = 0
             best_rank = -float('inf')
             for idx, o in enumerate(options):
@@ -595,7 +600,7 @@ def agent(obs_dict: dict) -> list[int]:
                     else:
                         r_score = -float('inf')
 
-                log_rule_execution(f"  [Active Promo Opt {idx}] {get_card_name(cid)} -> Rank Score: {r_score}")
+                log_rule_execution(f"  [IF EXECUTED] Active Promotion Branch -> Option {idx} ({get_card_name(cid)}) Rank Score: {r_score}")
 
                 if r_score > best_rank:
                     best_rank = r_score
@@ -618,22 +623,25 @@ def agent(obs_dict: dict) -> list[int]:
             cid = resolve_card_id(o, info, current, select_data)
             c_name = get_card_name(cid)
 
-            # ── DECK SEARCH / CARD SELECTION MODAL ──
+            # ── BRANCH 1: DISCARD / DECK SEARCH SELECTION MODAL ──
             if "DISCARD" in context_str:
+                log_rule_execution(f"  [IF EXECUTED] Branch 1A: Discard Context matched for Option {idx} ({c_name})")
                 score = score_discard_option(cid, hand, bench_and_active_ids)
             elif is_search_modal:
+                log_rule_execution(f"  [IF EXECUTED] Branch 1B: Deck Search Modal matched for Option {idx} ({c_name})")
                 score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game, dwebble_in_play, opp_has_ability, hand_size)
 
-            # ── RULE 1: POKÉGEAR 3.0 RESTRICTION ──
+            # ── BRANCH 2: POKÉGEAR 3.0 RESTRICTION ──
             elif cid == Pokégear:
                 if has_other_supporter_in_hand or supporter_played:
-                    log_rule_execution(f"  [RULE APPLIED] Pokégear 3.0 HARD BANNED (-inf): Supporter already in hand or played!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 2: Pokégear 3.0 HARD BANNED (-inf): Supporter already in hand/played!")
                     score = -float('inf')
                 else:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 2: Pokégear 3.0 Allowed -> Score 600.0")
                     score = 600.0 + w_trainer * 2.0
                     has_useful_pre_attack_action = True
 
-            # ── RULE 4: ULTRA BALL RESTRICTION ──
+            # ── BRANCH 3: ULTRA BALL RESTRICTION ──
             elif cid == UltraBall:
                 valid_ultraball = (
                     (dwebble_in_play < 2 and Dwebble not in hand) or
@@ -641,25 +649,27 @@ def agent(obs_dict: dict) -> list[int]:
                     (opp_has_ability and ogerpon_in_play < 2 and Ogerpon not in hand)
                 )
                 if not valid_ultraball:
-                    log_rule_execution(f"  [RULE APPLIED] Ultra Ball HARD BANNED (-inf): No target requirement met!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 3: Ultra Ball HARD BANNED (-inf): No target requirement met!")
                     score = -float('inf')
                 else:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 3: Ultra Ball Allowed -> Score 650.0")
                     score = 650.0 + w_trainer * 3.0
                     has_useful_pre_attack_action = True
 
-            # ── RULE 3 & SUPPORTER PLAYS ──
+            # ── BRANCH 4: LILLIE SUPPORTER SEQUENCING ──
             elif cid == Lillie:
                 if has_playable_before_lillie:
-                    log_rule_execution(f"  [RULE APPLIED] Lillie Supporter HARD BANNED (-inf): Playable cards still in hand!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 4: Lillie Supporter HARD BANNED (-inf): Playable cards still in hand!")
                     score = -float('inf')
                 else:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 4: Lillie Supporter Allowed -> Score 600.0")
                     score = 600.0 + w_trainer * 5.0
                     has_useful_pre_attack_action = True
 
-            # ── RULE 7: BOSS'S ORDERS STRICT CONDITIONS ──
+            # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS ──
             elif cid == BossOrders:
                 if my_energy < 3 or my_dmg <= 0:
-                    log_rule_execution(f"  [RULE APPLIED] Boss's Orders HARD BANNED (-inf): Active has insufficient energy (< 3) to attack!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): Active energy < 3 to attack!")
                     score = -float('inf')
                 else:
                     valid_boss_target = False
@@ -677,16 +687,17 @@ def agent(obs_dict: dict) -> list[int]:
                                 break
 
                     if not valid_boss_target:
-                        log_rule_execution(f"  [RULE APPLIED] Boss's Orders HARD BANNED (-inf): No benched target meets KO + Prize/Energy condition!")
+                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): No target meets KO + Prize/Energy condition!")
                         score = -float('inf')
                     else:
+                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score 650.0")
                         score = 650.0 + w_trainer * 5.0
                         has_useful_pre_attack_action = True
 
-            # ── RULE 2 & 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
+            # ── BRANCH 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
                 if cid == Ogerpon and not opp_has_ability and ogerpon_in_play >= 2:
-                    log_rule_execution(f"  [RULE APPLIED] 3rd Ogerpon Bench Deployment HARD BANNED (-inf): Opponent active has no ability!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 6: 3rd Ogerpon Bench Deployment HARD BANNED (-inf): Opponent active has no ability!")
                     score = -float('inf')
                 elif cid == Kangaskhan and not is_early_game:
                     if bench_count < 2:
@@ -694,12 +705,12 @@ def agent(obs_dict: dict) -> list[int]:
                         score = 800.0 + subscore
                         has_useful_pre_attack_action = True
                     else:
-                        log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Bench Deployment HARD BANNED (-inf)")
+                        log_rule_execution(f"  [IF EXECUTED] Branch 6: Late-Game Kangaskhan Bench Deployment HARD BANNED (-inf)")
                         score = -float('inf')
                 elif cid == Dwebble and dwebble_in_play < 2:
                     subscore = w_pokemon * 5.0 + 50.0
                     score = 900.0 + subscore
-                    log_rule_execution(f"  [RULE APPLIED] Early Dwebble Bench Play Priority: Dwebble deployed with Score {score}!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 6: Early Dwebble Bench Play Priority Matched -> Score {score}!")
                     has_useful_pre_attack_action = True
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
                     subscore = w_pokemon * 5.0 + 10.0
@@ -710,19 +721,21 @@ def agent(obs_dict: dict) -> list[int]:
                     score = 800.0 + subscore
                     has_useful_pre_attack_action = True
 
-            # ── TIER 7: EVOLUTION (Evolve Dwebble to Crustle) ──
+            # ── BRANCH 7: EVOLUTION (Evolve Dwebble to Crustle) ──
             elif (o_type in {6, 7, 9} or "EVOLVE" in ot_str) and (cid == Crustle):
                 subscore = w_evolve * 5.0 + (3.0 if optimal_lead == Crustle else 0.0)
                 score = 700.0 + subscore
+                log_rule_execution(f"  [IF EXECUTED] Branch 7: Crustle Evolution Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── TIER 6: OTHER DRAW SUPPORTERS ──
+            # ── BRANCH 8: OTHER DRAW SUPPORTERS / ITEMS ──
             elif o_type in {7, 3} and (cid in SUPPORTERS_SET or cid in {BuddyPuffin, UltraBall, Pokégear, SwitchCard, HerosCape, CommunityCenter, TRFactory, JumboIceCream}):
                 subscore = w_trainer * 5.0 + (3.0 if hand_size <= 3 else 1.0)
                 score = 600.0 + subscore
+                log_rule_execution(f"  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── TIER 5: FOCUSED ENERGY ATTACHMENT ──
+            # ── BRANCH 9: FOCUSED ENERGY ATTACHMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 tier_base = W.get("W_TIER_ENERGY", 500.0)
                 in_play_area = o.get("inPlayArea")
@@ -740,18 +753,19 @@ def agent(obs_dict: dict) -> list[int]:
                         target_energy = len(b_energies)
 
                 if target_cid == Kangaskhan and not is_early_game:
-                    log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
                     score = -float('inf')
                 elif target_energy >= 3:
-                    log_rule_execution(f"  [RULE APPLIED] Energy Hoarding HARD BANNED (-inf): Target already has {target_energy} energies (>= 3)!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Hoarding HARD BANNED (-inf): Target already has {target_energy} energies (>= 3)!")
                     score = -float('inf')
                 elif is_active_target:
                     need_norm = (3 - target_energy) / 3.0
                     subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
                     if must_attach_opening_energy:
-                        log_rule_execution(f"  [RULE APPLIED] Opening Energy Attachment Exception Triggered: Score 950.0!")
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score 950.0!")
                         score = 950.0 + subscore
                     else:
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score {tier_base + subscore}")
                         score = tier_base + subscore
                 else:
                     if my_energy < 3:
@@ -762,7 +776,7 @@ def agent(obs_dict: dict) -> list[int]:
                         score = tier_base + subscore
                 has_useful_pre_attack_action = True
 
-            # ── TIER 4: ATTACKING ──
+            # ── BRANCH 10: ATTACKING ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
                 tier_base = W.get("W_TIER_ATTACK", 400.0)
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
@@ -776,18 +790,20 @@ def agent(obs_dict: dict) -> list[int]:
                     if len(opp_bench) == 0:
                         subscore += W.get("W_BENCH_OUT_BONUS", 10.0)
                     score = tier_base + subscore
+                log_rule_execution(f"  [IF EXECUTED] Branch 10: Attack Option Matched -> Score {score}")
 
-            # ── TIER 3: STADIUMS, HEALING & TOOLS ──
+            # ── BRANCH 11: STADIUMS, HEALING & TOOLS ──
             elif o_type in {7, 10} or cid in {CommunityCenter, JumboIceCream, TRFactory, HerosCape}:
                 tier_base = W.get("W_TIER_TOOL_HEAL", 300.0)
                 subscore = w_tool * 5.0
                 score = tier_base + subscore
+                log_rule_execution(f"  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── RULE 5: RETREAT GUARD & WALL SAFETY ──
+            # ── BRANCH 12: RETREAT GUARD & WALL SAFETY ──
             elif o_type in {12, 8} or "RETREAT" in ot_str:
                 if active_takes_zero_damage:
-                    log_rule_execution(f"  [RULE APPLIED] Retreat Guard HARD BANNED (-inf): Active is an immune wall!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat Guard HARD BANNED (-inf): Active is an immune wall!")
                     score = -float('inf')
                 else:
                     is_special_condition = any([
@@ -800,28 +816,30 @@ def agent(obs_dict: dict) -> list[int]:
                     if benched_wall_takes_zero or hp_pct < 0.30 or is_special_condition:
                         subscore = w_retreat * 5.0 + (1.0 - hp_pct) * 3.0
                         score = 200.0 + subscore
+                        log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat Pivot Matched -> Score {score}")
                     else:
-                        log_rule_execution(f"  [RULE APPLIED] Retreat Guard HARD BANNED (-inf): No benched wall ready & active not in danger!")
+                        log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat Guard HARD BANNED (-inf): Active takes damage but no benched wall ready!")
                         score = -float('inf')
 
-            # ── TIER 1: END TURN ──
+            # ── BRANCH 13: END TURN ──
             elif o_type in {14} or "END" in ot_str:
                 if has_useful_pre_attack_action:
                     score = -50.0
                 else:
                     score = 0.0
+                log_rule_execution(f"  [IF EXECUTED] Branch 13: End Turn Matched -> Score {score}")
 
             else:
                 score = W.get("W_TIER_NEUTRAL", 100.0)
+                log_rule_execution(f"  [IF EXECUTED] Branch 14: Neutral Fallback Matched -> Score {score}")
 
-            log_rule_execution(f"  [Option {idx}] Type={o_type} | {c_name} -> Evaluated Score: {score}")
             scored_options.append((score, idx))
 
         scored_options.sort(key=lambda x: x[0], reverse=True)
         best_score, best_idx = scored_options[0]
         chosen_cid = resolve_card_id(options[best_idx], info, current, select_data)
         
-        log_rule_execution(f"  => EXECUTION CHOICE: Option {best_idx} ({get_card_name(chosen_cid)}) selected with Highest Score: {best_score}\n")
+        log_rule_execution(f"  => FINAL EXECUTION SELECTION: Option {best_idx} ({get_card_name(chosen_cid)}) with Highest Score: {best_score}\n")
 
         desc_indices = [i for _, i in scored_options]
         return sanitize_action(desc_indices, select_data)
