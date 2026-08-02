@@ -835,11 +835,11 @@ def agent(obs_dict: dict) -> list[int]:
                     score = 800.0 + subscore
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 7: EVOLUTION (Evolve Dwebble to Crustle) ──
-            elif (o_type in {6, 7, 9} or "EVOLVE" in ot_str) and (cid == Crustle):
+            # ── BRANCH 7: EVOLUTION (Evolve Dwebble to Crustle — TOP AGGRESSION & WALL PRIORITY!) ──
+            elif (o_type in {4, 6, 7, 9} or "EVOLVE" in ot_str) and (cid == Crustle):
                 subscore = w_evolve * 5.0 + (3.0 if optimal_lead == Crustle else 0.0)
-                score = 700.0 + subscore
-                log_rule_execution(f"  [IF EXECUTED] Branch 7: Crustle Evolution Matched -> Score {score}")
+                score = 9800.0 + subscore
+                log_rule_execution(f"  [IF EXECUTED] Branch 7: Crustle Evolution Matched -> TOP AGGRESSION SCORE {score}!")
                 has_useful_pre_attack_action = True
 
             # ── BRANCH 8: OTHER DRAW SUPPORTERS / ITEMS ──
@@ -851,7 +851,7 @@ def agent(obs_dict: dict) -> list[int]:
 
             # ── BRANCH 9: FOCUSED ENERGY ATTACHMENT & STRICT ENERGY MANAGEMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
-                tier_base = W.get("W_TIER_ENERGY", 500.0)
+                tier_base = 9500.0  # High priority to power up active for attacking!
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
                 is_active_target = (in_play_area in {3, 4, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
@@ -867,7 +867,6 @@ def agent(obs_dict: dict) -> list[int]:
                         target_energy = len(b_energies)
 
                 # Determine highest attack energy requirement for the target Pokemon
-                # Crustle (345), Dwebble (344 - evolves to Crustle), Ogerpon (117), Kangaskhan (756) all require max 3 energy
                 max_needed_energy = 3
                 if target_cid == Dwebble or target_cid == Crustle:
                     max_needed_energy = 3
@@ -877,7 +876,6 @@ def agent(obs_dict: dict) -> list[int]:
                     max_needed_energy = 3
 
                 # Energy Type Specificity Bonus:
-                # cid is the attached energy card ID (GrassEnergy #1, MistEnergy #11, SpikyEnergy #14, RockEnergy #20)
                 energy_match_bonus = 0.0
                 if target_cid == Ogerpon:
                     if cid == RockEnergy:
@@ -909,23 +907,23 @@ def agent(obs_dict: dict) -> list[int]:
                     need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
                     subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0) + energy_match_bonus
                     if must_attach_opening_energy:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score {950.0 + subscore}!")
-                        score = 950.0 + subscore
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score {9700.0 + subscore}!")
+                        score = 9700.0 + subscore
                     else:
                         log_rule_execution(f"  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score {tier_base + subscore}")
                         score = tier_base + subscore
                 else:
                     if my_energy < max_needed_energy:
-                        score = 100.0 + energy_match_bonus
+                        score = 800.0 + energy_match_bonus
                     else:
                         need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
                         subscore = w_energy * 2.5 + need_norm * 1.5 + energy_match_bonus
-                        score = tier_base + subscore
+                        score = 500.0 + subscore
                 has_useful_pre_attack_action = True
 
-            # ── BRANCH 10: ATTACKING ──
+            # ── BRANCH 10: ATTACKING (GOAL OF THE GAME: DEAL DAMAGE & TAKE PRIZES!) ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
-                tier_base = W.get("W_TIER_ATTACK", 400.0)
+                tier_base = 99999.0  # TOP PRIORITY: Attack whenever energy condition is met!
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
                     score = -float('inf')
@@ -933,11 +931,11 @@ def agent(obs_dict: dict) -> list[int]:
                     prize_norm = (6 - my_prizes) / 6.0
                     subscore = w_attack * 5.0 + w_prize * prize_norm * 3.0
                     if my_dmg >= opp_hp and opp_hp > 0:
-                        subscore += W.get("W_LETHAL_KO_BONUS", 5.0)
+                        subscore += W.get("W_LETHAL_KO_BONUS", 500.0)
                     if len(opp_bench) == 0:
-                        subscore += W.get("W_BENCH_OUT_BONUS", 10.0)
+                        subscore += W.get("W_BENCH_OUT_BONUS", 1000.0)
                     score = tier_base + subscore
-                log_rule_execution(f"  [IF EXECUTED] Branch 10: Attack Option Matched -> Score {score}")
+                log_rule_execution(f"  [IF EXECUTED] Branch 10: Attack Option Matched -> TOP PRIZE-CARD SCORE {score}!")
 
             # ── BRANCH 11: HERO'S CAPE & STADIUMS / HEALING ──
             elif o_type in {7, 10} or cid in {HerosCape, CommunityCenter, JumboIceCream, TRFactory}:
@@ -951,26 +949,10 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── BRANCH 12: RETREAT GUARD & WALL SAFETY ──
-            elif o_type in {12, 8} or "RETREAT" in ot_str:
-                if active_takes_zero_damage:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat Guard HARD BANNED (-inf): Active is an immune wall!")
-                    score = -float('inf')
-                else:
-                    is_special_condition = any([
-                        _get_val(my_active, "poisoned"),
-                        _get_val(my_active, "burned"),
-                        _get_val(my_active, "asleep"),
-                        _get_val(my_active, "confused"),
-                        _get_val(my_active, "paralyzed")
-                    ])
-                    if benched_wall_takes_zero or hp_pct < 0.30 or is_special_condition:
-                        subscore = w_retreat * 5.0 + (1.0 - hp_pct) * 3.0
-                        score = 200.0 + subscore
-                        log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat Pivot Matched -> Score {score}")
-                    else:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat Guard HARD BANNED (-inf): Active takes damage but no benched wall ready!")
-                        score = -float('inf')
+            # ── BRANCH 12: STRICT NO RETREAT RULE (RETREAT IS HARD BANNED -inf TO PREVENT WASTING ENERGIES!) ──
+            elif o_type == 12 or "RETREAT" in ot_str:
+                log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat HARD BANNED (-inf): User Rule — Never retreat to preserve energies!")
+                score = -float('inf')
 
             # ── BRANCH 13: END TURN ──
             elif o_type in {14} or "END" in ot_str:
