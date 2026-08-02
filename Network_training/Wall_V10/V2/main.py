@@ -822,6 +822,7 @@ def agent(obs_dict: dict) -> list[int]:
             # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS (DIRECTIVE A, B, C & OGERPON RULE) ──
             elif cid == BossOrders:
                 valid_boss_target = False
+                is_cond_A_ko = False
                 target_reason = ""
                 opp_active_hp = info.get("opp_active_hp", 999)
                 opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
@@ -860,7 +861,8 @@ def agent(obs_dict: dict) -> list[int]:
 
                     if cond_A:
                         valid_boss_target = True
-                        target_reason = f"Condition A (Bench KO on {get_card_name(b_id)} while active un-KOable)"
+                        is_cond_A_ko = True
+                        target_reason = f"Condition A EASY PRIZE CARD KO on {get_card_name(b_id)}!"
                         break
                     elif cond_B:
                         valid_boss_target = True
@@ -875,8 +877,12 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): Strict conditions (Ogerpon Ability / Cond A, B, C) not met!")
                     score = -float('inf')
                 else:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score 700.0 [{target_reason}]")
-                    score = 700.0 + w_trainer * 5.0
+                    if is_cond_A_ko:
+                        score = 99000.0  # TOP PRIORITY: Pull weak benched Pokemon to active for an immediate Prize Card KO!
+                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Condition A Matched -> TOP PRIZE CARD KO SCORE {score} [{target_reason}]!")
+                    else:
+                        score = 9000.0 + w_trainer * 5.0
+                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score {score} [{target_reason}]")
                     has_useful_pre_attack_action = True
 
             # ── BRANCH 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
