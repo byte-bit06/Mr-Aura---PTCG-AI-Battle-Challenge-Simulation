@@ -952,10 +952,43 @@ def agent(obs_dict: dict) -> list[int]:
                 log_rule_execution(f"  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── BRANCH 8B: SWITCH CARD HARD BAN (ENFORCING NEVER SWITCH/RETREAT RULE) ──
+            # ── BRANCH 8B: SWITCH CARD (STRICT USER DIRECTIVE CONDITIONS 1, 2, 3) ──
             elif cid == SwitchCard:
-                log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): User Rule — Never switch or retreat!")
-                score = -float('inf')
+                active_is_crustle_wall = (my_active_id == Crustle and opp_is_ex)
+                active_is_ogerpon_wall = (my_active_id == Ogerpon and opp_has_ability)
+                active_is_immune_wall = (active_is_crustle_wall or active_is_ogerpon_wall)
+
+                benched_has_attacker = False
+                benched_crustle_ready = False
+                benched_ogerpon_ready = False
+
+                for b in my_bench:
+                    if not isinstance(b, dict): continue
+                    b_id = _get_val(b, "id")
+                    if has_enough_energy_for_highest_attack(b):
+                        benched_has_attacker = True
+                    if b_id == Crustle:
+                        benched_crustle_ready = True
+                    if b_id == Ogerpon:
+                        benched_ogerpon_ready = True
+
+                # Condition 1: Active has no energy to attack, benched Pokemon has enough energy, AND active is NOT an immune wall!
+                cond_1 = (not my_active_has_enough_energy and benched_has_attacker and not active_is_immune_wall)
+
+                # Condition 2: Opponent is EX and we have a Crustle on bench (and active is not Crustle)
+                cond_2 = (opp_is_ex and my_active_id != Crustle and benched_crustle_ready)
+
+                # Condition 3: Opponent is Non-EX with Ability and we have an Ogerpon on bench (and active is not Ogerpon)
+                cond_3 = (opp_has_ability and not opp_is_ex and my_active_id != Ogerpon and benched_ogerpon_ready)
+
+                if cond_1 or cond_2 or cond_3:
+                    reason_str = "Cond 1 (Energy Attacker Swap)" if cond_1 else ("Cond 2 (Crustle EX Wall Pivot)" if cond_2 else "Cond 3 (Ogerpon Ability Wall Pivot)")
+                    score = 9000.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard Allowed -> Score 9000.0 [{reason_str}]!")
+                    has_useful_pre_attack_action = True
+                else:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): None of Conditions 1, 2, or 3 met!")
+                    score = -float('inf')
 
             # ── BALANCED BRANCH 9: ENERGY ATTACHMENT (FUELED BUT CONTROLLED) ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
