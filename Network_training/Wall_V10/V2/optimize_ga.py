@@ -2,8 +2,8 @@
 optimize_ga.py — 100,000 Game Genetic Algorithm Optimizer for Wall_V10 V2
 ==========================================================================
 Optimizes weight parameters in optimized_weights.json against meta gauntlet.
-Continuously saves best weights to optimized_weights.json, rebuilds submission.tar.gz,
-and saves timestamped checkpoints to checkpoints/ directory.
+Continuously saves best weights to optimized_weights.json and timestamped checkpoints
+to checkpoints/ directory. Final submission.tar.gz is built ONCE at the end of optimization.
 
 100,000 Games Calculation:
   - 7 Opponents x 2 Matches (P1 & P2) = 14 Games per Individual
@@ -249,7 +249,7 @@ def crossover(parent1, parent2):
     return child
 
 def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t, gen, total_games_so_far):
-    """Continuously save best genome to optimized_weights.json, checkpoints, and rebuild submission.tar.gz."""
+    """Continuously save best genome to optimized_weights.json and timestamped checkpoints."""
     timestamp = time.strftime('%Y%m%d_%H%M%S')
     best_genome["VERSION"] = f"V2_GA_Gen{gen}_Games{total_games_so_far}_{timestamp}"
     best_genome["generation_stats"] = {
@@ -274,9 +274,10 @@ def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t
     with open(chk_path, 'w', encoding='utf-8') as f:
         json.dump(best_genome, f, indent=2)
 
-    log_ga_history(f"  [SAVED CHECKSUM] Updated {json_path} & Checkpoint {chk_path} (Gen {gen} | Games {total_games_so_far:,})")
+    log_ga_history(f"  [SAVED WEIGHTS] Updated {json_path} & Checkpoint {chk_path} (Gen {gen} | Games {total_games_so_far:,})")
 
-    # 3. Rebuild submission archive
+def build_final_submission_tarball():
+    """Build submission.tar.gz once at the end of optimization."""
     sub_path = os.path.join(_this_dir, "submission.tar.gz")
     cg_dir = os.path.join(_network_training_dir, "cg")
     v_files = ['main.py', 'deck.csv', '__init__.py', 'optimized_weights.json']
@@ -291,9 +292,9 @@ def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t
                     for file in files:
                         fp = os.path.join(root, file)
                         tar.add(fp, arcname=fp.replace(os.sep, '/'))
-        log_ga_history(f"  [SUBMISSION ARCHIVE] Rebuilt {sub_path} ({os.path.getsize(sub_path):,} bytes)")
+        log_ga_history(f"\n[FINAL SUBMISSION ARCHIVE] Successfully built {sub_path} ({os.path.getsize(sub_path):,} bytes)")
     except Exception as e:
-        log_ga_history(f"  [Warning] Could not rebuild submission tar.gz: {e}")
+        log_ga_history(f"\n[Warning] Could not rebuild submission tar.gz: {e}")
 
 def run_ga():
     env = make('cabt', debug=False)
@@ -351,7 +352,7 @@ def run_ga():
 
         log_ga_history(f"--> Gen {gen} Best -> Fit: {best_gen_fit:+.1f} | WinRate: {best_gen_wr:.1f}% | Prizes (Us: {best_gen_mypz:.2f}, Opp: {best_gen_opppz:.2f}) | Damage (Given: {best_gen_dmgg:.0f}, Taken: {best_gen_dmgt:.0f})")
 
-        # CONTINUOUS SAVING: Save immediately whenever a new best fitness is reached
+        # CONTINUOUS SAVING: Save weights immediately whenever a new best fitness is reached
         if best_gen_fit > best_overall_fitness:
             best_overall_fitness = best_gen_fit
             best_overall_genome = copy.deepcopy(best_gen_genome)
@@ -373,6 +374,9 @@ def run_ga():
 
         population = new_population
         log_ga_history("")
+
+    # Build final submission tarball ONLY at the end of optimization!
+    build_final_submission_tarball()
 
     log_ga_history("=== 100,000 Game GA Optimization Completed Successfully ===")
     log_ga_history(f"Best Overall Fitness: {best_overall_fitness:+.2f}")
