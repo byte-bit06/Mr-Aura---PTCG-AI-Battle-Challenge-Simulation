@@ -876,6 +876,29 @@ def agent(obs_dict: dict) -> list[int]:
                 elif target_cid == Kangaskhan:
                     max_needed_energy = 3
 
+                # Energy Type Specificity Bonus:
+                # cid is the attached energy card ID (GrassEnergy #1, MistEnergy #11, SpikyEnergy #14, RockEnergy #20)
+                energy_match_bonus = 0.0
+                if target_cid == Ogerpon:
+                    if cid == RockEnergy:
+                        energy_match_bonus += 500.0
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Rock Fighting Energy (#20) matched for Ogerpon ex -> +500.0 Priority Bonus!")
+                    elif cid in {MistEnergy, SpikyEnergy}:
+                        energy_match_bonus += 100.0
+                elif target_cid in {Dwebble, Crustle}:
+                    if cid == GrassEnergy:
+                        energy_match_bonus += 300.0
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Basic Grass Energy (#1) matched for Dwebble/Crustle -> +300.0 Priority Bonus!")
+                    elif cid == MistEnergy:
+                        energy_match_bonus += 250.0
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Special Mist Energy (#11) matched for Crustle Wall -> +250.0 Priority Bonus!")
+                    elif cid == SpikyEnergy:
+                        energy_match_bonus += 200.0
+                elif target_cid == Kangaskhan:
+                    if cid in {MistEnergy, SpikyEnergy}:
+                        energy_match_bonus += 200.0
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Special Protection Energy matched for Kangaskhan ex -> +200.0 Priority Bonus!")
+
                 if target_cid == Kangaskhan and not is_early_game:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
                     score = -float('inf')
@@ -884,19 +907,19 @@ def agent(obs_dict: dict) -> list[int]:
                     score = -float('inf')
                 elif is_active_target:
                     need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
-                    subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
+                    subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0) + energy_match_bonus
                     if must_attach_opening_energy:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score 950.0!")
+                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score {950.0 + subscore}!")
                         score = 950.0 + subscore
                     else:
                         log_rule_execution(f"  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score {tier_base + subscore}")
                         score = tier_base + subscore
                 else:
                     if my_energy < max_needed_energy:
-                        score = 100.0
+                        score = 100.0 + energy_match_bonus
                     else:
                         need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
-                        subscore = w_energy * 2.5 + need_norm * 1.5
+                        subscore = w_energy * 2.5 + need_norm * 1.5 + energy_match_bonus
                         score = tier_base + subscore
                 has_useful_pre_attack_action = True
 
