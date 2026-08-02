@@ -131,10 +131,132 @@ my_deck = load_deck()
 _load_card_database()
 
 try:
-    from cg.api import all_card_data
+    from cg.api import all_card_data, search_begin, search_step, search_end, search_release, SelectContext, OptionType, to_observation_class
     _CG_CARD_TABLE = {c.cardId: c for c in all_card_data()}
+    _SEARCH_OK = True
 except Exception:
     _CG_CARD_TABLE = {}
+    _SEARCH_OK = False
+
+def evaluate_simulated_state(obs) -> float:
+    """
+    Evaluates a future simulated state (after 1-turn rollout)
+    for Wall_V10: Prize difference, Wall Immunities, Energy build, and Opponent Counter-Threat.
+    """
+    if obs is None or getattr(obs, "current", None) is None: return -float('inf')
+    st = obs.current
+    if getattr(st, "result", None) is not None and st.result != -1:
+        if st.result == st.yourIndex:
+            return 100000.0  # WIN!
+        else:
+            return -100000.0 # LOSS!
+            
+    my_idx = st.yourIndex
+    op_idx = 1 - my_idx
+    me = st.players[my_idx]
+    op = st.players[op_idx]
+    
+    val = 0.0
+    
+    # 1. Prize Differential
+    val += (6 - len(me.prize)) * 2000.0
+    val -= (6 - len(op.prize)) * 2500.0
+
+    # 2. Our Active Wall & Energy
+    my_active = me.active[0] if me.active else None
+    if my_active:
+        val += my_active.hp * 2.0
+        val += len(my_active.energies) * 300.0
+        
+        op_active = op.active[0] if op.active else None
+        opp_is_ex = is_card_ex(op_active.id) if op_active else False
+        opp_has_ability = card_has_ability(op_active.id) if op_active else False
+        
+        # Wall Immunity bonus
+        if my_active.id == Crustle and opp_is_ex:
+            val += 5000.0
+        elif my_active.id == Ogerpon and opp_has_ability:
+            val += 5000.0
+
+    # 3. Benched Pokemon & Setup
+    for p in me.bench:
+        if p is None: continue
+        val += len(p.energies) * 200.0
+        if p.id == Crustle: val += 800.0
+        elif p.id == Dwebble: val += 400.0
+
+    # 4. Opponent Threat Assessment
+    op_active = op.active[0] if op.active else None
+    if op_active:
+        op_dmg = get_card_attack_damage(op_active.id)
+        if my_active and op_dmg >= my_active.hp:
+            if not (my_active.id == Crustle and opp_is_ex) and not (my_active.id == Ogerpon and opp_has_ability):
+                val -= 3000.0
+
+    # 5. Hand size preservation
+    val += len(me.hand) * 15.0
+
+    return val
+
+def rollout_simulated_turn(sid, cur_obs, your_index):
+    steps = 0
+    while steps < 15:
+        if cur_obs.current.result is not None and cur_obs.current.result != -1: break
+        if cur_obs.current.yourIndex != your_index: break
+        if cur_obs.select is None: break
+        
+        obs_dict = cur_obs.to_dict() if hasattr(cur_obs, "to_dict") else {}
+        sel = agent(obs_dict)
+        if not sel: break
+        
+        if cur_obs.select.context == SelectContext.MAIN and cur_obs.select.option[sel[0]].type == OptionType.END:
+            search_step(sid, sel)
+            break
+            
+        ar = search_step(sid, sel)
+        if getattr(ar, "error", 0) != 0 or ar.state is None: break
+        cur_obs, sid = ar.state.observation, ar.state.searchId
+        steps += 1
+    return cur_obs
+
+def run_mcts_lookahead_search(obs_dict: dict, heuristic_candidates: list[int]) -> list[int]:
+    if not _SEARCH_OK or not heuristic_candidates or len(heuristic_candidates) <= 1:
+        return heuristic_candidates
+        
+    try:
+        obs = to_observation_class(obs_dict)
+        if obs is None or obs.select is None or obs.select.context != SelectContext.MAIN:
+            return heuristic_candidates
+            
+        top_candidates = heuristic_candidates[:4]
+        best_val = -float('inf')
+        best_action = top_candidates[0]
+        
+        for cand in top_candidates:
+            try:
+                sbi = search_begin(obs, your_deck=my_deck)
+                if getattr(sbi, "error", 0) != 0 or sbi.state is None: continue
+                sid = sbi.state.searchId
+                ar = search_step(sid, [cand])
+                if getattr(ar, "error", 0) != 0 or ar.state is None: continue
+                
+                final_obs = rollout_simulated_turn(ar.state.searchId, ar.state.observation, obs.current.yourIndex)
+                score_val = evaluate_simulated_state(final_obs)
+                
+                if score_val > best_val:
+                    best_val = score_val
+                    best_action = cand
+            except Exception:
+                pass
+                
+        if best_action != top_candidates[0]:
+            log_rule_execution(f"  [MCTS LOOKAHEAD] Candidate {best_action} selected over {top_candidates[0]} with Rollout Score {best_val}!")
+            return [best_action] + [c for c in heuristic_candidates if c != best_action]
+            
+    except Exception as e:
+        log_rule_execution(f"  [MCTS LOOKAHEAD EXCEPTION] {e}")
+        
+    return heuristic_candidates
 
 def is_card_ex(cid):
     if not cid: return False
@@ -993,13 +1115,14 @@ def agent(obs_dict: dict) -> list[int]:
                     score = 50.0 + (10.0 if is_card_ex(cid) else 0.0)
                     log_rule_execution(f"  [IF EXECUTED] Branch 1C: Default Opponent Bench Target Selected ({c_name}) -> Score {score}")
 
-            # ── BRANCH 2: POKÉGEAR 3.0 RESTRICTION ──
+            # ── BRANCH 2: POKÉGEAR 3.0 (EMERGENCY DRAW PRIORITY WHEN HAND <= 2) ──
             elif cid == Pokégear:
-                if has_other_supporter_in_hand or supporter_played:
+                if has_other_supporter_in_hand or supporter_already_played:
                     log_rule_execution(f"  [IF EXECUTED] Branch 2: Pokégear 3.0 HARD BANNED (-inf): Supporter already in hand/played!")
                     score = -float('inf')
                 else:
-                    score = 25.0 + w_trainer * 0.2
+                    # Opponent Technique: Aggressive Emergency Draw when hand is low (<= 2 cards)
+                    score = 98.0 if hand_size <= 2 else (86.8 + w_trainer * 0.2)
                     log_rule_execution(f"  [IF EXECUTED] Branch 2: Pokégear 3.0 Allowed -> Score {score}")
                     has_useful_pre_attack_action = True
 
@@ -1014,17 +1137,21 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 3: Ultra Ball HARD BANNED (-inf): No target requirement met!")
                     score = -float('inf')
                 else:
-                    score = 28.0 + w_trainer * 0.3
+                    score = 94.0 if dwebble_in_play < 2 else (86.5 + w_trainer * 0.3)
                     log_rule_execution(f"  [IF EXECUTED] Branch 3: Ultra Ball Allowed -> Score {score}")
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 4: LILLIE SUPPORTER SEQUENCING ──
+            # ── BRANCH 4: LILLIE SUPPORTER (EMERGENCY HAND REFILL WHEN HAND <= 2) ──
             elif cid == Lillie:
-                if has_playable_before_lillie:
+                if supporter_already_played:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 4: Lillie Supporter HARD BANNED (-inf): Supporter already played!")
+                    score = -float('inf')
+                elif has_playable_before_lillie and hand_size > 2:
                     log_rule_execution(f"  [IF EXECUTED] Branch 4: Lillie Supporter HARD BANNED (-inf): Playable cards still in hand!")
                     score = -float('inf')
                 else:
-                    score = 25.0 + w_trainer * 0.5
+                    # Opponent Technique: Emergency Hand Refill Score 98.0 when hand <= 2!
+                    score = 98.0 if hand_size <= 2 else (86.0 + w_trainer * 0.5)
                     log_rule_execution(f"  [IF EXECUTED] Branch 4: Lillie Supporter Allowed -> Score {score}")
                     has_useful_pre_attack_action = True
 
@@ -1120,8 +1247,8 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: EMERGENCY BENCH DEPLOYMENT MATCHED -> Score 100.0 (Prevents Instant Loss)!")
                     has_useful_pre_attack_action = True
                 elif cid == Dwebble and dwebble_in_play < 2:
-                    subscore = w_pokemon * 0.1 + 1.0
-                    score = 87.0 + subscore
+                    subscore = w_pokemon * 0.1
+                    score = 94.0 + subscore  # Opponent Technique: 2-Dwebble Bench Flood Priority
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: Early Dwebble Bench Play Priority Matched -> Score {score}!")
                     has_useful_pre_attack_action = True
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
@@ -1268,6 +1395,8 @@ def agent(obs_dict: dict) -> list[int]:
         log_rule_execution(f"  => FINAL EXECUTION SELECTION: Option {best_idx} ({get_card_name(chosen_cid)}) with Highest Score: {best_score}\n")
 
         desc_indices = [i for _, i in scored_options]
+        if _SEARCH_OK and len(desc_indices) > 1:
+            desc_indices = run_mcts_lookahead_search(obs_dict, desc_indices)
         return sanitize_action(desc_indices, select_data, obs_dict)
     except Exception as e:
         log_rule_execution(f"  [EXCEPTION] {e}")
