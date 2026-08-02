@@ -138,10 +138,38 @@ except Exception:
     _CG_CARD_TABLE = {}
     _SEARCH_OK = False
 
+def get_opponent_max_threat(op_player, opp_is_ex=False, opp_has_ability=False) -> int:
+    """
+    Safely calculates the maximum counter-damage threat the opponent can deal next turn
+    assuming +1 energy attachment on their active or benched attackers.
+    """
+    if op_player is None: return 0
+    max_dmg = 0
+    
+    # Check Active and Bench attackers safely
+    active_pkmn = op_player.active[0] if (getattr(op_player, "active", None) and len(op_player.active) > 0) else None
+    bench_list = list(getattr(op_player, "bench", [])) if getattr(op_player, "bench", None) else []
+    all_opp_pkmn = ([active_pkmn] if active_pkmn else []) + bench_list
+
+    for p in all_opp_pkmn:
+        if p is None: continue
+        p_id = getattr(p, "id", None)
+        if not p_id: continue
+        
+        # Calculate base move damage from card database
+        base_dmg = get_card_attack_damage(p_id)
+        if base_dmg > max_dmg:
+            max_dmg = base_dmg
+            
+    return max_dmg
+
 def evaluate_simulated_state(obs) -> float:
     """
-    Evaluates a future simulated state (after 1-turn rollout)
-    for Wall_V10: Prize difference, Wall Immunities, Energy build, and Opponent Counter-Threat.
+    Evaluates a future simulated state (after 1-turn rollout) across 4 core dimensions:
+    1. Wall Stability & Damage Threats (-3000.0 penalty if exposed to KO, +5000.0 if immune wall)
+    2. Prize Differential (+2000.0 per prize taken, -2500.0 per prize conceded)
+    3. Resource & Engine Health (+500.0 for hand > 3, -1000.0 if hand <= 2, +300.0 per active energy)
+    4. Setup Progression (+800.0 for Crustle, +500.0 for Dwebble backup)
     """
     if obs is None or getattr(obs, "current", None) is None: return -float('inf')
     st = obs.current
@@ -151,59 +179,88 @@ def evaluate_simulated_state(obs) -> float:
         else:
             return -100000.0 # LOSS!
             
-    my_idx = st.yourIndex
+    my_idx = getattr(st, "yourIndex", 0)
     op_idx = 1 - my_idx
-    me = st.players[my_idx]
-    op = st.players[op_idx]
+    players = getattr(st, "players", [])
+    if not players or len(players) <= max(my_idx, op_idx):
+        return 0.0
+
+    me = players[my_idx]
+    op = players[op_idx]
     
     val = 0.0
     
-    # 1. Prize Differential
-    val += (6 - len(me.prize)) * 2000.0
-    val -= (6 - len(op.prize)) * 2500.0
+    # ── 1. Prize Differential ──
+    me_prizes = len(getattr(me, "prize", []))
+    op_prizes = len(getattr(op, "prize", []))
+    val += (6 - me_prizes) * 2000.0
+    val -= (6 - op_prizes) * 2500.0
 
-    # 2. Our Active Wall & Energy
-    my_active = me.active[0] if me.active else None
+    # ── 2. Wall Stability & Damage Threats ──
+    my_active = me.active[0] if (getattr(me, "active", None) and len(me.active) > 0) else None
+    op_active = op.active[0] if (getattr(op, "active", None) and len(op.active) > 0) else None
+    
+    opp_is_ex = is_card_ex(getattr(op_active, "id", None)) if op_active else False
+    opp_has_ability = card_has_ability(getattr(op_active, "id", None)) if op_active else False
+
     if my_active:
-        val += my_active.hp * 2.0
-        val += len(my_active.energies) * 300.0
+        active_hp = getattr(my_active, "hp", 0)
+        active_id = getattr(my_active, "id", None)
+        active_energies = len(getattr(my_active, "energies", []))
         
-        op_active = op.active[0] if op.active else None
-        opp_is_ex = is_card_ex(op_active.id) if op_active else False
-        opp_has_ability = card_has_ability(op_active.id) if op_active else False
+        val += active_hp * 2.0
+        val += active_energies * 300.0
         
         # Wall Immunity bonus
-        if my_active.id == Crustle and opp_is_ex:
-            val += 5000.0
-        elif my_active.id == Ogerpon and opp_has_ability:
-            val += 5000.0
+        is_crustle_immune = (active_id == Crustle and opp_is_ex)
+        is_ogerpon_immune = (active_id == Ogerpon and opp_has_ability)
+        
+        if is_crustle_immune or is_ogerpon_immune:
+            val += 5000.0  # TOP WALL IMMUNITY STABILITY BONUS!
 
-    # 3. Benched Pokemon & Setup
-    for p in me.bench:
+        # Threat Assessment & Fainting Risk Penalty
+        op_max_damage = get_opponent_max_threat(op, opp_is_ex, opp_has_ability)
+        if op_max_damage >= active_hp and not is_crustle_immune and not is_ogerpon_immune:
+            val -= 3000.0  # Heavy penalty for exposing active to a 1-hit KO!
+
+    # ── 3. Resource & Engine Health ──
+    hand_count = len(getattr(me, "hand", []))
+    if hand_count > 3:
+        val += 500.0
+    elif hand_count <= 2:
+        val -= 1000.0  # Top-decking penalty
+
+    # ── 4. Setup Progression (Backup attackers on bench) ──
+    me_bench = list(getattr(me, "bench", [])) if getattr(me, "bench", None) else []
+    dwebble_backup_count = 0
+    for p in me_bench:
         if p is None: continue
-        val += len(p.energies) * 200.0
-        if p.id == Crustle: val += 800.0
-        elif p.id == Dwebble: val += 400.0
+        p_id = getattr(p, "id", None)
+        p_energies = len(getattr(p, "energies", []))
+        val += p_energies * 200.0
+        
+        if p_id == Crustle:
+            val += 800.0
+            dwebble_backup_count += 1
+        elif p_id == Dwebble:
+            val += 500.0
+            dwebble_backup_count += 1
 
-    # 4. Opponent Threat Assessment
-    op_active = op.active[0] if op.active else None
-    if op_active:
-        op_dmg = get_card_attack_damage(op_active.id)
-        if my_active and op_dmg >= my_active.hp:
-            if not (my_active.id == Crustle and opp_is_ex) and not (my_active.id == Ogerpon and opp_has_ability):
-                val -= 3000.0
-
-    # 5. Hand size preservation
-    val += len(me.hand) * 15.0
+    if dwebble_backup_count >= 2:
+        val += 1000.0  # 2-Dwebble setup readiness bonus!
 
     return val
 
 def rollout_simulated_turn(sid, cur_obs, your_index):
+    """
+    Executes up to 15 rollout steps safely using cg.api search_step.
+    """
     steps = 0
     while steps < 15:
+        if getattr(cur_obs, "current", None) is None: break
         if cur_obs.current.result is not None and cur_obs.current.result != -1: break
         if cur_obs.current.yourIndex != your_index: break
-        if cur_obs.select is None: break
+        if getattr(cur_obs, "select", None) is None: break
         
         obs_dict = cur_obs.to_dict() if hasattr(cur_obs, "to_dict") else {}
         sel = agent(obs_dict)
@@ -220,6 +277,10 @@ def rollout_simulated_turn(sid, cur_obs, your_index):
     return cur_obs
 
 def run_mcts_lookahead_search(obs_dict: dict, heuristic_candidates: list[int]) -> list[int]:
+    """
+    Iterates through candidate choices using cg.api.search_begin and search_step
+    to perform 1-step lookahead evaluation and pick the action with highest state value.
+    """
     if not _SEARCH_OK or not heuristic_candidates or len(heuristic_candidates) <= 1:
         return heuristic_candidates
         
