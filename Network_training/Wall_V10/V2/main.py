@@ -48,7 +48,12 @@ def _load_card_database():
         base_dir = os.path.dirname(__file__)
     except NameError:
         base_dir = "/kaggle_simulations/agent"
-    for candidate in ["EN_Card_Data.csv", "data/EN_Card_Data.csv", "/kaggle_simulations/agent/EN_Card_Data.csv", "../data/EN_Card_Data.csv"]:
+    candidates = [
+        "EN_Card_Data copy.csv", "data/EN_Card_Data copy.csv", "../data/EN_Card_Data copy.csv", "../../data/EN_Card_Data copy.csv",
+        "EN_Card_Data.csv", "data/EN_Card_Data.csv", "../data/EN_Card_Data.csv", "../../data/EN_Card_Data.csv",
+        r"c:\Users\Shaur\Coding Project\AWS\data\EN_Card_Data copy.csv"
+    ]
+    for candidate in candidates:
         for p in [candidate, os.path.join(base_dir, candidate)]:
             if os.path.exists(p):
                 try:
@@ -89,14 +94,19 @@ def is_card_ex(cid):
     if not cid: return False
     c = _CG_CARD_TABLE.get(cid)
     if c: return getattr(c, 'ex', False) or getattr(c, 'megaEx', False)
-    if cid in _CARD_DB: return str(_CARD_DB[cid].get("EX", "false")).lower() == "true"
+    if cid in _CARD_DB:
+        r = _CARD_DB[cid].get("Rule", "").lower()
+        stg = _CARD_DB[cid].get("Stage (Pokémon)/Type (Energy and Trainer)", "").lower()
+        return "ex" in r or "ex" in stg
     return False
 
 def card_has_ability(cid):
     if not cid: return False
     c = _CG_CARD_TABLE.get(cid)
     if c: return len(getattr(c, 'abilities', [])) > 0 or getattr(c, 'ability', None) is not None
-    if cid in _CARD_DB: return len(_CARD_DB[cid].get("Abilities", [])) > 0
+    if cid in _CARD_DB:
+        eff = _CARD_DB[cid].get("Effect Explanation", "")
+        return "[Ability]" in eff or "Ability" in eff
     return False
 
 # ── Correct Card Constants ─────────────────────────────────────────────────────
@@ -128,32 +138,27 @@ SUPPORTERS_SET = {Lillie, Petrel, Hilda, Colress, Morty, Xerosic, BossOrders}
 
 def get_card_name(cid):
     if not cid: return "Pre-Game Mulligan / Confirm Draw"
-    names = {
-        344: "Dwebble",
-        345: "Crustle",
-        117: "Cornerstone Mask Ogerpon ex",
-        756: "Mega Kangaskhan ex",
-        1122: "Pokégear 3.0",
-        1121: "Ultra Ball",
-        1086: "Buddy-Buddy Poffin",
-        1123: "Switch",
-        1182: "Boss's Orders",
-        1227: "Lillie's Determination",
-        1219: "Petrel",
-        1225: "Hilda",
-        1194: "Colress's Tenacity",
-        1187: "Morty's Conviction",
-        1197: "Xerosic's Machinations",
-        1147: "Jumbo Ice Cream",
-        1159: "Hero's Cape",
-        1242: "Community Center",
-        1257: "Team Rocket's Factory",
-        1: "Basic Grass Energy",
-        11: "Mist Energy",
-        14: "Spiky Energy",
-        20: "Rock Fighting Energy"
-    }
-    return names.get(cid, f"Card #{cid}")
+    if cid in _CARD_DB:
+        c_name = _CARD_DB[cid].get("Card Name")
+        if c_name: return c_name.strip()
+    c = _CG_CARD_TABLE.get(cid)
+    if c and getattr(c, 'name', None):
+        return getattr(c, 'name').strip()
+    return f"Card #{cid}"
+
+def format_pokemon_summary(p_dict):
+    if not p_dict or not isinstance(p_dict, dict): return "None"
+    cid = p_dict.get("id")
+    c_name = get_card_name(cid)
+    hp = p_dict.get("hp", 0)
+    max_hp = p_dict.get("maxHp", 0)
+    e_cards = p_dict.get("energyCards") or []
+    e_names = [get_card_name(e.get("id") if isinstance(e, dict) else e) for e in e_cards]
+    e_str = f"{len(e_cards)} ({', '.join(e_names)})" if e_names else f"{len(e_cards)}"
+    t_cards = p_dict.get("tools") or []
+    t_names = [get_card_name(t.get("id") if isinstance(t, dict) else t) for t in t_cards]
+    t_str = f"Tools: {', '.join(t_names)}" if t_names else "Tools: None"
+    return f"{c_name} (ID #{cid}) [HP: {hp}/{max_hp} | Energy: {e_str} | {t_str}]"
 
 # ── Weights Loader ─────────────────────────────────────────────────────────────
 _WEIGHT_DEFAULTS = {
@@ -318,7 +323,8 @@ def extract_board_info(obs_dict):
         if isinstance(b, dict): opp_bench.append(b)
         elif isinstance(b, (int, float)): opp_bench.append({"id": int(b), "hp": 200, "energies": []})
 
-    log_rule_execution(f"  [RAW BOARD INSPECTION] opp_active={opp_active} | opp_bench_count={len(opp_bench)} | opp_bench={opp_bench}")
+    opp_b_str = ", ".join([format_pokemon_summary(b) for b in opp_bench]) if opp_bench else "None"
+    log_rule_execution(f"  [FORMATTED BOARD STATE] Opponent Active: {format_pokemon_summary(opp_active)} | Opponent Bench ({len(opp_bench)}): [{opp_b_str}]")
     
     opp_active_id = opp_active.get("id") if opp_active else None
     opp_is_ex = is_card_ex(opp_active_id)
