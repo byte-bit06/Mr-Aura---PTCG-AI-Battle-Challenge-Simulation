@@ -1414,24 +1414,27 @@ def agent(obs_dict: dict) -> list[int]:
                 max_needed_energy = 3
                 target_pkmn = my_active if is_active_target else (my_bench[in_play_idx] if in_play_idx is not None and 0 <= in_play_idx < len(my_bench) else None)
 
-                if target_cid == Kangaskhan and not is_early_game:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
-                    score = -float('inf')
-                elif has_enough_energy_for_highest_attack(target_pkmn) or target_energy >= max_needed_energy:
+                if has_enough_energy_for_highest_attack(target_pkmn) or target_energy >= max_needed_energy:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
                     score = -float('inf')
                 else:
-                    # User Directive 2: Strongly favor primary active ex/wall (Crustle/Ogerpon) with 0 or low energy!
+                    # User Directive: Power up Kangaskhan ex on Active/Bench for heavy 200 HP knockout swings!
                     if is_active_target:
                         if target_cid in {Crustle, Ogerpon, Dwebble}:
                             tier_base = 96.0
                             urgency = 2.0 if target_energy == 0 else (1.0 if target_energy == 1 else 0.5)
                             score = tier_base + urgency  # Score 98.0 for 0-energy active Crustle/Ogerpon!
+                        elif target_cid == Kangaskhan:
+                            # 200 HP Heavy Hitter Active Bonus (Score 96.0 when at 2 energies for immediate 200 HP swing!)
+                            score = 96.0 if target_energy == 2 else 94.0
                         else:
                             score = 93.0
                     else:
                         if target_cid in {Crustle, Ogerpon, Dwebble}:
                             score = 92.0
+                        elif target_cid == Kangaskhan:
+                            # Powering up benched 300 HP Heavy Hitter Kangaskhan ex
+                            score = 88.0
                         else:
                             score = 85.0
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Optimized Energy Attachment Matched -> Score {score} for {get_card_name(target_cid)}!")
