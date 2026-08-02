@@ -1,14 +1,15 @@
 """
-optimize_ga.py — Genetic Algorithm Optimizer for Wall_V10 V2
-============================================================
+optimize_ga.py — 100,000 Game Genetic Algorithm Optimizer for Wall_V10 V2
+==========================================================================
 Optimizes weight parameters in optimized_weights.json against meta gauntlet.
+Continuously saves best weights to optimized_weights.json, rebuilds submission.tar.gz,
+and saves timestamped checkpoints to checkpoints/ directory.
 
-Multi-Objective Fitness Objective:
-  1. Maximizes Prize Cards Taken Us (+1000.0x per prize)
-  2. Heavily Penalizes Prize Cards Conceded Opponent (-2500.0x per prize)
-  3. Maximizes Total HP Damage Given (+1.0x per HP damage dealt)
-  4. Minimizes Total HP Damage Taken (-1.5x per HP damage received)
-  5. Win Bonus (+5000.0x per victory)
+100,000 Games Calculation:
+  - 7 Opponents x 2 Matches (P1 & P2) = 14 Games per Individual
+  - Population Size = 32
+  - Games per Generation = 32 x 14 = 448 Games
+  - 225 Generations x 448 Games = 100,800 Total Games!
 """
 
 import os
@@ -27,6 +28,21 @@ if _network_training_dir not in sys.path:
     sys.path.insert(0, _network_training_dir)
 if _this_dir not in sys.path:
     sys.path.insert(0, _this_dir)
+
+CHECKPOINT_DIR = os.path.join(_this_dir, "checkpoints")
+if not os.path.exists(CHECKPOINT_DIR):
+    os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+
+HISTORY_LOG_FILE = os.path.join(_this_dir, "ga_optimization_history.log")
+
+def log_ga_history(msg):
+    sys.stdout.write(f"{msg}\n")
+    sys.stdout.flush()
+    try:
+        with open(HISTORY_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+    except Exception:
+        pass
 
 # ── Patch Environment ──────────────────────────────────────────────────────
 import cg.game as local_game
@@ -75,11 +91,11 @@ W_DMG_GIVEN_MULT = float(os.environ.get("GA_W_DMG_GIVEN", "1.0"))   # Reward for
 W_DMG_TAKEN_MULT = float(os.environ.get("GA_W_DMG_TAKEN", "1.5"))   # Penalty for taking damage!
 W_WIN_BONUS      = float(os.environ.get("GA_W_WIN_BONUS", "5000.0"))
 
-POPULATION_SIZE = int(os.environ.get("GA_POP_SIZE", "8"))
-GENERATIONS     = int(os.environ.get("GA_GENERATIONS", "15"))
-MUTATION_RATE   = float(os.environ.get("GA_MUTATION_RATE", "0.20"))
+POPULATION_SIZE = int(os.environ.get("GA_POP_SIZE", "32"))
+GENERATIONS     = int(os.environ.get("GA_GENERATIONS", "225"))  # 225 x 32 x 14 = 100,800 Total Games!
+MUTATION_RATE   = float(os.environ.get("GA_MUTATION_RATE", "0.25"))
 MUTATION_STDEV  = float(os.environ.get("GA_MUTATION_STDEV", "0.15"))
-ELITISM         = int(os.environ.get("GA_ELITISM", "2"))
+ELITISM         = int(os.environ.get("GA_ELITISM", "4"))
 
 def update_agent_weights(weights_dict):
     """Dynamically update live agent weights dictionary in main.py."""
@@ -232,25 +248,35 @@ def crossover(parent1, parent2):
             child[k] = parent2[k]
     return child
 
-def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t, gen):
-    """Save best genome to optimized_weights.json and rebuild submission.tar.gz."""
-    best_genome["VERSION"] = f"V2_GA_Gen{gen}_{time.strftime('%Y%m%d_%H%M%S')}"
+def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t, gen, total_games_so_far):
+    """Continuously save best genome to optimized_weights.json, checkpoints, and rebuild submission.tar.gz."""
+    timestamp = time.strftime('%Y%m%d_%H%M%S')
+    best_genome["VERSION"] = f"V2_GA_Gen{gen}_Games{total_games_so_far}_{timestamp}"
     best_genome["generation_stats"] = {
         "generation": gen,
+        "total_games_evaluated": total_games_so_far,
         "fitness": fitness,
         "win_rate": win_rate,
         "avg_my_prizes": my_pz,
         "avg_opp_prizes": opp_pz,
         "avg_damage_given": dmg_g,
-        "avg_damage_taken": dmg_t
+        "avg_damage_taken": dmg_t,
+        "updated_at": timestamp
     }
     
+    # 1. Main optimized_weights.json
     json_path = os.path.join(_this_dir, "optimized_weights.json")
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(best_genome, f, indent=2)
-    print(f"  [Saved] Updated {json_path} (Gen {gen})", flush=True)
 
-    # Rebuild submission archive
+    # 2. Checkpoint JSON File
+    chk_path = os.path.join(CHECKPOINT_DIR, f"weights_gen{gen:03d}_fit{int(fitness)}.json")
+    with open(chk_path, 'w', encoding='utf-8') as f:
+        json.dump(best_genome, f, indent=2)
+
+    log_ga_history(f"  [SAVED CHECKSUM] Updated {json_path} & Checkpoint {chk_path} (Gen {gen} | Games {total_games_so_far:,})")
+
+    # 3. Rebuild submission archive
     sub_path = os.path.join(_this_dir, "submission.tar.gz")
     cg_dir = os.path.join(_network_training_dir, "cg")
     v_files = ['main.py', 'deck.csv', '__init__.py', 'optimized_weights.json']
@@ -265,52 +291,71 @@ def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t
                     for file in files:
                         fp = os.path.join(root, file)
                         tar.add(fp, arcname=fp.replace(os.sep, '/'))
-        print(f"  [Saved] Rebuilt submission archive {sub_path} ({os.path.getsize(sub_path):,} bytes)", flush=True)
+        log_ga_history(f"  [SUBMISSION ARCHIVE] Rebuilt {sub_path} ({os.path.getsize(sub_path):,} bytes)")
     except Exception as e:
-        print(f"  [Warning] Could not rebuild submission tar.gz: {e}")
+        log_ga_history(f"  [Warning] Could not rebuild submission tar.gz: {e}")
 
 def run_ga():
     env = make('cabt', debug=False)
     
+    # Load existing optimized weights if available to resume training seamlessly
     base_genome = dict(v2_main._WEIGHT_DEFAULTS)
+    existing_weights_path = os.path.join(_this_dir, "optimized_weights.json")
+    if os.path.exists(existing_weights_path):
+        try:
+            with open(existing_weights_path) as f:
+                loaded = json.load(f)
+                base_genome.update({k: v for k, v in loaded.items() if k in v2_main._WEIGHT_DEFAULTS})
+            log_ga_history(f"Loaded existing weights from {existing_weights_path} as base genome.")
+        except Exception:
+            pass
 
     # Initialize Population
     population = [copy.deepcopy(base_genome)]
     for _ in range(POPULATION_SIZE - 1):
         population.append(mutate(base_genome))
 
-    print(f"=== Starting Multi-Objective Genetic Algorithm Optimization for Wall_V10 V2 ===", flush=True)
-    print(f"  Population Size:   {POPULATION_SIZE}", flush=True)
-    print(f"  Generations:       {GENERATIONS}", flush=True)
-    print(f"  Prize Taken Mult:  +{W_TAKEN_MULT}x", flush=True)
-    print(f"  Prize Conceded:   -{W_CONCEDED_MULT}x (Heavy Penalty)", flush=True)
-    print(f"  Damage Given Mult: +{W_DMG_GIVEN_MULT}x (Maximize HP Damage Dealt)", flush=True)
-    print(f"  Damage Taken Mult: -{W_DMG_TAKEN_MULT}x (Minimize HP Damage Taken)", flush=True)
-    print(f"  Win Bonus:        +{W_WIN_BONUS}x", flush=True)
-    print(f"=================================================================================\n", flush=True)
+    games_per_indiv = len(opponents) * 2
+    games_per_gen = POPULATION_SIZE * games_per_indiv
+    total_target_games = GENERATIONS * games_per_gen
+
+    log_ga_history(f"=== Starting 100,000 Game Genetic Algorithm Optimization for Wall_V10 V2 ===")
+    log_ga_history(f"  Population Size:       {POPULATION_SIZE}")
+    log_ga_history(f"  Generations:           {GENERATIONS}")
+    log_ga_history(f"  Games per Generation:  {games_per_gen}")
+    log_ga_history(f"  Total Target Games:    {total_target_games:,}")
+    log_ga_history(f"  Prize Taken Mult:      +{W_TAKEN_MULT}x")
+    log_ga_history(f"  Prize Conceded:       -{W_CONCEDED_MULT}x (Heavy Penalty)")
+    log_ga_history(f"  Damage Given Mult:     +{W_DMG_GIVEN_MULT}x")
+    log_ga_history(f"  Damage Taken Mult:     -{W_DMG_TAKEN_MULT}x")
+    log_ga_history(f"  Win Bonus:            +{W_WIN_BONUS}x")
+    log_ga_history(f"=================================================================================\n")
 
     best_overall_genome = None
     best_overall_fitness = -float('inf')
+    cum_games = 0
 
     for gen in range(1, GENERATIONS + 1):
-        print(f"--- Generation {gen}/{GENERATIONS} ---", flush=True)
+        log_ga_history(f"--- Generation {gen}/{GENERATIONS} (Progress: {cum_games:,}/{total_target_games:,} games) ---")
         eval_results = []
 
         for idx, genome in enumerate(population):
             fit, wr, my_pz, opp_pz, dmg_g, dmg_t = evaluate_genome(env, genome)
+            cum_games += games_per_indiv
             eval_results.append((fit, wr, my_pz, opp_pz, dmg_g, dmg_t, genome))
-            print(f"  Indiv {idx+1}/{POPULATION_SIZE} -> Fit: {fit:+.1f} | WinRate: {wr:.1f}% | Prizes (Us: {my_pz:.2f}, Opp: {opp_pz:.2f}) | Damage (Given: {dmg_g:.0f}, Taken: {dmg_t:.0f})", flush=True)
+            log_ga_history(f"  Indiv {idx+1:02d}/{POPULATION_SIZE} (Game {cum_games:,}) -> Fit: {fit:+.1f} | WinRate: {wr:.1f}% | Prizes (Us: {my_pz:.2f}, Opp: {opp_pz:.2f}) | Damage (Given: {dmg_g:.0f}, Taken: {dmg_t:.0f})")
 
         # Sort population by fitness (descending)
         eval_results.sort(key=lambda x: x[0], reverse=True)
         best_gen_fit, best_gen_wr, best_gen_mypz, best_gen_opppz, best_gen_dmgg, best_gen_dmgt, best_gen_genome = eval_results[0]
 
-        print(f"Gen {gen} Best -> Fit: {best_gen_fit:+.1f} | WinRate: {best_gen_wr:.1f}% | Prizes (Us: {best_gen_mypz:.2f}, Opp: {best_gen_opppz:.2f}) | Damage (Given: {best_gen_dmgg:.0f}, Taken: {best_gen_dmgt:.0f})", flush=True)
+        log_ga_history(f"--> Gen {gen} Best -> Fit: {best_gen_fit:+.1f} | WinRate: {best_gen_wr:.1f}% | Prizes (Us: {best_gen_mypz:.2f}, Opp: {best_gen_opppz:.2f}) | Damage (Given: {best_gen_dmgg:.0f}, Taken: {best_gen_dmgt:.0f})")
 
+        # CONTINUOUS SAVING: Save immediately whenever a new best fitness is reached
         if best_gen_fit > best_overall_fitness:
             best_overall_fitness = best_gen_fit
             best_overall_genome = copy.deepcopy(best_gen_genome)
-            save_best_genome(best_overall_genome, best_gen_fit, best_gen_wr, best_gen_mypz, best_gen_opppz, best_gen_dmgg, best_gen_dmgt, gen)
+            save_best_genome(best_overall_genome, best_gen_fit, best_gen_wr, best_gen_mypz, best_gen_opppz, best_gen_dmgg, best_gen_dmgt, gen, cum_games)
 
         # Selection & Reproduction for next generation
         new_population = []
@@ -327,10 +372,10 @@ def run_ga():
             new_population.append(child)
 
         population = new_population
-        print("", flush=True)
+        log_ga_history("")
 
-    print("=== Multi-Objective GA Optimization Completed Successfully ===", flush=True)
-    print(f"Best Overall Fitness: {best_overall_fitness:+.2f}", flush=True)
+    log_ga_history("=== 100,000 Game GA Optimization Completed Successfully ===")
+    log_ga_history(f"Best Overall Fitness: {best_overall_fitness:+.2f}")
 
 if __name__ == '__main__':
     run_ga()
