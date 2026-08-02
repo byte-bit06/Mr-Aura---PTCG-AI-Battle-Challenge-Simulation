@@ -21,6 +21,23 @@ import json
 import csv
 from math import inf
 
+RULE_LOG_FILE = os.path.join(os.path.dirname(__file__), "live_rule_executions.log")
+
+def log_rule_execution(msg):
+    sys.stderr.write(f"{msg}\n")
+    try:
+        with open(RULE_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"{msg}\n")
+    except Exception:
+        pass
+
+# Clear old log file on start
+try:
+    with open(RULE_LOG_FILE, "w", encoding="utf-8") as f:
+        f.write("=== WALL_V10 V2 STRICT RULE EXECUTION VERIFICATION LOG ===\n\n")
+except Exception:
+    pass
+
 # ── Card Database & Deck Loader ───────────────────────────────────────────────
 _CARD_DB = {}
 def _load_card_database():
@@ -107,6 +124,35 @@ BuddyPuffin   = 1086
 Pokégear      = 1122
 
 SUPPORTERS_SET = {Lillie, Petrel, Hilda, Colress, Morty, Xerosic, BossOrders}
+
+def get_card_name(cid):
+    if not cid: return "System Action / End Turn"
+    names = {
+        344: "Dwebble",
+        345: "Crustle",
+        117: "Cornerstone Mask Ogerpon ex",
+        756: "Mega Kangaskhan ex",
+        1122: "Pokégear 3.0",
+        1121: "Ultra Ball",
+        1086: "Buddy-Buddy Poffin",
+        1123: "Switch",
+        1182: "Boss's Orders",
+        1227: "Lillie's Determination",
+        1219: "Petrel",
+        1225: "Hilda",
+        1194: "Colress's Tenacity",
+        1187: "Morty's Conviction",
+        1197: "Xerosic's Machinations",
+        1147: "Jumbo Ice Cream",
+        1159: "Hero's Cape",
+        1242: "Community Center",
+        1257: "Team Rocket's Factory",
+        1: "Basic Grass Energy",
+        11: "Mist Energy",
+        14: "Spiky Energy",
+        20: "Rock Fighting Energy"
+    }
+    return names.get(cid, f"Card #{cid}")
 
 # ── Weights Loader ─────────────────────────────────────────────────────────────
 _WEIGHT_DEFAULTS = {
@@ -316,6 +362,7 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
     
     # HARD BAN: Never promote Kangaskhan ex to active in late game!
     if cid == Kangaskhan and not is_early_game:
+        log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Active Promotion HARD BANNED (-inf)")
         return -float('inf')
     
     energy_norm = min(energy_count / 3.0, 1.0)
@@ -354,15 +401,18 @@ def score_discard_option(cid, hand, bench_and_active_ids):
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
     # ── 1. DWEBBLE SEARCH PRIORITY (POKÉMON SEARCH - Buddy Poffin / Ultra Ball) ──
     if cid == Dwebble and dwebble_in_play < 2:
+        log_rule_execution(f"  [RULE APPLIED] Early Dwebble Search Priority: Dwebble (Card #344) assigned MAX Score 100,000.0!")
         return 100000.0  # Absolute MAX priority for Dwebble!
 
     # ── 2. LILLIE SEARCH PRIORITY (POKÉGEAR 3.0 / SUPPORTER SEARCH) ──
     if cid == Lillie:
+        log_rule_execution(f"  [RULE APPLIED] Pokégear / Supporter Search: Lillie's Determination (Card #1227) assigned TOP Score 80,000.0!")
         return 80000.0   # Absolute MAX priority for Lillie!
 
     # ── 3. CRUSTLE EVOLUTION SEARCH ──
     if cid == Crustle:
         if Dwebble in bench_and_active_ids:
+            log_rule_execution(f"  [RULE APPLIED] Crustle Evolution Search Priority: Crustle assigned Score 50,000.0!")
             return 50000.0
         return -1000.0
 
@@ -377,6 +427,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
         if opp_has_ability or bench_and_active_ids.count(Ogerpon) < 1:
             return 20000.0
         if bench_and_active_ids.count(Ogerpon) >= 2:
+            log_rule_execution(f"  [RULE APPLIED] Ogerpon Search Limit HARD BANNED (-inf): Already 2 Ogerpon in play!")
             return -float('inf')
         return -100.0
 
@@ -384,6 +435,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
     if cid == Kangaskhan:
         if not is_early_game:
             if bench_count < 2: return 1000.0
+            log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Search HARD BANNED (-inf)")
             return -float('inf')
         return 2000.0
 
@@ -470,7 +522,6 @@ def agent(obs_dict: dict) -> list[int]:
         is_early_game = (turn_num <= 4 or my_prizes >= 5)
 
         # Directive 1 Check: Opening hand energy attachment requirement
-        # When you don't have Dwebble, Ogerpon, or search items (Poffins/UltraBall) in opening hand, attach any energy you have immediately
         has_setup_pieces = any(c in {Dwebble, Ogerpon, BuddyPuffin, UltraBall} for c in hand)
         must_attach_opening_energy = (turn_num <= 2 and not has_setup_pieces)
 
@@ -514,6 +565,9 @@ def agent(obs_dict: dict) -> list[int]:
             if bid == Crustle and opp_is_ex: benched_wall_takes_zero = True
             if bid == Ogerpon and opp_has_ability: benched_wall_takes_zero = True
 
+        active_name = get_card_name(my_active_id)
+        log_rule_execution(f"\n[Turn {turn_num} STEP] Active: {active_name} (HP: {my_hp}/{my_max_hp}, E: {my_energy}) | Bench: {bench_count} | Dwebble in Play: {dwebble_in_play} | Context: {context_str}")
+
         # Active Promotion Rank Function (Setup / Active Promotion Phase)
         if ("SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str) and not is_search_modal:
             best_idx = 0
@@ -539,12 +593,16 @@ def agent(obs_dict: dict) -> list[int]:
                     if is_early_game:
                         r_score += W.get("W_KANGASKHAN_EARLY_RANK", 50.0)
                     else:
-                        r_score = -float('inf')  # HARD BAN Kangaskhan active promotion in late game!
+                        r_score = -float('inf')
+
+                log_rule_execution(f"  [Active Promo Opt {idx}] {get_card_name(cid)} -> Rank Score: {r_score}")
 
                 if r_score > best_rank:
                     best_rank = r_score
                     best_idx = idx
 
+            chosen_cid = resolve_card_id(options[best_idx], info, current, select_data)
+            log_rule_execution(f"  => CHOSEN ACTIVE PROMOTION: {get_card_name(chosen_cid)} (Option {best_idx})")
             return sanitize_action([best_idx], select_data)
 
         # Scored Option Engine & Strict Directives
@@ -558,6 +616,7 @@ def agent(obs_dict: dict) -> list[int]:
             
             # Universal Option-to-Card ID Resolution!
             cid = resolve_card_id(o, info, current, select_data)
+            c_name = get_card_name(cid)
 
             # ── DECK SEARCH / CARD SELECTION MODAL ──
             if "DISCARD" in context_str:
@@ -568,7 +627,8 @@ def agent(obs_dict: dict) -> list[int]:
             # ── RULE 1: POKÉGEAR 3.0 RESTRICTION ──
             elif cid == Pokégear:
                 if has_other_supporter_in_hand or supporter_played:
-                    score = -float('inf')  # HARD BAN Pokégear 3.0 when supporter is in hand or already played!
+                    log_rule_execution(f"  [RULE APPLIED] Pokégear 3.0 HARD BANNED (-inf): Supporter already in hand or played!")
+                    score = -float('inf')
                 else:
                     score = 600.0 + w_trainer * 2.0
                     has_useful_pre_attack_action = True
@@ -581,7 +641,8 @@ def agent(obs_dict: dict) -> list[int]:
                     (opp_has_ability and ogerpon_in_play < 2 and Ogerpon not in hand)
                 )
                 if not valid_ultraball:
-                    score = -float('inf')  # HARD BAN Ultra Ball for no reason!
+                    log_rule_execution(f"  [RULE APPLIED] Ultra Ball HARD BANNED (-inf): No target requirement met!")
+                    score = -float('inf')
                 else:
                     score = 650.0 + w_trainer * 3.0
                     has_useful_pre_attack_action = True
@@ -589,7 +650,8 @@ def agent(obs_dict: dict) -> list[int]:
             # ── RULE 3 & SUPPORTER PLAYS ──
             elif cid == Lillie:
                 if has_playable_before_lillie:
-                    score = -float('inf')  # HARD BAN Lillie before playing useful cards in hand!
+                    log_rule_execution(f"  [RULE APPLIED] Lillie Supporter HARD BANNED (-inf): Playable cards still in hand!")
+                    score = -float('inf')
                 else:
                     score = 600.0 + w_trainer * 5.0
                     has_useful_pre_attack_action = True
@@ -597,7 +659,8 @@ def agent(obs_dict: dict) -> list[int]:
             # ── RULE 7: BOSS'S ORDERS STRICT CONDITIONS ──
             elif cid == BossOrders:
                 if my_energy < 3 or my_dmg <= 0:
-                    score = -float('inf')  # HARD BAN Boss's Orders if active cannot attack!
+                    log_rule_execution(f"  [RULE APPLIED] Boss's Orders HARD BANNED (-inf): Active has insufficient energy (< 3) to attack!")
+                    score = -float('inf')
                 else:
                     valid_boss_target = False
                     opp_active_prizes = 2 if is_card_ex(info.get("opp_active_id")) else 1
@@ -608,13 +671,14 @@ def agent(obs_dict: dict) -> list[int]:
                         b_energies = len(_get_val(b, "energies") or [])
                         b_prizes = 2 if is_card_ex(b_id) else 1
 
-                        if my_dmg >= b_hp:  # Can KO target
+                        if my_dmg >= b_hp:
                             if (b_prizes > opp_active_prizes) or (b_energies >= opp_active_energy + 2):
                                 valid_boss_target = True
                                 break
 
                     if not valid_boss_target:
-                        score = -float('inf')  # HARD BAN Boss's Orders if no valid high-value/high-energy target!
+                        log_rule_execution(f"  [RULE APPLIED] Boss's Orders HARD BANNED (-inf): No benched target meets KO + Prize/Energy condition!")
+                        score = -float('inf')
                     else:
                         score = 650.0 + w_trainer * 5.0
                         has_useful_pre_attack_action = True
@@ -622,17 +686,20 @@ def agent(obs_dict: dict) -> list[int]:
             # ── RULE 2 & 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
                 if cid == Ogerpon and not opp_has_ability and ogerpon_in_play >= 2:
-                    score = -float('inf')  # HARD BAN 3rd Ogerpon when opp active has no ability!
+                    log_rule_execution(f"  [RULE APPLIED] 3rd Ogerpon Bench Deployment HARD BANNED (-inf): Opponent active has no ability!")
+                    score = -float('inf')
                 elif cid == Kangaskhan and not is_early_game:
                     if bench_count < 2:
                         subscore = w_pokemon * 2.0
                         score = 800.0 + subscore
                         has_useful_pre_attack_action = True
                     else:
+                        log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Bench Deployment HARD BANNED (-inf)")
                         score = -float('inf')
                 elif cid == Dwebble and dwebble_in_play < 2:
-                    subscore = w_pokemon * 5.0 + 50.0  # Top Priority Dwebble deployment!
+                    subscore = w_pokemon * 5.0 + 50.0
                     score = 900.0 + subscore
+                    log_rule_execution(f"  [RULE APPLIED] Early Dwebble Bench Play Priority: Dwebble deployed with Score {score}!")
                     has_useful_pre_attack_action = True
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
                     subscore = w_pokemon * 5.0 + 10.0
@@ -650,12 +717,12 @@ def agent(obs_dict: dict) -> list[int]:
                 has_useful_pre_attack_action = True
 
             # ── TIER 6: OTHER DRAW SUPPORTERS ──
-            elif o_type in {7, 3} and cid in {Petrel, Hilda, Colress, Morty, Xerosic, Carmine, Arven, Iono, BuddyPuffin, NestBall, HeavyBall, EarthenVessel}:
+            elif o_type in {7, 3} and (cid in SUPPORTERS_SET or cid in {BuddyPuffin, UltraBall, Pokégear, SwitchCard, HerosCape, CommunityCenter, TRFactory, JumboIceCream}):
                 subscore = w_trainer * 5.0 + (3.0 if hand_size <= 3 else 1.0)
                 score = 600.0 + subscore
                 has_useful_pre_attack_action = True
 
-            # ── TIER 5: FOCUSED ENERGY ATTACHMENT (WITH DIRECTIVE 1 EXCEPTION) ──
+            # ── TIER 5: FOCUSED ENERGY ATTACHMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 tier_base = W.get("W_TIER_ENERGY", 500.0)
                 in_play_area = o.get("inPlayArea")
@@ -673,14 +740,17 @@ def agent(obs_dict: dict) -> list[int]:
                         target_energy = len(b_energies)
 
                 if target_cid == Kangaskhan and not is_early_game:
+                    log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
                     score = -float('inf')
                 elif target_energy >= 3:
+                    log_rule_execution(f"  [RULE APPLIED] Energy Hoarding HARD BANNED (-inf): Target already has {target_energy} energies (>= 3)!")
                     score = -float('inf')
                 elif is_active_target:
                     need_norm = (3 - target_energy) / 3.0
                     subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
                     if must_attach_opening_energy:
-                        score = 950.0 + subscore  # Top Priority Opening Energy Attachment!
+                        log_rule_execution(f"  [RULE APPLIED] Opening Energy Attachment Exception Triggered: Score 950.0!")
+                        score = 950.0 + subscore
                     else:
                         score = tier_base + subscore
                 else:
@@ -717,7 +787,8 @@ def agent(obs_dict: dict) -> list[int]:
             # ── RULE 5: RETREAT GUARD & WALL SAFETY ──
             elif o_type in {12, 8} or "RETREAT" in ot_str:
                 if active_takes_zero_damage:
-                    score = -float('inf')  # HARD BAN retreat when active is an immune wall!
+                    log_rule_execution(f"  [RULE APPLIED] Retreat Guard HARD BANNED (-inf): Active is an immune wall!")
+                    score = -float('inf')
                 else:
                     is_special_condition = any([
                         _get_val(my_active, "poisoned"),
@@ -728,9 +799,10 @@ def agent(obs_dict: dict) -> list[int]:
                     ])
                     if benched_wall_takes_zero or hp_pct < 0.30 or is_special_condition:
                         subscore = w_retreat * 5.0 + (1.0 - hp_pct) * 3.0
-                        score = 200.0 + subscore  # Valid wall pivot retreat!
+                        score = 200.0 + subscore
                     else:
-                        score = -float('inf')  # HARD BAN pointless retreat!
+                        log_rule_execution(f"  [RULE APPLIED] Retreat Guard HARD BANNED (-inf): No benched wall ready & active not in danger!")
+                        score = -float('inf')
 
             # ── TIER 1: END TURN ──
             elif o_type in {14} or "END" in ot_str:
@@ -742,10 +814,17 @@ def agent(obs_dict: dict) -> list[int]:
             else:
                 score = W.get("W_TIER_NEUTRAL", 100.0)
 
+            log_rule_execution(f"  [Option {idx}] Type={o_type} | {c_name} -> Evaluated Score: {score}")
             scored_options.append((score, idx))
 
         scored_options.sort(key=lambda x: x[0], reverse=True)
+        best_score, best_idx = scored_options[0]
+        chosen_cid = resolve_card_id(options[best_idx], info, current, select_data)
+        
+        log_rule_execution(f"  => EXECUTION CHOICE: Option {best_idx} ({get_card_name(chosen_cid)}) selected with Highest Score: {best_score}\n")
+
         desc_indices = [i for _, i in scored_options]
         return sanitize_action(desc_indices, select_data)
-    except Exception:
+    except Exception as e:
+        log_rule_execution(f"  [EXCEPTION] {e}")
         return sanitize_action([0], select_data)
