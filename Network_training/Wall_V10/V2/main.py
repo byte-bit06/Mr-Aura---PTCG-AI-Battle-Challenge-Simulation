@@ -849,7 +849,7 @@ def agent(obs_dict: dict) -> list[int]:
                 log_rule_execution(f"  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
-            # ── BRANCH 9: FOCUSED ENERGY ATTACHMENT ──
+            # ── BRANCH 9: FOCUSED ENERGY ATTACHMENT & STRICT ENERGY MANAGEMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 tier_base = W.get("W_TIER_ENERGY", 500.0)
                 in_play_area = o.get("inPlayArea")
@@ -866,14 +866,24 @@ def agent(obs_dict: dict) -> list[int]:
                         b_energies = _get_val(b_pkmn, "energies") or []
                         target_energy = len(b_energies)
 
+                # Determine highest attack energy requirement for the target Pokemon
+                # Crustle (345), Dwebble (344 - evolves to Crustle), Ogerpon (117), Kangaskhan (756) all require max 3 energy
+                max_needed_energy = 3
+                if target_cid == Dwebble or target_cid == Crustle:
+                    max_needed_energy = 3
+                elif target_cid == Ogerpon:
+                    max_needed_energy = 3
+                elif target_cid == Kangaskhan:
+                    max_needed_energy = 3
+
                 if target_cid == Kangaskhan and not is_early_game:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
                     score = -float('inf')
-                elif target_energy >= 3:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Hoarding HARD BANNED (-inf): Target already has {target_energy} energies (>= 3)!")
+                elif target_energy >= max_needed_energy:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies for its highest attack!")
                     score = -float('inf')
                 elif is_active_target:
-                    need_norm = (3 - target_energy) / 3.0
+                    need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
                     subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
                     if must_attach_opening_energy:
                         log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score 950.0!")
@@ -882,10 +892,10 @@ def agent(obs_dict: dict) -> list[int]:
                         log_rule_execution(f"  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score {tier_base + subscore}")
                         score = tier_base + subscore
                 else:
-                    if my_energy < 3:
+                    if my_energy < max_needed_energy:
                         score = 100.0
                     else:
-                        need_norm = (3 - target_energy) / 3.0
+                        need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
                         subscore = w_energy * 2.5 + need_norm * 1.5
                         score = tier_base + subscore
                 has_useful_pre_attack_action = True
