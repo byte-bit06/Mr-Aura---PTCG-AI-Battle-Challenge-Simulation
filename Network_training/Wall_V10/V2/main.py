@@ -146,8 +146,39 @@ def get_card_name(cid):
         return getattr(c, 'name').strip()
     return f"Card #{cid}"
 
-def get_energy_count(p_dict):
+def get_pokemon_team_info(p_dict, my_idx=None):
+    if not p_dict or not isinstance(p_dict, dict):
+        return {"id": None, "name": "None", "playerIndex": None, "is_my_team": False, "energy_count": 0}
+    cid = p_dict.get("id")
+    c_name = get_card_name(cid)
+    p_idx = p_dict.get("playerIndex")
+    is_mine = (p_idx == my_idx) if (my_idx is not None and p_idx is not None) else None
+    
+    e_cnt = 0
+    e_cards = p_dict.get("energyCards")
+    if isinstance(e_cards, list) and len(e_cards) > 0:
+        e_cnt = len(e_cards)
+    else:
+        e_val = p_dict.get("energies")
+        if isinstance(e_val, list):
+            e_cnt = len(e_val)
+        elif isinstance(e_val, (int, float)):
+            e_cnt = int(e_val)
+
+    return {
+        "id": cid,
+        "name": c_name,
+        "playerIndex": p_idx,
+        "is_my_team": is_mine,
+        "energy_count": e_cnt
+    }
+
+def get_energy_count(p_dict, expected_player_index=None):
     if not p_dict or not isinstance(p_dict, dict): return 0
+    if expected_player_index is not None:
+        p_idx = p_dict.get("playerIndex")
+        if p_idx is not None and p_idx != expected_player_index:
+            return 0  # Reject card if it belongs to the wrong player/team!
     e_cards = p_dict.get("energyCards")
     if isinstance(e_cards, list) and len(e_cards) > 0:
         return len(e_cards)
@@ -158,16 +189,16 @@ def get_energy_count(p_dict):
         return int(e_val)
     return 0
 
-def format_pokemon_summary(p_dict):
+def format_pokemon_summary(p_dict, my_idx=None):
     if not p_dict or not isinstance(p_dict, dict): return "None"
-    cid = p_dict.get("id")
-    c_name = get_card_name(cid)
+    info = get_pokemon_team_info(p_dict, my_idx)
+    team_label = "OUR TEAM" if info["is_my_team"] else ("OPPONENT" if info["is_my_team"] is False else f"Player {info['playerIndex']}")
     hp = p_dict.get("hp", 0)
     max_hp = p_dict.get("maxHp", 0)
-    e_cnt = get_energy_count(p_dict)
     t_cards = p_dict.get("tools") or []
+    t_names = [get_card_name(t.get("id") if isinstance(t, dict) else t) for t in t_cards]
     t_str = f"Tools: {', '.join(t_names)}" if t_names else "Tools: None"
-    return f"{c_name} (ID #{cid}) [HP: {hp}/{max_hp} | Energy: {e_cnt} | {t_str}]"
+    return f"[{team_label}] {info['name']} (ID #{info['id']}) [HP: {hp}/{max_hp} | Energy: {info['energy_count']} | {t_str}]"
 
 def get_attack_energy_requirement(cid):
     if cid == Crustle or cid == Dwebble: return 3
