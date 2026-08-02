@@ -957,9 +957,9 @@ def agent(obs_dict: dict) -> list[int]:
                 log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): User Rule — Never switch or retreat!")
                 score = -float('inf')
 
-            # ── BRANCH 9: FOCUSED ENERGY ATTACHMENT & STRICT ENERGY MANAGEMENT ──
+            # ── AGGRESSIVE BRANCH 9: ENERGY ATTACHMENT (FAST-TRACK TO ATTACK) ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
-                tier_base = 9500.0  # High priority to power up active for attacking!
+                tier_base = 150000.0  # Massive priority to power up and attack instantly!
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
                 is_active_target = (in_play_area in {3, 4, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
@@ -967,84 +967,39 @@ def agent(obs_dict: dict) -> list[int]:
                 target_cid = my_active_id if is_active_target else None
                 target_energy = get_energy_count(my_active) if is_active_target else 0
                 
-                if not is_active_target:
-                    if in_play_idx is not None and 0 <= in_play_idx < len(my_bench):
-                        b_pkmn = my_bench[in_play_idx]
-                        target_cid = _get_val(b_pkmn, "id")
-                        target_energy = get_energy_count(b_pkmn)
+                if not is_active_target and in_play_idx is not None and 0 <= in_play_idx < len(my_bench):
+                    b_pkmn = my_bench[in_play_idx]
+                    target_cid = _get_val(b_pkmn, "id")
+                    target_energy = get_energy_count(b_pkmn)
 
-                # Determine highest attack energy requirement for the target Pokemon
                 max_needed_energy = 3
-                if target_cid == Dwebble or target_cid == Crustle:
-                    max_needed_energy = 3
-                elif target_cid == Ogerpon:
-                    max_needed_energy = 3
-                elif target_cid == Kangaskhan:
-                    max_needed_energy = 3
-
-                # Energy Type Specificity Bonus:
-                energy_match_bonus = 0.0
-                if target_cid == Ogerpon:
-                    if cid == RockEnergy:
-                        energy_match_bonus += 500.0
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Rock Fighting Energy (#20) matched for Ogerpon ex -> +500.0 Priority Bonus!")
-                    elif cid in {MistEnergy, SpikyEnergy}:
-                        energy_match_bonus += 100.0
-                elif target_cid in {Dwebble, Crustle}:
-                    if cid == GrassEnergy:
-                        energy_match_bonus += 300.0
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Basic Grass Energy (#1) matched for Dwebble/Crustle -> +300.0 Priority Bonus!")
-                    elif cid == MistEnergy:
-                        energy_match_bonus += 250.0
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Special Mist Energy (#11) matched for Crustle Wall -> +250.0 Priority Bonus!")
-                    elif cid == SpikyEnergy:
-                        energy_match_bonus += 200.0
-                elif target_cid == Kangaskhan:
-                    if cid in {MistEnergy, SpikyEnergy}:
-                        energy_match_bonus += 200.0
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Special Protection Energy matched for Kangaskhan ex -> +200.0 Priority Bonus!")
-
-                target_pkmn = my_active if is_active_target else (my_bench[in_play_idx] if in_play_idx < len(my_bench) else None)
+                target_pkmn = my_active if is_active_target else (my_bench[in_play_idx] if in_play_idx is not None and 0 <= in_play_idx < len(my_bench) else None)
 
                 if target_cid == Kangaskhan and not is_early_game:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
                     score = -float('inf')
                 elif has_enough_energy_for_highest_attack(target_pkmn) or target_energy >= max_needed_energy:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies for its highest attack!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
                     score = -float('inf')
-                elif is_active_target:
-                    need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
-                    subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0) + energy_match_bonus
-                    if must_attach_opening_energy:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Opening Energy Attachment Exception Matched -> Score {9700.0 + subscore}!")
-                        score = 9700.0 + subscore
-                    else:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score {tier_base + subscore}")
-                        score = tier_base + subscore
                 else:
-                    if my_energy < max_needed_energy:
-                        score = 800.0 + energy_match_bonus
-                    else:
-                        need_norm = (max_needed_energy - target_energy) / float(max_needed_energy)
-                        subscore = w_energy * 2.5 + need_norm * 1.5 + energy_match_bonus
-                        score = 500.0 + subscore
-                has_useful_pre_attack_action = True
+                    active_urgency_bonus = 50000.0 if is_active_target else 1000.0
+                    score = tier_base + active_urgency_bonus + (max_needed_energy - target_energy) * 10000.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Fast-Track Energy Attachment Matched -> Score {score}!")
+                has_useful_pre_attack_action = False  # Don't let setup block energy/attacks
 
-            # ── BRANCH 10: ATTACKING (GOAL OF THE GAME: DEAL DAMAGE & TAKE PRIZES!) ──
+            # ── AGGRESSIVE BRANCH 10: ATTACKING (THE ULTIMATE PRIORITY) ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
-                tier_base = 99999.0  # TOP PRIORITY: Attack whenever energy condition is met!
+                tier_base = 999999.0  # Absolute highest score on the board
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
                     score = -float('inf')
                 else:
                     prize_norm = (6 - my_prizes) / 6.0
-                    subscore = w_attack * 5.0 + w_prize * prize_norm * 3.0
+                    subscore = w_attack * 10.0 + w_prize * prize_norm * 5.0
                     if my_dmg >= opp_hp and opp_hp > 0:
-                        subscore += W.get("W_LETHAL_KO_BONUS", 500.0)
-                    if len(opp_bench) == 0:
-                        subscore += W.get("W_BENCH_OUT_BONUS", 1000.0)
+                        subscore += 50000.0  # Massive bonus for securing a guaranteed KO!
                     score = tier_base + subscore
-                log_rule_execution(f"  [IF EXECUTED] Branch 10: Attack Option Matched -> TOP PRIZE-CARD SCORE {score}!")
+                log_rule_execution(f"  [IF EXECUTED] Branch 10: HYPER-AGGRESSIVE ATTACK MATCHED -> Score {score}!")
 
             # ── BRANCH 11: HERO'S CAPE & STADIUMS / HEALING ──
             elif o_type in {7, 10} or cid in {HerosCape, CommunityCenter, JumboIceCream, TRFactory}:
@@ -1072,10 +1027,7 @@ def agent(obs_dict: dict) -> list[int]:
 
             # ── BRANCH 13: END TURN ──
             elif o_type in {14} or "END" in ot_str:
-                if has_useful_pre_attack_action:
-                    score = -50.0
-                else:
-                    score = 0.0
+                score = 0.0
                 log_rule_execution(f"  [IF EXECUTED] Branch 13: End Turn Matched -> Score {score}")
 
             else:
