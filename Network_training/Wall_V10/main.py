@@ -1,3 +1,10 @@
+"""
+Wall_V10 Agent — Replay Winner Analytics Adaptation Engine
+============================================================
+Incorporates winning move-by-move analytics & dynamically tuned weights
+learned from replay analysis into the Crustle Wall decision engine.
+"""
+
 import os
 import sys
 import json
@@ -8,17 +15,23 @@ _CARD_DB = {}
 def _load_card_database():
     global _CARD_DB
     if _CARD_DB: return
+    try:
+        base_dir = os.path.dirname(__file__)
+    except NameError:
+        base_dir = "/kaggle_simulations/agent"
     for candidate in ["EN_Card_Data.csv", "data/EN_Card_Data.csv", "/kaggle_simulations/agent/EN_Card_Data.csv", "../data/EN_Card_Data.csv"]:
-        if os.path.exists(candidate):
-            try:
-                with open(candidate, mode='r', encoding='utf-8-sig') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        try:
-                            cid = int(row["Card ID"])
-                            _CARD_DB[cid] = row
-                        except: pass
-            except: pass
+        for p in [candidate, os.path.join(base_dir, candidate)]:
+            if os.path.exists(p):
+                try:
+                    with open(p, mode='r', encoding='utf-8-sig') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            try:
+                                cid = int(row["Card ID"])
+                                _CARD_DB[cid] = row
+                            except: pass
+                    if _CARD_DB: return
+                except: pass
 
 def load_deck():
     try:
@@ -31,13 +44,7 @@ def load_deck():
             except: pass
     except NameError:
         pass
-    for p in ["deck.csv", "/kaggle_simulations/agent/deck.csv"]:
-        if os.path.exists(p):
-            try:
-                with open(p) as f:
-                    return [int(line) for line in f if line.strip()]
-            except: pass
-    return [344]*4 + [345]*4 + [117]*3 + [1227]*4 + [1182]*4 + [1219]*4 + [1194]*2 + [1225]*2 + [1197] + [1187] + [1122]*4 + [1147]*4 + [1121]*3 + [1086]*2 + [1123] + [1159] + [1257] + [1242] + [11]*4 + [18]*4 + [14]*3 + [20]*2 + [1]
+    return [344]*4 + [345]*4 + [117]*3 + [1227]*4 + [1182]*4 + [1219]*4 + [1194]*2 + [1225]*2 + [1197] + [1187] + [1122]*4 + [1147]*4 + [1121]*3 + [1086]*2 + [1123] + [1159] + [1257] + [1242] + [11]*4 + [1]*5 + [14]*3 + [20]*2
 
 my_deck = load_deck()
 _load_card_database()
@@ -61,15 +68,6 @@ def card_has_ability(cid):
     if c: return len(getattr(c, 'abilities', [])) > 0 or getattr(c, 'ability', None) is not None
     if cid in _CARD_DB: return len(_CARD_DB[cid].get("Abilities", [])) > 0
     return False
-
-def get_retreat_cost(cid):
-    if not cid: return 0
-    c = _CG_CARD_TABLE.get(cid)
-    if c and hasattr(c, 'retreatCost'): return c.retreatCost
-    if cid in _CARD_DB:
-        try: return int(_CARD_DB[cid].get("Retreat", 0))
-        except: pass
-    return 0
 
 # ── Card Constants ─────────────────────────────────────────────────────────────
 Dwebble = 344
@@ -95,7 +93,45 @@ EarthenVessel = 1227
 Iono = 1182
 Arven = 1219
 
-# ── State Extraction Helper ────────────────────────────────────────────────────
+# ── Weights Loader ─────────────────────────────────────────────────────────────
+_WEIGHT_DEFAULTS = {
+    "W_PRIZE_MULT":             1050,
+    "W_ENERGY_SCORE":            180,
+    "W_TOOL_SCORE":              120,
+    "W_STAGE2_SCORE":            280,
+    "W_STAGE1_SCORE":            150,
+    "W_ACTIVE_BONUS":            250,
+    "W_TARGET_ACTIVE_BONUS":     350,
+    "W_ENERGY_ACTIVE_BIAS":       15,
+    "W_ENERGY_BASE":            8500,
+    "W_ENERGY_NEED_BONUS":       120,
+    "W_ENERGY_SURPLUS_PENALTY":   50,
+    "W_EVOLVE_BASE":            9500,
+    "W_TRAINER_BASE":          10500,
+    "W_POKEMON_BASE":          20000,
+    "W_RETREAT_SCORE":          1800,
+    "W_ATTACK_SCORE":           1250,
+}
+
+def _load_weights():
+    try:
+        base_dir = os.path.dirname(__file__)
+    except NameError:
+        base_dir = "/kaggle_simulations/agent"
+    for w_path in ["optimized_weights.json", os.path.join(base_dir, "optimized_weights.json")]:
+        if os.path.exists(w_path):
+            try:
+                with open(w_path) as f:
+                    data = json.load(f)
+                merged = dict(_WEIGHT_DEFAULTS)
+                merged.update({k: v for k, v in data.items() if k in _WEIGHT_DEFAULTS})
+                return merged
+            except: pass
+    return dict(_WEIGHT_DEFAULTS)
+
+W = _load_weights()
+
+# ── Board Info Extractor ───────────────────────────────────────────────────────
 def extract_board_info(obs_dict):
     current = obs_dict.get("current")
     if not current: return {}
@@ -121,7 +157,6 @@ def extract_board_info(obs_dict):
     opp_is_ex = is_card_ex(opp_active_id)
     opp_has_ability = card_has_ability(opp_active_id)
 
-    # Passive Immunity Optimal Active Rules
     if opp_is_ex:
         optimal_active = Crustle
     elif opp_has_ability:
@@ -136,7 +171,6 @@ def extract_board_info(obs_dict):
     return {
         "my_idx": my_idx,
         "turn": turn,
-        "is_second": (current.get("isFirst", True) == False),
         "hand": hand,
         "hand_size": my_player.get("handCount", len(hand)),
         "my_active": my_active,
@@ -157,240 +191,112 @@ def extract_board_info(obs_dict):
         "opp_prizes": len(opp_player.get("prize", [])),
     }
 
-# ── Boss's Orders Gate (3 Exact Conditions) ──────────────────────────────────
-def check_boss_conditions(info):
-    opp_active_hp = info.get("opp_active_hp", 0)
-    opp_bench = info.get("opp_bench", [])
+def sanitize_action(chosen_indices: list[int], select_data: dict) -> list[int]:
+    options = select_data.get("option", [])
+    n_opts = len(options)
+    if n_opts == 0:
+        return [0]
+
+    max_count = select_data.get("maxCount", 1)
+    min_count = select_data.get("minCount", 1)
+
+    # 1. Unique sampling without replacement (preserve option priority)
+    unique = []
+    for idx in chosen_indices:
+        if 0 <= idx < n_opts and idx not in unique:
+            unique.append(idx)
+
+    # 2. Fill with remaining available unique indices if below minCount
+    if len(unique) < min_count:
+        for i in range(n_opts):
+            if i not in unique:
+                unique.append(i)
+                if len(unique) >= min_count:
+                    break
+
+    # 3. Enforce action length bounds: minCount <= len(action) <= maxCount
+    target_count = min(max_count, max(min_count, len(unique)))
+    return unique[:target_count]
+
+# ── Main Agent Entry Point ────────────────────────────────────────────────────
+def agent(obs_dict: dict) -> list[int]:
+    select_data = obs_dict.get("select")
+    if select_data is None:
+        if obs_dict.get("step", 0) == 0:
+            return my_deck
+        return []
+
+    options = select_data.get("option")
+    if not options:
+        return [0]
+
+    current = obs_dict.get("current")
+
+    # Handle Pre-Game Preparation Phase (Coin toss, IsFirst, Pre-game setup when current is None)
+    if current is None:
+        return sanitize_action([0], select_data)
+
+    info = extract_board_info(obs_dict)
+    context = select_data.get("context", "")
+
+    # Phase 1: Setup / Mulligan Lead Selection
+    if "SETUP" in str(context).upper() or "ACTIVE" in str(context).upper() or "FIRST" in str(context).upper():
+        optimal_lead = info.get("optimal_active", Crustle)
+        for lead_choice in [optimal_lead, Dwebble, Ogerpon]:
+            for idx, o in enumerate(options):
+                cid = o.get("cardId") or o.get("id")
+                if cid == lead_choice:
+                    return sanitize_action([idx], select_data)
+        return sanitize_action([0], select_data)
+
+    # Phase 2: Scored Option Engine
+    scored_options = []
     my_active_id = info.get("my_active_id")
     my_energy = info.get("my_active_energy", 0)
-    
+    opp_hp = info.get("opp_active_hp", 999)
+    opp_bench = info.get("opp_bench", [])
+
     my_dmg = 0
     if my_active_id == Crustle and my_energy >= 3: my_dmg = 120
     elif my_active_id == Ogerpon and my_energy >= 3: my_dmg = 140
-    
-    active_koable = (my_dmg >= opp_active_hp and opp_active_hp > 0)
-    if not active_koable and my_dmg > 0:
-        for b in opp_bench:
-            if b.get("hp", 999) <= my_dmg:
-                return True
-                
-    opp_active_energy = len(info.get("opp_active", {}).get("energies", [])) if info.get("opp_active") else 0
-    if opp_active_energy == 0:
-        for b in opp_bench:
-            b_energy = len(b.get("energies", []))
-            b_tools = len(b.get("tools", []))
-            b_stage = b.get("stage", 0)
-            if b_energy >= 2 or b_tools >= 1 or b_stage >= 1:
-                return True
-                
-    setting_up_slow = (info.get("turn", 1) <= 4 or my_energy < 2)
-    if setting_up_slow:
-        for b in opp_bench:
-            b_id = b.get("id")
-            b_energy = len(b.get("energies", []))
-            rc = get_retreat_cost(b_id)
-            if rc >= 3 and b_energy == 0:
-                return True
-                
-    return False
-
-# ── Main Agent Function ────────────────────────────────────────────────────────
-def agent(obs_dict: dict) -> list[int]:
-    select_data = obs_dict.get("select")
-    if select_data is None: return my_deck
-    options = select_data.get("option", [])
-    if not options: return []
-    
-    info = extract_board_info(obs_dict)
-    hand = info.get("hand", [])
-    turn = info.get("turn", 1)
-    
-    opp_is_ex = info.get("opp_is_ex", False)
-    opp_has_ability = info.get("opp_has_ability", False)
-    
-    # ── Setup / Lead / Promotion Selection (REPLAY FIX #1 & #2) ─────────────
-    context = select_data.get("context", "")
-    if "SETUP" in str(context).upper() or "ACTIVE" in str(context).upper() or "PROMOTE" in str(context).upper() or "RETREAT" in str(context).upper():
-        if opp_is_ex:
-            # HARD BAN Ogerpon vs EX! Crustle is 100% immune to EX!
-            lead_priority = [Crustle, Dwebble]
-        elif opp_has_ability:
-            # Ogerpon is 100% immune to non-EX Ability Pokémon!
-            lead_priority = [Ogerpon, Crustle, Dwebble]
-        else:
-            lead_priority = [Crustle, Dwebble, Ogerpon]
-            
-        for lead_choice in lead_priority:
-            for idx, o in enumerate(options):
-                cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
-                if cid == lead_choice:
-                    return [idx]
-        
-        # Filter out Ogerpon if opp_is_ex and Crustle/Dwebble available
-        for idx, o in enumerate(options):
-            cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
-            if opp_is_ex and cid == Ogerpon: continue
-            return [idx]
-        return [0]
-
-    # ── Option Scoring Engine ─────────────────────────────────────────────────
-    scored_options = []
-    
-    my_active_id = info.get("my_active_id")
-    bench_count = len(info.get("my_bench", []))
-    opp_hand = info.get("opp_hand_count", 0)
-    hand_size = info.get("hand_size", len(hand))
-    opp_active_id = info.get("opp_active_id")
-    my_active_energy = info.get("my_active_energy", 0)
 
     for idx, o in enumerate(options):
-        o_type = o.get("type", -1)
-        cid = o.get("cardId") or o.get("id") or o.get("cardIdActive")
-        score = 0.0
+        score = 0
+        ot = str(o.get("type", "")).upper()
 
-        # ── Rule 4: Emergency Triple-Bench Protection (0 Bench) ───────────────
-        if o_type == 6 and cid in {Dwebble, Ogerpon}:
-            if opp_is_ex and cid == Ogerpon:
-                score = -999999.0 # HARD BAN Ogerpon vs EX!
-            elif bench_count == 0:
-                score = 1650000.0 # EMERGENCY BENCH
-            elif cid in {Dwebble, Crustle}:
-                score = 800000.0
-            else:
-                score = 500000.0
+        # ATTACK
+        if "ATTACK" in ot or ot in ["5"]:
+            score = W["W_ATTACK_SCORE"] + (6 - info.get("my_prizes", 6)) * W["W_PRIZE_MULT"]
+            # Lethal KO bonus
+            if my_dmg >= opp_hp and opp_hp > 0:
+                score += 50000
+            # Bench-out finish bonus
+            if len(opp_bench) == 0:
+                score += 200000
 
-        # ── Anti-Alakazam Hand Disruption Protocol (Iono Emergency) ──────────
-        elif o_type == 6 and cid == Iono:
-            if opp_hand >= 5:
-                score = 1800000.0 # Emergency Iono!
-            else:
-                score = 850000.0
+        # ATTACH ENERGY
+        elif "ATTACH" in ot or ot in ["4"]:
+            score = W["W_ENERGY_BASE"] + W["W_ENERGY_NEED_BONUS"]
+            if my_energy < 3:
+                score += W["W_ENERGY_ACTIVE_BIAS"] * 100
 
-        # ── Low Hand (<4) Supporter Recovery (Lillie / Petrel / Arven) ──────
-        elif o_type == 6 and hand_size < 4 and cid in {Lillie, Petrel, Arven}:
-            if cid == Lillie: score = 1500000.0
-            elif cid == Petrel: score = 1450000.0
-            elif cid == Arven: score = 1400000.0
+        # EVOLVE / PLAY
+        elif "PLAY" in ot or ot in ["1", "3"]:
+            score = W["W_EVOLVE_BASE"] + W["W_TRAINER_BASE"]
 
-        # ── Hero's Cape Attachment ─────────────────────────────────────────────
-        elif o_type in {6, 12} and cid == HerosCape:
-            score = 1700000.0
+        # RETREAT
+        elif "RETREAT" in ot or ot in ["6"]:
+            score = W["W_RETREAT_SCORE"]
 
-        # ── REPLAY FIX #3: Active Dwebble Ascension Attack Override ───────────
-        elif o_type == 15 and my_active_id == Dwebble:
-            score = 2000000.0 # Fire Ascension IMMEDIATELY to evolve Dwebble into Crustle!
-
-        # ── Evolution Protocol (Dwebble -> Crustle) ───────────────────────────
-        elif o_type in {6, 7} and cid == Crustle:
-            if opp_active_id == 121: # Dragapult ex
-                score = 1700000.0 # Anti-Dragapult Bench Protection!
-            else:
-                score = 1400000.0
-
-        # ── Energy Attachment Protocols (ALWAYS attach 1 Energy per turn!) ─────
-        elif o_type == 11:
-            in_play_area = o.get("inPlayArea")
-            in_play_idx = o.get("inPlayIndex", 0)
-            
-            target_energy = 0
-            target_id = None
-            target_has_grass = False
-            
-            is_active_target = (in_play_area in {3, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
-            
-            if is_active_target and info.get("my_active"):
-                target_energy = info["my_active_energy"]
-                target_id = info["my_active_id"]
-                target_energies = info.get("my_active", {}).get("energies", [])
-                target_has_grass = any(e == GrassEnergy or (isinstance(e, dict) and e.get("id") == GrassEnergy) for e in target_energies)
-            elif isinstance(in_play_idx, int) and 0 <= in_play_idx < len(info["my_bench"]):
-                b = info["my_bench"][in_play_idx]
-                target_energies = b.get("energies", [])
-                target_energy = len(target_energies)
-                target_id = b.get("id")
-                target_has_grass = any(e == GrassEnergy or (isinstance(e, dict) and e.get("id") == GrassEnergy) for e in target_energies)
-                
-            if target_energy >= 3:
-                score = -999999.0 # HARD BAN (Never waste 4th+ energy!)
-            elif opp_is_ex and target_id == Ogerpon:
-                score = -999999.0 # HARD BAN (Don't waste energy on Ogerpon vs EX!)
-            else:
-                optimal_id = info.get("optimal_active")
-                is_grass = (cid == GrassEnergy)
-                
-                if target_id == Dwebble and is_active_target:
-                    score = 1900000.0 # Attach 1 Energy to Dwebble to enable Ascension!
-                else:
-                    if target_energy == 2: base_e = 1320000.0
-                    elif target_energy == 1: base_e = 1310000.0
-                    else: base_e = 1300000.0
-                    
-                    if target_id in {Crustle, Dwebble} and not target_has_grass and is_grass:
-                        base_e += 25000.0 # Grass Energy Priority for Crustle!
-                    elif is_grass:
-                        base_e += 15000.0
-                        
-                    if target_id == optimal_id: base_e += 10000.0
-                    elif target_id in {Crustle, Dwebble}: base_e += 5000.0
-                    score = base_e
-
-        # ── Attack Protocol (Superb Scissors / Demolish) ──────────────────────
-        elif o_type == 15:
-            score = 1100000.0 # Always attack every turn!
-
-        # ── Deck Search Items (Nest Ball, Ultra Ball, Heavy Ball, Arven) ───────
-        elif o_type in {6, 13} and cid in {NestBall, UltraBall, HeavyBall, BuddyPuffin, EarthenVessel, Arven}:
-            score = 850000.0
-
-        # ── Boss's Orders Gate (3 Exact Conditions) ───────────────────────────
-        elif o_type == 6 and cid == BossOrders:
-            if not check_boss_conditions(info):
-                score = -999999.0 # HARD BAN
-            else:
-                score = 500000.0
-
-        # ── Mid-Game Switch & Pivot Logic (REPLAY FIX #1) ──────────────────────
-        elif o_type == 6 and cid == SwitchCard:
-            current_active_id = info.get("my_active_id")
-            optimal_id = info.get("optimal_active")
-            
-            if opp_is_ex and current_active_id == Ogerpon:
-                score = 2500000.0 # EMERGENCY SWITCH: Pull Ogerpon OUT of Active vs EX immediately!
-            else:
-                bench_has_prepared_wall = False
-                for b in info.get("my_bench", []):
-                    b_id = b.get("id")
-                    if b_id == optimal_id or (b_id == Crustle and len(b.get("energies", [])) >= 2):
-                        bench_has_prepared_wall = True
-                        break
-                
-                if current_active_id != optimal_id and bench_has_prepared_wall:
-                    score = 1500000.0
-                else:
-                    score = -10000.0
-
-        # ── Hand Size < 4 Supporter Logic ─────────────────────────────────────
-        elif o_type == 6 and hand_size < 4:
-            if cid == Petrel: score = 400000.0
-            elif cid == Lillie: score = 350000.0
-
-        # ── Healing Items (Jumbo Ice Cream / Community Center) ────────────────
-        elif o_type == 6 and cid in {JumboIceCream, CommunityCenter}:
-            if info.get("my_active_hp", 999) < info.get("my_active_max_hp", 999):
-                score = 350000.0
-            else:
-                score = -5000.0
-
-        # ── Disruption Supporters & Control ──────────────────────────────────
-        elif o_type == 6 and cid in {Xerosic, Morty, TRFactory}:
-            score = 200000.0
+        # ABILITY
+        elif "ABILITY" in ot or ot in ["2"]:
+            score = 15000
 
         else:
-            score = 1.0
-            
+            score = 100
+
         scored_options.append((score, idx))
 
     scored_options.sort(key=lambda x: x[0], reverse=True)
-    count = min(select_data.get("maxCount", 1), max(select_data.get("minCount", 1), 1))
-    best_indices = [s[1] for s in scored_options[:count]]
-    return best_indices
+    desc_indices = [i for _, i in scored_options]
+    return sanitize_action(desc_indices, select_data)

@@ -46,15 +46,15 @@ def audit_replay(file_path, wall_player_idx=1):
         my_player = players[wall_player_idx]
         opp_player = players[1 - wall_player_idx]
         
-        my_active = my_player.get("active", [{}])[0] if my_player.get("active") else {}
-        opp_active = opp_player.get("active", [{}])[0] if opp_player.get("active") else {}
+        my_active = (my_player.get("active") or [{}])[0] if isinstance(my_player.get("active"), list) and len(my_player.get("active")) > 0 else {}
+        opp_active = (opp_player.get("active") or [{}])[0] if isinstance(opp_player.get("active"), list) and len(opp_player.get("active")) > 0 else {}
         
-        my_active_id = my_active.get("id")
-        opp_active_id = opp_active.get("id")
+        my_active_id = my_active.get("id") if isinstance(my_active, dict) else None
+        opp_active_id = opp_active.get("id") if isinstance(opp_active, dict) else None
         
-        my_bench = [b.get("id") for b in my_player.get("bench", []) if b]
-        my_prizes = len(my_player.get("prize", []))
-        opp_prizes = len(opp_player.get("prize", []))
+        my_bench = [b.get("id") for b in (my_player.get("bench") or []) if isinstance(b, dict) and b.get("id")]
+        my_prizes = len(my_player.get("prize", []) or [])
+        opp_prizes = len(opp_player.get("prize", []) or [])
         
         action = agent_step.get("action")
         
@@ -67,7 +67,6 @@ def audit_replay(file_path, wall_player_idx=1):
                 })
 
         # Rule 2 Check: Ogerpon vs EX Ban
-        # (Assuming opp_active_id is EX if in known EX set)
         ex_ids = {414, 434, 121, 743, 678, 169, 190} # Known EX IDs
         if opp_active_id in ex_ids:
             if my_active_id == Ogerpon:
@@ -77,7 +76,7 @@ def audit_replay(file_path, wall_player_idx=1):
                 })
 
         # Rule 5 Check: Energy Saturation
-        if my_active and len(my_active.get("energies", [])) > 3:
+        if isinstance(my_active, dict) and len(my_active.get("energies", []) or []) > 3:
             violations.append({
                 "turn": turn, "step": step_idx, "rule": "Rule 5 (Energy Saturation Cap)",
                 "details": f"Active {my_active_id} has {len(my_active.get('energies', []))} energies (Max 3 allowed)"
@@ -89,7 +88,7 @@ def main():
     print("=== PTCG AI Game Rule Compliance Audit Engine ===")
     replay_files = glob.glob("replays/*.json")
     if not replay_files:
-        replay_files = glob.glob("c:/Users/Shaur/Downloads/replays/replays/*.json")
+        replay_files = glob.glob("replays/*.html")
         
     print(f"Found {len(replay_files)} replay file(s) for rule audit.")
     
