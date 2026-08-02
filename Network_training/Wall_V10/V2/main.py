@@ -166,9 +166,21 @@ def format_pokemon_summary(p_dict):
     max_hp = p_dict.get("maxHp", 0)
     e_cnt = get_energy_count(p_dict)
     t_cards = p_dict.get("tools") or []
-    t_names = [get_card_name(t.get("id") if isinstance(t, dict) else t) for t in t_cards]
     t_str = f"Tools: {', '.join(t_names)}" if t_names else "Tools: None"
     return f"{c_name} (ID #{cid}) [HP: {hp}/{max_hp} | Energy: {e_cnt} | {t_str}]"
+
+def get_attack_energy_requirement(cid):
+    if cid == Crustle or cid == Dwebble: return 3
+    elif cid == Ogerpon: return 3
+    elif cid == Kangaskhan: return 3
+    return 3
+
+def has_enough_energy_for_highest_attack(p_dict):
+    if not p_dict or not isinstance(p_dict, dict): return False
+    cid = p_dict.get("id")
+    req = get_attack_energy_requirement(cid)
+    current_energy = get_energy_count(p_dict)
+    return current_energy >= req
 
 # ── Weights Loader ─────────────────────────────────────────────────────────────
 _WEIGHT_DEFAULTS = {
@@ -595,11 +607,13 @@ def agent(obs_dict: dict) -> list[int]:
             select_data.get("reason") is not None
         )
 
-        # Expected attack damage
+        # Expected attack damage (Check if active has enough energy for highest attack!)
+        my_active_has_enough_energy = has_enough_energy_for_highest_attack(my_active)
         my_dmg = 0
-        if my_active_id == Crustle and my_energy >= 3: my_dmg = 120
-        elif my_active_id == Ogerpon and my_energy >= 3: my_dmg = 140
-        elif my_active_id == Kangaskhan and my_energy >= 3: my_dmg = 100
+        if my_active_has_enough_energy:
+            if my_active_id == Crustle: my_dmg = 120
+            elif my_active_id == Ogerpon: my_dmg = 140
+            elif my_active_id == Kangaskhan: my_dmg = 100
 
         # Helper state checks for strict rules
         has_other_supporter_in_hand = any(c in {Lillie, Petrel, Hilda, Colress, Morty, Xerosic} for c in hand)
@@ -966,10 +980,12 @@ def agent(obs_dict: dict) -> list[int]:
                         energy_match_bonus += 200.0
                         log_rule_execution(f"  [IF EXECUTED] Branch 9: Special Protection Energy matched for Kangaskhan ex -> +200.0 Priority Bonus!")
 
+                target_pkmn = my_active if is_active_target else (my_bench[in_play_idx] if in_play_idx < len(my_bench) else None)
+
                 if target_cid == Kangaskhan and not is_early_game:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Late-Game Kangaskhan Energy Attachment HARD BANNED (-inf)")
                     score = -float('inf')
-                elif target_energy >= max_needed_energy:
+                elif has_enough_energy_for_highest_attack(target_pkmn) or target_energy >= max_needed_energy:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies for its highest attack!")
                     score = -float('inf')
                 elif is_active_target:
