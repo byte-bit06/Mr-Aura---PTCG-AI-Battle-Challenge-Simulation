@@ -3,7 +3,7 @@ Wall_V10 Agent — Replay Winner Analytics Adaptation Engine (V2 Strict Rules En
 ====================================================================================
 Incorporates winning move-by-move analytics & strict hard-coded strategic rules:
 
-Hard-Coded Strategic Directives:
+Hard-Coded Strategic Directives (Now fully resolved via position-to-card ID resolver):
   1. Pokégear 3.0 Restriction: Never play Pokégear 3.0 if a supporter is already in hand or played this turn.
      - Pokégear Search Selection: ALWAYS prioritize Lillie (Score: 80,000) over any other Supporter in Pokégear top 7.
   2. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until at least 2 are in play (Score: 100,000 in Search Modal).
@@ -182,6 +182,50 @@ w_attack  = W.get("W_ATTACK_SCORE", 1250.0) / 1000.0
 w_retreat = W.get("W_RETREAT_SCORE", 1800.0) / 1000.0
 w_tool    = W.get("W_TOOL_SCORE", 120.0) / 1000.0
 
+# ── Universal Option-to-Card ID Resolver ──────────────────────────────────────
+def resolve_card_id(o, info, current, select_data):
+    if not o or not isinstance(o, dict): return None
+    cid = o.get('cardId') or o.get('id') or o.get('cardIdActive') or o.get('cardIdTarget')
+    if cid is not None: return cid
+    
+    area = o.get('area')
+    idx = o.get('index')
+    if idx is None: idx = o.get('cardIndex') or o.get('handIndex')
+    
+    hand = info.get('hand', [])
+    looking = current.get('looking', []) if isinstance(current, dict) else []
+    deck = select_data.get('deck', []) if isinstance(select_data, dict) else []
+
+    # Area 2 = Hand
+    if area == 2 or (area is None and idx is not None and o.get('type') in {1, 3, 7, 8, 9}):
+        if isinstance(hand, list) and idx is not None and 0 <= idx < len(hand):
+            c_val = hand[idx]
+            return c_val.get('id') if isinstance(c_val, dict) else c_val
+            
+    # Area 12 = Looking / Search Deck Modal
+    if area == 12 or (area is None and isinstance(looking, list) and len(looking) > 0):
+        if isinstance(looking, list) and idx is not None and 0 <= idx < len(looking):
+            c_val = looking[idx]
+            return c_val.get('id') if isinstance(c_val, dict) else c_val
+
+    # Area 1 = Deck List
+    if area == 1:
+        if isinstance(deck, list) and idx is not None and 0 <= idx < len(deck):
+            c_val = deck[idx]
+            return c_val.get('id') if isinstance(c_val, dict) else c_val
+        elif isinstance(looking, list) and idx is not None and 0 <= idx < len(looking):
+            c_val = looking[idx]
+            return c_val.get('id') if isinstance(c_val, dict) else c_val
+            
+    # Area 4 = Bench / Active
+    if area == 4:
+        my_bench = info.get('my_bench', [])
+        if isinstance(my_bench, list) and idx is not None and 0 <= idx < len(my_bench):
+            c_val = my_bench[idx]
+            return c_val.get('id') if isinstance(c_val, dict) else c_val
+
+    return None
+
 # ── Board Info Extractor ───────────────────────────────────────────────────────
 def extract_board_info(obs_dict):
     current = obs_dict.get("current")
@@ -193,7 +237,7 @@ def extract_board_info(obs_dict):
     my_player = current["players"][my_idx]
     opp_player = current["players"][opp_idx]
     
-    hand = [c.get("id") for c in my_player.get("hand", []) if "id" in c]
+    hand = [c.get("id") if isinstance(c, dict) else c for c in my_player.get("hand", []) if c is not None]
     
     my_active_list = my_player.get("active", [])
     my_active = my_active_list[0] if len(my_active_list) > 0 else None
@@ -308,13 +352,13 @@ def score_discard_option(cid, hand, bench_and_active_ids):
     return 0.0
 
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
-    # ── 1. DWEBBLE SEARCH PRIORITY (POKEMON SEARCH) ──
+    # ── 1. DWEBBLE SEARCH PRIORITY (POKÉMON SEARCH - Buddy Poffin / Ultra Ball) ──
     if cid == Dwebble and dwebble_in_play < 2:
-        return 100000.0  # Absolute MAX priority for Dwebble in Pokemon search!
+        return 100000.0  # Absolute MAX priority for Dwebble!
 
-    # ── 2. LILLIE SEARCH PRIORITY (POKÉGEAR / SUPPORTER SEARCH) ──
+    # ── 2. LILLIE SEARCH PRIORITY (POKÉGEAR 3.0 / SUPPORTER SEARCH) ──
     if cid == Lillie:
-        return 80000.0   # Absolute MAX priority for Lillie in Supporter/Pokégear search!
+        return 80000.0   # Absolute MAX priority for Lillie!
 
     # ── 3. CRUSTLE EVOLUTION SEARCH ──
     if cid == Crustle:
@@ -325,7 +369,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
     # ── 4. OTHER SUPPORTERS (POKÉGEAR FALLBACKS) ──
     if cid in SUPPORTERS_SET:
         if cid == BossOrders:
-            return 100.0  # Reserve Boss's Orders unless specifically needed
+            return 100.0
         return 500.0
 
     # ── 5. OGERPON SEARCH LIMIT ──
@@ -475,7 +519,7 @@ def agent(obs_dict: dict) -> list[int]:
             best_idx = 0
             best_rank = -float('inf')
             for idx, o in enumerate(options):
-                cid = o.get("cardId") or o.get("id")
+                cid = resolve_card_id(o, info, current, select_data)
                 matched_pkmn = None
                 for b in my_bench:
                     if _get_val(b, "id") == cid:
@@ -511,7 +555,9 @@ def agent(obs_dict: dict) -> list[int]:
             score = 0.0
             o_type = o.get("type", -1)
             ot_str = str(o_type).upper()
-            cid = o.get("cardId") or o.get("id") or o.get("cardIdActive") or o.get("cardIdTarget")
+            
+            # Universal Option-to-Card ID Resolution!
+            cid = resolve_card_id(o, info, current, select_data)
 
             # ── DECK SEARCH / CARD SELECTION MODAL ──
             if "DISCARD" in context_str:
