@@ -5,8 +5,8 @@ Incorporates winning move-by-move analytics & strict hard-coded strategic rules:
 
 Hard-Coded Strategic Directives:
   1. Pokégear 3.0 Restriction: Never play Pokégear 3.0 if a supporter is already in hand or played this turn.
-     - Pokégear Search Selection: If hand < 4 cards, prioritize Lillie above all other supporters.
-  2. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until at least 2 are in play.
+     - Pokégear Search Selection: If hand < 4 cards, prioritize Lillie above all other supporters (Score: 80,000).
+  2. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until at least 2 are in play (Score: 100,000 in Search Modal).
   3. Opening Hand Energy Attachment: If opening hand lacks Dwebble/Ogerpon/search items, attach any energy in hand immediately.
   4. Lillie Supporter Sequencing: Always play all playable Pokémon, evolutions, and items BEFORE playing Lillie.
   5. Ultra Ball Restriction: Only play Ultra Ball if needed to get Dwebble (< 2 in play), or to find Crustle / Ogerpon when needed.
@@ -308,30 +308,28 @@ def score_discard_option(cid, hand, bench_and_active_ids):
     return 0.0
 
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
-    # Rule Directive: If hand_size < 4 when using Pokégear / search, prioritize Lillie above all other supporters
-    if hand_size < 4:
-        if cid == Lillie:
-            return 25.0  # Highest priority search selection when hand is low!
-        elif cid in SUPPORTERS_SET:
-            return 2.0
-
     # Rule 2: Early game Dwebble search priority (< 2 in play)
     if dwebble_in_play < 2:
         if cid == Dwebble:
-            return W.get("W_SEARCH_DWEBBLE_MISSING", 15.0)  # Highest search priority!
+            return 100000.0  # ABSOLUTE MAXIMUM SEARCH PRIORITY FOR DWEBBLE!
         elif cid == Crustle and Dwebble in bench_and_active_ids:
-            return 8.0
-        elif cid == Kangaskhan and not is_early_game:
-            return -float('inf')
+            return 50000.0
         elif cid == Ogerpon and not opp_has_ability:
-            return -2.0  # Focus on Dwebble first!
+            return -100.0  # Focus on Dwebble first!
+
+    # Rule Directive: If hand_size < 4 when using Pokégear / search, prioritize Lillie above all other supporters
+    if hand_size < 4:
+        if cid == Lillie:
+            return 80000.0  # Top priority search selection when hand is low!
+        elif cid in SUPPORTERS_SET:
+            return 500.0
 
     # Rule 1: Mask Stage 1 evolution if no matching Basic is in play!
     if cid == Crustle and Dwebble not in bench_and_active_ids:
-        return -10.0
+        return -1000.0
     
     if cid == Crustle and Dwebble in bench_and_active_ids:
-        return W.get("W_SEARCH_CRUSTLE_READY", 10.0)
+        return 50000.0
 
     # Rule 6: Never search Ogerpon if already >= 2 in play unless opponent active has an ability
     if cid == Ogerpon and not opp_has_ability and bench_and_active_ids.count(Ogerpon) >= 2:
@@ -339,13 +337,13 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
     
     if cid == Kangaskhan and not is_early_game:
         if bench_count < 2:
-            return W.get("W_SEARCH_KANGASKHAN_EMERGENCY", 3.0)
+            return 1000.0
         return -float('inf')
 
     if cid in bench_and_active_ids and bench_count >= 5:
-        return -4.0
+        return -100.0
         
-    return W.get("W_SEARCH_NEUTRAL", 1.0)
+    return 100.0
 
 def sanitize_action(chosen_indices: list[int], select_data: dict) -> list[int]:
     options = select_data.get("option", [])
@@ -429,6 +427,13 @@ def agent(obs_dict: dict) -> list[int]:
         has_setup_pieces = any(c in {Dwebble, Ogerpon, BuddyPuffin, UltraBall} for c in hand)
         must_attach_opening_energy = (turn_num <= 2 and not has_setup_pieces)
 
+        # Robust Detection of Deck Search / Card Selection Modal
+        is_search_modal = (
+            current.get("looking") is not None or
+            any(kw in context_str for kw in ["SEARCH", "DECK", "LOOKING", "CHOOSE", "SELECT", "POFFIN", "FETCH", "FIND", "VIEW", "BALL"]) or
+            select_data.get("reason") is not None
+        )
+
         # Expected attack damage
         my_dmg = 0
         if my_active_id == Crustle and my_energy >= 3: my_dmg = 120
@@ -463,7 +468,7 @@ def agent(obs_dict: dict) -> list[int]:
             if bid == Ogerpon and opp_has_ability: benched_wall_takes_zero = True
 
         # Active Promotion Rank Function (Setup / Active Promotion Phase)
-        if "SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str:
+        if ("SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str) and not is_search_modal:
             best_idx = 0
             best_rank = -float('inf')
             for idx, o in enumerate(options):
@@ -505,10 +510,10 @@ def agent(obs_dict: dict) -> list[int]:
             ot_str = str(o_type).upper()
             cid = o.get("cardId") or o.get("id") or o.get("cardIdActive") or o.get("cardIdTarget")
 
-            # Context Check for Discard / Search selections
+            # ── DECK SEARCH / CARD SELECTION MODAL ──
             if "DISCARD" in context_str:
                 score = score_discard_option(cid, hand, bench_and_active_ids)
-            elif "SEARCH" in context_str or "DECK" in context_str:
+            elif is_search_modal:
                 score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game, dwebble_in_play, opp_has_ability, hand_size)
 
             # ── RULE 1: POKÉGEAR 3.0 RESTRICTION ──
@@ -625,7 +630,6 @@ def agent(obs_dict: dict) -> list[int]:
                 elif is_active_target:
                     need_norm = (3 - target_energy) / 3.0
                     subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
-                    # Directive 1: Opening hand energy attachment when lacking Dwebble/Ogerpon/search items
                     if must_attach_opening_energy:
                         score = 950.0 + subscore  # Top Priority Opening Energy Attachment!
                     else:
