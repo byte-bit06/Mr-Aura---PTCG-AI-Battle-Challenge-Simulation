@@ -1,14 +1,23 @@
 """
-Wall_V10 Agent — Replay Winner Analytics Adaptation Engine
-============================================================
+Wall_V10 Agent — Replay Winner Analytics Adaptation Engine (V2 Strategic Upgrade)
+================================================================================
 Incorporates winning move-by-move analytics & dynamically tuned weights
-learned from replay analysis into the Crustle Wall decision engine.
+learned from replay analysis into the Crustle/Ogerpon Wall decision engine.
+
+Key Strategy:
+  - Crustle Wall: Blocks all Pokémon ex (immune to damage from ex).
+  - Ogerpon Wall: Blocks all Pokémon with abilities (Cornerstone Mask Ogerpon ex).
+  - Early-Game Kangaskhan ex: Rush early KOs before opponent sets up.
+  - Late-Game Hard Ban on Kangaskhan ex: Prevent benching, promoting, or energizing Kangaskhan in late game.
+  - Hard Limits: Uses -float('inf') for absolute non-negotiable bans.
+  - Normalized Score Engine: Integrates optimized_weights.json cleanly.
 """
 
 import os
 import sys
 import json
 import csv
+from math import inf
 
 # ── Card Database & Deck Loader ───────────────────────────────────────────────
 _CARD_DB = {}
@@ -74,6 +83,7 @@ def card_has_ability(cid):
 Dwebble = 344
 Crustle = 345
 Ogerpon = 117
+Kangaskhan = 756
 SwitchCard = 14
 BossOrders = 20
 HerosCape = 1242
@@ -160,6 +170,24 @@ def extract_board_info(obs_dict):
     opp_is_ex = is_card_ex(opp_active_id)
     opp_has_ability = card_has_ability(opp_active_id)
 
+    # Check opponent bench for ex or ability threats if active is non-ex
+    if not opp_is_ex:
+        for b in opp_bench:
+            bid = b.get("id") if isinstance(b, dict) else getattr(b, "id", None)
+            if is_card_ex(bid):
+                opp_is_ex = True
+                break
+    if not opp_has_ability:
+        for b in opp_bench:
+            bid = b.get("id") if isinstance(b, dict) else getattr(b, "id", None)
+            if card_has_ability(bid):
+                opp_has_ability = True
+                break
+
+    # Wall Method Selection:
+    # 1. If Opponent has EX Pokémon -> Crustle wall blocks EXs
+    # 2. If Opponent has Ability Pokémon -> Ogerpon wall blocks Ability Pokémon
+    # 3. Otherwise default to Crustle
     if opp_is_ex:
         optimal_active = Crustle
     elif opp_has_ability:
@@ -200,24 +228,32 @@ def _get_val(obj, key, default=None):
         return obj.get(key, default)
     return getattr(obj, key, default)
 
-def rank_active_candidate(pokemon, optimal_active_id):
-    if not pokemon: return -999999.0
+def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
+    if not pokemon: return -float('inf')
     cid = _get_val(pokemon, "id")
     hp = _get_val(pokemon, "hp", 0)
     energies = _get_val(pokemon, "energies") or []
     energy_count = len(energies)
     
-    # Fix 4: Active Promotion Rank Function
+    # HARD BAN: Never promote Kangaskhan ex to active in late game!
+    if cid == Kangaskhan and not is_early_game:
+        return -float('inf')
+    
     # Score = (Energy Attached * 3000) + (Current HP * 100) - (Is Combo Piece * 5000)
     is_combo_piece = 1 if (cid == Dwebble and energy_count == 0) else 0
     score = (energy_count * 3000.0) + (hp * 100.0) - (is_combo_piece * 5000.0)
     
     if cid == optimal_active_id:
-        score += 10000.0  # Bonus for matching optimal active wall
+        score += 20000.0  # Priority match for wall method (Crustle for ex, Ogerpon for ability)
+    elif cid == Dwebble:
+        score += 15000.0
+    elif cid == Ogerpon:
+        score += 10000.0
+    elif cid == Kangaskhan and is_early_game:
+        score += 12000.0  # Early game knockout pressure
     return score
 
 def score_discard_option(cid, hand, bench_and_active_ids):
-    # Fix 2: Discard Penalty Matrix
     # High Discard Penalty (-50,000): Win-condition Supporters & key evolution targets
     if cid in {BossOrders, Iono, Lillie, Arven}:
         return -50000.0
@@ -236,8 +272,7 @@ def score_discard_option(cid, hand, bench_and_active_ids):
 
     return 1000.0
 
-def score_search_option(cid, hand, bench_and_active_ids, bench_count):
-    # Fix 1: Search Prerequisite Masking
+def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True):
     # Rule 1: Mask Stage 1 evolution if no matching Basic is in play!
     if cid == Crustle and Dwebble not in bench_and_active_ids:
         return -50000.0  # Mask unplayable evolution card!
@@ -250,7 +285,11 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count):
     if cid == Crustle and Dwebble in bench_and_active_ids:
         return 190000.0  # Search ready-to-evolve Stage 1!
     
-    # Rule 4: Mask redundant basic search if bench is full
+    # Rule 4: Hard ban searching Kangaskhan in late game
+    if cid == Kangaskhan and not is_early_game:
+        return -float('inf')
+
+    # Rule 5: Mask redundant basic search if bench is full
     if cid in bench_and_active_ids and bench_count >= 5:
         return -20000.0
         
@@ -297,7 +336,7 @@ def agent(obs_dict: dict) -> list[int]:
 
     current = obs_dict.get("current")
 
-    # Handle Pre-Game Preparation Phase (Coin toss, IsFirst, Pre-game setup when current is None)
+    # Handle Pre-Game Preparation Phase
     if current is None:
         return sanitize_action([0], select_data)
 
@@ -306,26 +345,37 @@ def agent(obs_dict: dict) -> list[int]:
         context = select_data.get("context", "")
         context_str = str(context).upper()
 
-        # Fix 4: Active Promotion Rank Function (Setup / Active Promotion Phase)
+        turn_num = info.get("turn", 1)
+        my_prizes = info.get("my_prizes", 6)
+        # Early Game condition: turns 1-4 or initial prize state (6 remaining)
+        is_early_game = (turn_num <= 4 or my_prizes >= 5)
+
+        # Active Promotion Rank Function (Setup / Active Promotion Phase)
         if "SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str:
             optimal_lead = info.get("optimal_active", Crustle)
             my_bench = info.get("my_bench", [])
             
-            # Rank candidates using Active Promotion Rank Function
             best_idx = 0
-            best_rank = -999999.0
+            best_rank = -float('inf')
             for idx, o in enumerate(options):
                 cid = o.get("cardId") or o.get("id")
-                # Check option candidate match in bench or hand
                 matched_pkmn = None
                 for b in my_bench:
                     if _get_val(b, "id") == cid:
                         matched_pkmn = b
                         break
-                r_score = rank_active_candidate(matched_pkmn, optimal_lead) if matched_pkmn else 0.0
-                if cid == optimal_lead: r_score += 20000.0
-                elif cid == Dwebble: r_score += 15000.0
-                elif cid == Ogerpon: r_score += 10000.0
+                r_score = rank_active_candidate(matched_pkmn, optimal_lead, is_early_game) if matched_pkmn else 0.0
+                if cid == optimal_lead:
+                    r_score += 20000.0
+                elif cid == Dwebble:
+                    r_score += 15000.0
+                elif cid == Ogerpon:
+                    r_score += 12000.0
+                elif cid == Kangaskhan:
+                    if is_early_game:
+                        r_score += 10000.0
+                    else:
+                        r_score = -float('inf')  # HARD BAN Kangaskhan active promotion in late game!
 
                 if r_score > best_rank:
                     best_rank = r_score
@@ -333,7 +383,7 @@ def agent(obs_dict: dict) -> list[int]:
 
             return sanitize_action([best_idx], select_data)
 
-        # Phase 2: Scored Option Engine & Strict Turn Hierarchy
+        # Scored Option Engine & Turn Hierarchy
         scored_options = []
         my_active = info.get("my_active")
         my_active_id = info.get("my_active_id")
@@ -346,6 +396,7 @@ def agent(obs_dict: dict) -> list[int]:
         hand = info.get("hand", [])
         my_bench = info.get("my_bench", [])
         bench_count = len(my_bench)
+        optimal_lead = info.get("optimal_active", Crustle)
 
         bench_and_active_ids = [_get_val(b, "id") for b in my_bench if _get_val(b, "id")]
         if my_active_id: bench_and_active_ids.append(my_active_id)
@@ -356,7 +407,6 @@ def agent(obs_dict: dict) -> list[int]:
         elif my_active_id == Ogerpon and my_energy >= 3: my_dmg = 140
         elif my_active_id == Kangaskhan and my_energy >= 3: my_dmg = 100
 
-        # Track pre-attack useful actions to penalize premature END turn
         has_useful_pre_attack_action = False
 
         for idx, o in enumerate(options):
@@ -369,44 +419,55 @@ def agent(obs_dict: dict) -> list[int]:
             if "DISCARD" in context_str:
                 score = score_discard_option(cid, hand, bench_and_active_ids)
             elif "SEARCH" in context_str or "DECK" in context_str:
-                score = score_search_option(cid, hand, bench_and_active_ids, bench_count)
+                score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game)
 
-            # ── Fix 3: Early-Bench Priority Heuristic (Play Basics to Bench BEFORE Supporters!) ──
+            # ── 1. EARLY BENCH PRIORITY (Play Basics to Bench) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
-                score = 180000.0  # Top Early Turn Priority! Starts 1-turn evolution clock!
-                has_useful_pre_attack_action = True
+                if cid == Kangaskhan and not is_early_game:
+                    score = -float('inf')  # HARD BAN playing Kangaskhan ex in late game!
+                elif cid == Ogerpon and optimal_lead == Ogerpon:
+                    score = 185000.0 + W["W_POKEMON_BASE"]  # High priority wall deployment vs Ability opponents
+                    has_useful_pre_attack_action = True
+                else:
+                    score = 180000.0 + W["W_POKEMON_BASE"]  # Early bench priority!
+                    has_useful_pre_attack_action = True
 
-            # ── 1. DRAW & SEARCH SUPPORTERS (Priority 1: Play early to draw cards!) ──
+            # ── 2. DRAW & SEARCH SUPPORTERS ──
             elif o_type in {7, 3} and cid in {Lillie, Carmine, Arven, Iono, Pokégear, BuddyPuffin, NestBall, UltraBall, HeavyBall, EarthenVessel}:
-                score = 120000.0
+                score = 120000.0 + W["W_TRAINER_BASE"]
                 has_useful_pre_attack_action = True
 
-            # ── 2. EVOLUTION (Priority 2: Evolve Dwebble to Crustle) ──
+            # ── 3. EVOLUTION (Evolve Dwebble to Crustle) ──
             elif (o_type in {6, 7, 9} or "EVOLVE" in ot_str) and (cid == Crustle):
-                score = 140000.0  # Instant Crustle evolution wall!
+                score = 140000.0 + W["W_EVOLVE_BASE"]
+                if optimal_lead == Crustle:
+                    score += 5000.0  # Extra wall match bonus vs EX opponents
                 has_useful_pre_attack_action = True
 
-            # ── 3. FOCUSED ENERGY ATTACHMENT (Priority 3: Primary Attacker Focus!) ──
+            # ── 4. FOCUSED ENERGY ATTACHMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
                 is_active_target = (in_play_area in {3, 4, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
                 
-                # Determine current energy on target Pokemon
-                if is_active_target:
-                    target_energy = my_energy
-                else:
-                    target_energy = 0
+                target_cid = my_active_id if is_active_target else None
+                target_energy = my_energy if is_active_target else 0
+                
+                if not is_active_target:
                     if in_play_idx is not None and 0 <= in_play_idx < len(my_bench):
                         b_pkmn = my_bench[in_play_idx]
+                        target_cid = _get_val(b_pkmn, "id")
                         b_energies = _get_val(b_pkmn, "energies") or []
                         target_energy = len(b_energies)
 
-                # Hard Stop: Absolute block on energy attachment if target already has 3+ energy
-                if target_energy >= 3:
-                    score = -999999.0  # HARD BAN surplus energy beyond 3 (hoarding prevention)
+                # HARD BAN: Never attach energy to Kangaskhan ex in late game!
+                if target_cid == Kangaskhan and not is_early_game:
+                    score = -float('inf')
+                # HARD BAN: Absolute block on energy attachment if target already has 3+ energy (hoarding prevention)
+                elif target_energy >= 3:
+                    score = -float('inf')
                 elif is_active_target:
-                    score = 85000.0 + (3 - target_energy) * 10000.0  # Active Attacker focus
+                    score = 85000.0 + W["W_ENERGY_BASE"] + (3 - target_energy) * W["W_ENERGY_NEED_BONUS"]
                     if is_card_ex(my_active_id):
                         score += 20000.0
                 else:
@@ -414,28 +475,27 @@ def agent(obs_dict: dict) -> list[int]:
                     if my_energy < 3:
                         score = 10000.0  # Active needs energy first! Do NOT spread!
                     else:
-                        score = 35000.0  # Active powered, energy to benched attacker!
+                        score = 35000.0 + W["W_ENERGY_BASE"]  # Active powered, energy to benched attacker!
                 has_useful_pre_attack_action = True
 
-            # ── 4. STADIUMS, HEALING & ABILITIES (Priority 4) ──
+            # ── 5. STADIUMS, HEALING & ABILITIES ──
             elif o_type in {7, 10} or cid in {CommunityCenter, JumboIceCream, TRFactory, HerosCape, Xerosic, Petrel}:
-                score = 50000.0
+                score = 50000.0 + W["W_TOOL_SCORE"]
                 has_useful_pre_attack_action = True
 
-            # ── 5. ATTACKING (Priority 5 & Fix 5: Recoil & Damage Efficiency Check) ──
+            # ── 6. ATTACKING ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
-                # Fix 5: Recoil Check
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
-                    score = -999999.0  # Mask inefficient / suicidal recoil attack!
+                    score = -float('inf')  # Mask suicidal or inefficient recoil attack!
                 else:
-                    score = 75000.0 + W["W_ATTACK_SCORE"] + (6 - info.get("my_prizes", 6)) * W["W_PRIZE_MULT"]
+                    score = 75000.0 + W["W_ATTACK_SCORE"] + (6 - my_prizes) * W["W_PRIZE_MULT"]
                     if my_dmg >= opp_hp and opp_hp > 0:
                         score += 50000.0  # Lethal KO bonus
                     if len(opp_bench) == 0:
                         score += 200000.0  # Bench-out finish bonus
 
-            # ── 6. PANIC RETREAT GUARD (Mask Out Unless Low HP / Special Condition) ──
+            # ── 7. PANIC RETREAT GUARD ──
             elif o_type in {12, 8} or "RETREAT" in ot_str:
                 is_special_condition = any([
                     _get_val(my_active, "poisoned"),
@@ -445,14 +505,14 @@ def agent(obs_dict: dict) -> list[int]:
                     _get_val(my_active, "paralyzed")
                 ])
                 if hp_pct < 0.30 or is_special_condition:
-                    score = 15000.0  # Legitimate emergency retreat!
+                    score = 15000.0 + W["W_RETREAT_SCORE"]  # Emergency retreat!
                 else:
-                    score = -999999.0  # HARD BAN PANIC RETREAT! Save energy & active wall!
+                    score = -float('inf')  # HARD BAN panic retreat! Preserve active wall & energy!
 
-            # ── 7. END TURN (Priority 6: Mask/Penalize if useful actions remain) ──
+            # ── 8. END TURN ──
             elif o_type in {14} or "END" in ot_str:
                 if has_useful_pre_attack_action:
-                    score = -100000.0  # Mask End Turn when net-positive actions remain!
+                    score = -100000.0  # Penalize ending turn when useful actions remain!
                 else:
                     score = -500.0
 
