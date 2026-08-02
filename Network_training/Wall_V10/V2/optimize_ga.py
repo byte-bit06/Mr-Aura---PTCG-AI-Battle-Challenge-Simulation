@@ -1,15 +1,16 @@
 """
-optimize_ga.py — 100,000 Game Genetic Algorithm Optimizer for Wall_V10 V2
-==========================================================================
+optimize_ga.py — 100,000 Game Multi-Game Genetic Algorithm Optimizer for Wall_V10 V2
+====================================================================================
 Optimizes weight parameters in optimized_weights.json against meta gauntlet.
 Continuously saves best weights to optimized_weights.json and timestamped checkpoints
 to checkpoints/ directory. Final submission.tar.gz is built ONCE at the end of optimization.
 
-100,000 Games Calculation:
-  - 7 Opponents x 2 Matches (P1 & P2) = 14 Games per Individual
-  - Population Size = 32
-  - Games per Generation = 32 x 14 = 448 Games
-  - 225 Generations x 448 Games = 100,800 Total Games!
+Variance Reduction & Selection Config:
+  - 4 Games per Opponent (2 going first as P1, 2 going second as P2) = 28 Games per Candidate
+  - Top 5% Selection & Elitism (Only top 5% of bots are bred to produce children)
+  - Population Size = 40 (Top 5% = 2 Elite Parents)
+  - Games per Generation = 40 x 28 = 1,120 Games
+  - 90 Generations x 1,120 Games = 100,800 Total Games!
 """
 
 import os
@@ -18,6 +19,7 @@ import json
 import random
 import copy
 import time
+import math
 import tarfile
 from kaggle_environments import make
 
@@ -91,11 +93,14 @@ W_DMG_GIVEN_MULT = float(os.environ.get("GA_W_DMG_GIVEN", "1.0"))   # Reward for
 W_DMG_TAKEN_MULT = float(os.environ.get("GA_W_DMG_TAKEN", "1.5"))   # Penalty for taking damage!
 W_WIN_BONUS      = float(os.environ.get("GA_W_WIN_BONUS", "5000.0"))
 
-POPULATION_SIZE = int(os.environ.get("GA_POP_SIZE", "32"))
-GENERATIONS     = int(os.environ.get("GA_GENERATIONS", "225"))  # 225 x 32 x 14 = 100,800 Total Games!
-MUTATION_RATE   = float(os.environ.get("GA_MUTATION_RATE", "0.25"))
-MUTATION_STDEV  = float(os.environ.get("GA_MUTATION_STDEV", "0.15"))
-ELITISM         = int(os.environ.get("GA_ELITISM", "4"))
+GAMES_PER_OPPONENT = int(os.environ.get("GA_GAMES_PER_OPP", "4"))  # 4 games per opponent (2 P1, 2 P2) for 0 luck variance!
+POPULATION_SIZE    = int(os.environ.get("GA_POP_SIZE", "40"))
+GENERATIONS        = int(os.environ.get("GA_GENERATIONS", "90"))   # 90 Gens x 40 Pop x 28 Games = 100,800 Games!
+MUTATION_RATE      = float(os.environ.get("GA_MUTATION_RATE", "0.25"))
+MUTATION_STDEV     = float(os.environ.get("GA_MUTATION_STDEV", "0.15"))
+
+# Top 5% Selection
+TOP_5_PCT_COUNT    = max(2, int(math.ceil(POPULATION_SIZE * 0.05)))
 
 def update_agent_weights(weights_dict):
     """Dynamically update live agent weights dictionary in main.py."""
@@ -182,7 +187,7 @@ def evaluate_match(env, p1_agent, p2_agent):
     return winner_idx, p1_prizes_taken, p2_prizes_taken, p1_dmg_given, p1_dmg_taken
 
 def evaluate_genome(env, genome):
-    """Evaluate individual genome fitness against meta gauntlet opponents."""
+    """Evaluate individual genome fitness across 4 games per opponent (2 P1, 2 P2) against meta gauntlet."""
     update_agent_weights(genome)
     
     total_fitness = 0.0
@@ -193,28 +198,41 @@ def evaluate_genome(env, genome):
     total_wins = 0
     total_games = 0
 
+    n_p1_games = GAMES_PER_OPPONENT // 2
+    n_p2_games = GAMES_PER_OPPONENT - n_p1_games
+
     for opp_name, opp_agent in opponents:
-        # Match 1: Bot as Player 1
-        w1, p1_taken, p2_taken, d_given1, d_taken1 = evaluate_match(env, v2_main.agent, opp_agent)
-        my_p1 = p1_taken
-        opp_p1 = p2_taken
-        won1 = (w1 == 0)
-        fit1 = (W_TAKEN_MULT * my_p1) - (W_CONCEDED_MULT * opp_p1) + (W_DMG_GIVEN_MULT * d_given1) - (W_DMG_TAKEN_MULT * d_taken1) + (W_WIN_BONUS if won1 else 0.0)
+        # P1 Matches
+        for _ in range(n_p1_games):
+            w1, p1_taken, p2_taken, d_given1, d_taken1 = evaluate_match(env, v2_main.agent, opp_agent)
+            my_p1 = p1_taken
+            opp_p1 = p2_taken
+            won1 = (w1 == 0)
+            fit1 = (W_TAKEN_MULT * my_p1) - (W_CONCEDED_MULT * opp_p1) + (W_DMG_GIVEN_MULT * d_given1) - (W_DMG_TAKEN_MULT * d_taken1) + (W_WIN_BONUS if won1 else 0.0)
 
-        # Match 2: Bot as Player 2
-        w2, p1_taken, p2_taken, d_given2, d_taken2 = evaluate_match(env, opp_agent, v2_main.agent)
-        my_p2 = p2_taken
-        opp_p2 = p1_taken
-        won2 = (w2 == 1)
-        fit2 = (W_TAKEN_MULT * my_p2) - (W_CONCEDED_MULT * opp_p2) + (W_DMG_GIVEN_MULT * d_given2) - (W_DMG_TAKEN_MULT * d_taken2) + (W_WIN_BONUS if won2 else 0.0)
+            total_fitness += fit1
+            total_my_prizes += my_p1
+            total_opp_prizes += opp_p1
+            total_dmg_given += d_given1
+            total_dmg_taken += d_taken1
+            if won1: total_wins += 1
+            total_games += 1
 
-        total_fitness += (fit1 + fit2)
-        total_my_prizes += (my_p1 + my_p2)
-        total_opp_prizes += (opp_p1 + opp_p2)
-        total_dmg_given += (d_given1 + d_given2)
-        total_dmg_taken += (d_taken1 + d_taken2)
-        total_wins += (1 if won1 else 0) + (1 if won2 else 0)
-        total_games += 2
+        # P2 Matches
+        for _ in range(n_p2_games):
+            w2, p1_taken, p2_taken, d_given2, d_taken2 = evaluate_match(env, opp_agent, v2_main.agent)
+            my_p2 = p2_taken
+            opp_p2 = p1_taken
+            won2 = (w2 == 1)
+            fit2 = (W_TAKEN_MULT * my_p2) - (W_CONCEDED_MULT * opp_p2) + (W_DMG_GIVEN_MULT * d_given2) - (W_DMG_TAKEN_MULT * d_taken2) + (W_WIN_BONUS if won2 else 0.0)
+
+            total_fitness += fit2
+            total_my_prizes += my_p2
+            total_opp_prizes += opp_p2
+            total_dmg_given += d_given2
+            total_dmg_taken += d_taken2
+            if won2: total_wins += 1
+            total_games += 1
 
     avg_fitness = total_fitness / max(1, total_games)
     avg_my_prizes = total_my_prizes / max(1, total_games)
@@ -316,13 +334,15 @@ def run_ga():
     for _ in range(POPULATION_SIZE - 1):
         population.append(mutate(base_genome))
 
-    games_per_indiv = len(opponents) * 2
+    games_per_indiv = len(opponents) * GAMES_PER_OPPONENT
     games_per_gen = POPULATION_SIZE * games_per_indiv
     total_target_games = GENERATIONS * games_per_gen
 
-    log_ga_history(f"=== Starting 100,000 Game Genetic Algorithm Optimization for Wall_V10 V2 ===")
+    log_ga_history(f"=== Starting 100,000 Game Multi-Game Genetic Algorithm Optimization for Wall_V10 V2 ===")
     log_ga_history(f"  Population Size:       {POPULATION_SIZE}")
     log_ga_history(f"  Generations:           {GENERATIONS}")
+    log_ga_history(f"  Games per Candidate:   {games_per_indiv} ({GAMES_PER_OPPONENT} per opponent -> zero luck variance!)")
+    log_ga_history(f"  Top 5% Elite Count:    {TOP_5_PCT_COUNT} (Only top 5% of bots breed children)")
     log_ga_history(f"  Games per Generation:  {games_per_gen}")
     log_ga_history(f"  Total Target Games:    {total_target_games:,}")
     log_ga_history(f"  Prize Taken Mult:      +{W_TAKEN_MULT}x")
@@ -330,7 +350,7 @@ def run_ga():
     log_ga_history(f"  Damage Given Mult:     +{W_DMG_GIVEN_MULT}x")
     log_ga_history(f"  Damage Taken Mult:     -{W_DMG_TAKEN_MULT}x")
     log_ga_history(f"  Win Bonus:            +{W_WIN_BONUS}x")
-    log_ga_history(f"=================================================================================\n")
+    log_ga_history(f"===============================================================================================\n")
 
     best_overall_genome = None
     best_overall_fitness = -float('inf')
@@ -358,16 +378,14 @@ def run_ga():
             best_overall_genome = copy.deepcopy(best_gen_genome)
             save_best_genome(best_overall_genome, best_gen_fit, best_gen_wr, best_gen_mypz, best_gen_opppz, best_gen_dmgg, best_gen_dmgt, gen, cum_games)
 
-        # Selection & Reproduction for next generation
-        new_population = []
-        # Elitism
-        for i in range(min(ELITISM, len(eval_results))):
-            new_population.append(copy.deepcopy(eval_results[i][6]))
+        # ── TOP 5% SELECTION & ELITE BREEDING ──
+        elite_parents = [eval_results[i][6] for i in range(TOP_5_PCT_COUNT)]
+        new_population = [copy.deepcopy(p) for p in elite_parents]
 
-        # Breed remaining population
+        # Breed remaining population ONLY using Top 5% parents!
         while len(new_population) < POPULATION_SIZE:
-            p1 = max(random.sample(eval_results, 3), key=lambda x: x[0])[6]
-            p2 = max(random.sample(eval_results, 3), key=lambda x: x[0])[6]
+            p1 = random.choice(elite_parents)
+            p2 = random.choice(elite_parents)
             child = crossover(p1, p2)
             child = mutate(child)
             new_population.append(child)
