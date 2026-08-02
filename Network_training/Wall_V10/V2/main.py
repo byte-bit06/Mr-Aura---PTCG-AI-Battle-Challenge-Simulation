@@ -961,7 +961,14 @@ def agent(obs_dict: dict) -> list[int]:
                 has_useful_pre_attack_action = True
 
             # ── BRANCH 12: STRICT NO RETREAT RULE (RETREAT IS HARD BANNED -inf TO PREVENT WASTING ENERGIES!) ──
-            elif o_type == 12 or "RETREAT" in ot_str:
+            elif (
+                o_type == 12 or
+                "RETREAT" in ot_str or
+                "RETREAT" in str(o).upper() or
+                "RETREAT" in context_str.upper() or
+                select_data.get("type") == 4 or
+                raw_context_val in {12, 30}
+            ):
                 log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat HARD BANNED (-inf): User Rule — Never retreat to preserve energies!")
                 score = -float('inf')
 
