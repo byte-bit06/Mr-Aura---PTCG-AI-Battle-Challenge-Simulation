@@ -1,16 +1,17 @@
 """
-Wall_V10 Agent — Replay Winner Analytics Adaptation Engine (V2 Strategic Upgrade)
+Wall_V10 Agent — Replay Winner Analytics Adaptation Engine (V2 Normalized Engine)
 ================================================================================
 Incorporates winning move-by-move analytics & dynamically tuned weights
 learned from replay analysis into the Crustle/Ogerpon Wall decision engine.
 
-Key Strategy:
-  - Crustle Wall: Blocks all Pokémon ex (immune to damage from ex).
+Key Principles:
+  - Mathematically Normalized Scoring Engine (Feature values bounded in [0.0, 1.0]).
+  - Strict Priority Tiers with Weight Modulation (W parameters properly scale subscores).
+  - Crustle Wall: Blocks all Pokémon ex (takes no damage from ex).
   - Ogerpon Wall: Blocks all Pokémon with abilities (Cornerstone Mask Ogerpon ex).
   - Early-Game Kangaskhan ex: Rush early KOs before opponent sets up.
-  - Late-Game Hard Ban on Kangaskhan ex: Prevent benching, promoting, or energizing Kangaskhan in late game.
+  - Late-Game Hard Ban: -float('inf') ban on playing, promoting, or energizing Kangaskhan in late game.
   - Hard Limits: Uses -float('inf') for absolute non-negotiable bans.
-  - Normalized Score Engine: Integrates optimized_weights.json cleanly.
 """
 
 import os
@@ -104,7 +105,7 @@ EarthenVessel = 1227
 Iono = 1182
 Arven = 1219
 
-# ── Weights Loader ─────────────────────────────────────────────────────────────
+# ── Weights Loader & Normalization Scale ───────────────────────────────────────
 _WEIGHT_DEFAULTS = {
     "W_PRIZE_MULT":             1050,
     "W_ENERGY_SCORE":            180,
@@ -144,6 +145,16 @@ def _load_weights():
 
 W = _load_weights()
 
+# Normalized Weight Coefficients (Scaled to ~ [0.1, 2.0] for balanced weight modulation)
+w_prize   = W.get("W_PRIZE_MULT", 1050) / 1000.0
+w_energy  = W.get("W_ENERGY_BASE", 8500) / 10000.0
+w_evolve  = W.get("W_EVOLVE_BASE", 9500) / 10000.0
+w_trainer = W.get("W_TRAINER_BASE", 10500) / 10000.0
+w_pokemon = W.get("W_POKEMON_BASE", 20000) / 20000.0
+w_attack  = W.get("W_ATTACK_SCORE", 1250) / 1000.0
+w_retreat = W.get("W_RETREAT_SCORE", 1800) / 1000.0
+w_tool    = W.get("W_TOOL_SCORE", 120) / 1000.0
+
 # ── Board Info Extractor ───────────────────────────────────────────────────────
 def extract_board_info(obs_dict):
     current = obs_dict.get("current")
@@ -170,7 +181,6 @@ def extract_board_info(obs_dict):
     opp_is_ex = is_card_ex(opp_active_id)
     opp_has_ability = card_has_ability(opp_active_id)
 
-    # Check opponent bench for ex or ability threats if active is non-ex
     if not opp_is_ex:
         for b in opp_bench:
             bid = b.get("id") if isinstance(b, dict) else getattr(b, "id", None)
@@ -232,6 +242,7 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
     if not pokemon: return -float('inf')
     cid = _get_val(pokemon, "id")
     hp = _get_val(pokemon, "hp", 0)
+    max_hp = _get_val(pokemon, "maxHp", 200) or 200
     energies = _get_val(pokemon, "energies") or []
     energy_count = len(energies)
     
@@ -239,61 +250,59 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
     if cid == Kangaskhan and not is_early_game:
         return -float('inf')
     
-    # Score = (Energy Attached * 3000) + (Current HP * 100) - (Is Combo Piece * 5000)
-    is_combo_piece = 1 if (cid == Dwebble and energy_count == 0) else 0
-    score = (energy_count * 3000.0) + (hp * 100.0) - (is_combo_piece * 5000.0)
+    # Normalized Subscore (bounded in 0.0 - 100.0 range)
+    energy_norm = min(energy_count / 3.0, 1.0)
+    hp_norm = min(hp / float(max_hp), 1.0) if max_hp > 0 else 0.5
+    is_combo_piece = 1.0 if (cid == Dwebble and energy_count == 0) else 0.0
+    
+    score = (energy_norm * 30.0) + (hp_norm * 20.0) - (is_combo_piece * 25.0)
     
     if cid == optimal_active_id:
-        score += 20000.0  # Priority match for wall method (Crustle for ex, Ogerpon for ability)
+        score += 100.0  # Optimal wall match (Crustle vs EX, Ogerpon vs Ability)
     elif cid == Dwebble:
-        score += 15000.0
+        score += 75.0
     elif cid == Ogerpon:
-        score += 10000.0
+        score += 60.0
     elif cid == Kangaskhan and is_early_game:
-        score += 12000.0  # Early game knockout pressure
+        score += 50.0   # Early game aggressive KO pressure
     return score
 
 def score_discard_option(cid, hand, bench_and_active_ids):
-    # High Discard Penalty (-50,000): Win-condition Supporters & key evolution targets
+    # Normalized Discard Scores (-10.0 to +2.0 scale)
     if cid in {BossOrders, Iono, Lillie, Arven}:
-        return -50000.0
+        return -10.0
     if cid == Crustle and Dwebble in bench_and_active_ids:
-        return -50000.0  # Don't discard evolution matching benched Dwebble!
+        return -10.0  # Don't discard evolution matching benched Dwebble!
     if cid in {Ogerpon, Kangaskhan} and cid not in bench_and_active_ids:
-        return -40000.0
+        return -8.0
 
-    # Low Discard Penalty: Extra Energy cards or duplicate basic search items
     grass_cnt = hand.count(GrassEnergy) if isinstance(hand, list) else 0
     mist_cnt = hand.count(MistEnergy) if isinstance(hand, list) else 0
     if cid in {GrassEnergy, MistEnergy} and (grass_cnt + mist_cnt > 2):
-        return 10000.0  # Safe energy discard
+        return 2.0  # Safe energy discard
     if isinstance(hand, list) and hand.count(cid) > 1:
-        return 8000.0   # Safe duplicate item discard
+        return 1.5  # Safe duplicate item discard
 
-    return 1000.0
+    return 0.0
 
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True):
-    # Rule 1: Mask Stage 1 evolution if no matching Basic is in play!
+    # Normalized Search Scores (-10.0 to +10.0 scale)
     if cid == Crustle and Dwebble not in bench_and_active_ids:
-        return -50000.0  # Mask unplayable evolution card!
+        return -10.0  # Mask unplayable evolution card!
     
-    # Rule 2: Prioritize Dwebble if Dwebble is missing from play!
     if cid == Dwebble and Dwebble not in bench_and_active_ids:
-        return 180000.0  # High priority search for missing basic!
+        return 9.0  # High priority search for missing basic!
     
-    # Rule 3: Prioritize Crustle if Dwebble IS on bench!
     if cid == Crustle and Dwebble in bench_and_active_ids:
-        return 190000.0  # Search ready-to-evolve Stage 1!
+        return 10.0  # Search ready-to-evolve Stage 1!
     
-    # Rule 4: Hard ban searching Kangaskhan in late game
     if cid == Kangaskhan and not is_early_game:
         return -float('inf')
 
-    # Rule 5: Mask redundant basic search if bench is full
     if cid in bench_and_active_ids and bench_count >= 5:
-        return -20000.0
+        return -4.0
         
-    return 10000.0
+    return 1.0
 
 def sanitize_action(chosen_indices: list[int], select_data: dict) -> list[int]:
     options = select_data.get("option", [])
@@ -347,7 +356,7 @@ def agent(obs_dict: dict) -> list[int]:
 
         turn_num = info.get("turn", 1)
         my_prizes = info.get("my_prizes", 6)
-        # Early Game condition: turns 1-4 or initial prize state (6 remaining)
+        hand_size = info.get("hand_size", 5)
         is_early_game = (turn_num <= 4 or my_prizes >= 5)
 
         # Active Promotion Rank Function (Setup / Active Promotion Phase)
@@ -366,14 +375,14 @@ def agent(obs_dict: dict) -> list[int]:
                         break
                 r_score = rank_active_candidate(matched_pkmn, optimal_lead, is_early_game) if matched_pkmn else 0.0
                 if cid == optimal_lead:
-                    r_score += 20000.0
+                    r_score += 100.0
                 elif cid == Dwebble:
-                    r_score += 15000.0
+                    r_score += 75.0
                 elif cid == Ogerpon:
-                    r_score += 12000.0
+                    r_score += 60.0
                 elif cid == Kangaskhan:
                     if is_early_game:
-                        r_score += 10000.0
+                        r_score += 50.0
                     else:
                         r_score = -float('inf')  # HARD BAN Kangaskhan active promotion in late game!
 
@@ -383,7 +392,7 @@ def agent(obs_dict: dict) -> list[int]:
 
             return sanitize_action([best_idx], select_data)
 
-        # Scored Option Engine & Turn Hierarchy
+        # Scored Option Engine & Normalized Priority Tiers
         scored_options = []
         my_active = info.get("my_active")
         my_active_id = info.get("my_active_id")
@@ -421,30 +430,32 @@ def agent(obs_dict: dict) -> list[int]:
             elif "SEARCH" in context_str or "DECK" in context_str:
                 score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game)
 
-            # ── 1. EARLY BENCH PRIORITY (Play Basics to Bench) ──
+            # ── TIER 8 (Base 800.0): EARLY BENCH PRIORITY (Play Basics to Bench) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
                 if cid == Kangaskhan and not is_early_game:
                     score = -float('inf')  # HARD BAN playing Kangaskhan ex in late game!
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
-                    score = 185000.0 + W["W_POKEMON_BASE"]  # High priority wall deployment vs Ability opponents
+                    subscore = w_pokemon * 5.0 + ((5 - bench_count) / 5.0) * 2.0 + 3.0  # High priority vs Ability opponents
+                    score = 800.0 + subscore
                     has_useful_pre_attack_action = True
                 else:
-                    score = 180000.0 + W["W_POKEMON_BASE"]  # Early bench priority!
+                    subscore = w_pokemon * 5.0 + ((5 - bench_count) / 5.0) * 2.0
+                    score = 800.0 + subscore
                     has_useful_pre_attack_action = True
 
-            # ── 2. DRAW & SEARCH SUPPORTERS ──
-            elif o_type in {7, 3} and cid in {Lillie, Carmine, Arven, Iono, Pokégear, BuddyPuffin, NestBall, UltraBall, HeavyBall, EarthenVessel}:
-                score = 120000.0 + W["W_TRAINER_BASE"]
-                has_useful_pre_attack_action = True
-
-            # ── 3. EVOLUTION (Evolve Dwebble to Crustle) ──
+            # ── TIER 7 (Base 700.0): EVOLUTION (Evolve Dwebble to Crustle) ──
             elif (o_type in {6, 7, 9} or "EVOLVE" in ot_str) and (cid == Crustle):
-                score = 140000.0 + W["W_EVOLVE_BASE"]
-                if optimal_lead == Crustle:
-                    score += 5000.0  # Extra wall match bonus vs EX opponents
+                subscore = w_evolve * 5.0 + (3.0 if optimal_lead == Crustle else 0.0)
+                score = 700.0 + subscore
                 has_useful_pre_attack_action = True
 
-            # ── 4. FOCUSED ENERGY ATTACHMENT ──
+            # ── TIER 6 (Base 600.0): DRAW & SEARCH SUPPORTERS ──
+            elif o_type in {7, 3} and cid in {Lillie, Carmine, Arven, Iono, Pokégear, BuddyPuffin, NestBall, UltraBall, HeavyBall, EarthenVessel}:
+                subscore = w_trainer * 5.0 + (3.0 if hand_size <= 3 else 1.0)
+                score = 600.0 + subscore
+                has_useful_pre_attack_action = True
+
+            # ── TIER 5 (Base 500.0): FOCUSED ENERGY ATTACHMENT ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
@@ -467,35 +478,40 @@ def agent(obs_dict: dict) -> list[int]:
                 elif target_energy >= 3:
                     score = -float('inf')
                 elif is_active_target:
-                    score = 85000.0 + W["W_ENERGY_BASE"] + (3 - target_energy) * W["W_ENERGY_NEED_BONUS"]
-                    if is_card_ex(my_active_id):
-                        score += 20000.0
+                    need_norm = (3 - target_energy) / 3.0
+                    subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
+                    score = 500.0 + subscore
                 else:
                     # Benched target with < 3 energy
                     if my_energy < 3:
-                        score = 10000.0  # Active needs energy first! Do NOT spread!
+                        score = 100.0  # Active needs energy first! Do NOT spread!
                     else:
-                        score = 35000.0 + W["W_ENERGY_BASE"]  # Active powered, energy to benched attacker!
+                        need_norm = (3 - target_energy) / 3.0
+                        subscore = w_energy * 2.5 + need_norm * 1.5
+                        score = 500.0 + subscore
                 has_useful_pre_attack_action = True
 
-            # ── 5. STADIUMS, HEALING & ABILITIES ──
-            elif o_type in {7, 10} or cid in {CommunityCenter, JumboIceCream, TRFactory, HerosCape, Xerosic, Petrel}:
-                score = 50000.0 + W["W_TOOL_SCORE"]
-                has_useful_pre_attack_action = True
-
-            # ── 6. ATTACKING ──
+            # ── TIER 4 (Base 400.0): ATTACKING ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
                     score = -float('inf')  # Mask suicidal or inefficient recoil attack!
                 else:
-                    score = 75000.0 + W["W_ATTACK_SCORE"] + (6 - my_prizes) * W["W_PRIZE_MULT"]
+                    prize_norm = (6 - my_prizes) / 6.0
+                    subscore = w_attack * 5.0 + w_prize * prize_norm * 3.0
                     if my_dmg >= opp_hp and opp_hp > 0:
-                        score += 50000.0  # Lethal KO bonus
+                        subscore += 5.0  # Lethal KO bonus
                     if len(opp_bench) == 0:
-                        score += 200000.0  # Bench-out finish bonus
+                        subscore += 10.0  # Bench-out finish bonus
+                    score = 400.0 + subscore
 
-            # ── 7. PANIC RETREAT GUARD ──
+            # ── TIER 3 (Base 300.0): STADIUMS, HEALING & TOOLS ──
+            elif o_type in {7, 10} or cid in {CommunityCenter, JumboIceCream, TRFactory, HerosCape, Xerosic, Petrel}:
+                subscore = w_tool * 5.0
+                score = 300.0 + subscore
+                has_useful_pre_attack_action = True
+
+            # ── TIER 2 (Base 200.0): EMERGENCY RETREAT ──
             elif o_type in {12, 8} or "RETREAT" in ot_str:
                 is_special_condition = any([
                     _get_val(my_active, "poisoned"),
@@ -505,16 +521,17 @@ def agent(obs_dict: dict) -> list[int]:
                     _get_val(my_active, "paralyzed")
                 ])
                 if hp_pct < 0.30 or is_special_condition:
-                    score = 15000.0 + W["W_RETREAT_SCORE"]  # Emergency retreat!
+                    subscore = w_retreat * 5.0 + (1.0 - hp_pct) * 3.0
+                    score = 200.0 + subscore  # Emergency retreat!
                 else:
                     score = -float('inf')  # HARD BAN panic retreat! Preserve active wall & energy!
 
-            # ── 8. END TURN ──
+            # ── TIER 1 (Base 100.0): NEUTRAL / MISCELLANEOUS ──
             elif o_type in {14} or "END" in ot_str:
                 if has_useful_pre_attack_action:
-                    score = -100000.0  # Penalize ending turn when useful actions remain!
+                    score = -50.0  # Penalize ending turn when useful actions remain!
                 else:
-                    score = -500.0
+                    score = 0.0
 
             else:
                 score = 100.0
