@@ -591,9 +591,12 @@ def agent(obs_dict: dict) -> list[int]:
         log_rule_execution(f"\n[Turn {turn_num} DECISION STEP] Active: {active_name} (HP: {my_hp}/{my_max_hp}, E: {my_energy}) | Bench: {bench_count} | Dwebble in Play: {dwebble_in_play} | Context: {context_str} (Raw: {raw_context_val})")
 
         # Active Promotion Rank Function (Setup / Active Promotion Phase)
-        if ("SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str or raw_context_val == 1) and not is_search_modal:
+        if ("SETUP" in context_str or "ACTIVE" in context_str or "SWITCH" in context_str or "FIRST" in context_str or raw_context_val in {1, 2}) and not is_search_modal:
             best_idx = 0
             best_rank = -float('inf')
+            is_going_second = (raw_context_val == 2 or turn_num > 1 or info.get("turn", 0) > 0 or info.get("isSecond", False))
+            has_crustle_in_hand = (Crustle in hand)
+
             for idx, o in enumerate(options):
                 cid = resolve_card_id(o, info, current, select_data)
                 matched_pkmn = None
@@ -601,18 +604,27 @@ def agent(obs_dict: dict) -> list[int]:
                     if _get_val(b, "id") == cid:
                         matched_pkmn = b
                         break
-                r_score = rank_active_candidate(matched_pkmn, optimal_lead, is_early_game) if matched_pkmn else 0.0
-                if cid == optimal_lead:
-                    r_score = 1000.0  # Optimal Wall (Crustle vs EX / Ogerpon vs Ability) is top active lead!
-                elif cid == Dwebble:
-                    r_score = 500.0   # 1-Prize basic starter
-                elif cid == Ogerpon:
-                    r_score = 300.0
-                elif cid == Kangaskhan:
-                    if is_early_game:
-                        r_score = 50.0 # Low active rank to avoid feeding 2 prizes early!
+
+                if is_going_second and has_crustle_in_hand:
+                    if cid == Dwebble:
+                        r_score = 1500.0 # Going 2nd with Crustle in hand -> Evolve Dwebble on turn 1!
+                        log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Dwebble Priority 1500.0 (Going 2nd with Crustle in hand!)")
+                    elif cid == Kangaskhan:
+                        r_score = 1000.0
+                    elif cid == Ogerpon:
+                        r_score = 300.0
                     else:
-                        r_score = -float('inf') # HARD BAN late game active promotion!
+                        r_score = 50.0
+                else:
+                    if cid == Kangaskhan:
+                        r_score = 1000.0 # Default Lead with Kangaskhan ex to use draw ability!
+                        log_rule_execution(f"  [IF EXECUTED] Active Promotion -> Kangaskhan ex Lead Priority 1000.0 (Draw Ability Starter!)")
+                    elif cid == Dwebble:
+                        r_score = 500.0
+                    elif cid == Ogerpon:
+                        r_score = 300.0
+                    else:
+                        r_score = 50.0
 
                 log_rule_execution(f"  [IF EXECUTED] Active Promotion Branch -> Option {idx} ({get_card_name(cid)}) Rank Score: {r_score}")
 
