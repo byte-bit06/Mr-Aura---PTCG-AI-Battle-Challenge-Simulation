@@ -3,16 +3,17 @@ Wall_V10 Agent — Replay Winner Analytics Adaptation Engine (V2 Strict Rules En
 ====================================================================================
 Incorporates winning move-by-move analytics & strict hard-coded strategic rules:
 
-Hard-Coded Strategic Directives (Now fully resolved via position-to-card ID resolver):
-  1. Pokégear 3.0 Restriction: Never play Pokégear 3.0 if a supporter is already in hand or played this turn.
+Hard-Coded Strategic Directives (Fully resolved via position-to-card ID resolver):
+  1. Early-Game Kangaskhan Active Lead: Kangaskhan ex is ALWAYS prioritized as active lead in early game (Turn 0 setup) for aggressive early KOs.
+  2. Pokégear 3.0 Restriction: Never play Pokégear 3.0 if a supporter is already in hand or played this turn.
      - Pokégear Search Selection: ALWAYS prioritize Lillie (Score: 80,000) over any other Supporter in Pokégear top 7.
-  2. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until at least 2 are in play (Score: 100,000 in Search Modal).
-  3. Opening Hand Energy Attachment: If opening hand lacks Dwebble/Ogerpon/search items, attach any energy in hand immediately.
-  4. Lillie Supporter Sequencing: Always play all playable Pokémon, evolutions, and items BEFORE playing Lillie.
-  5. Ultra Ball Restriction: Only play Ultra Ball if needed to get Dwebble (< 2 in play), or to find Crustle / Ogerpon when needed.
-  6. Retreat Guard & Wall Safety: Never retreat if active takes 0 damage (walling). Only retreat if active takes damage AND a benched wall takes 0 damage.
-  7. Ogerpon Bench Limit: Never play more than 2 Ogerpon unless opponent active has an ability.
-  8. Boss's Orders Strict Conditions: Only play Boss's Orders if active has >= 3 energy AND can KO a benched target that has higher prize value or >= 2 more energy than opponent active.
+  3. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until AT LEAST 2 are in play (Score: 100,000). Once 2 Dwebble/Crustle are in play, stop searching Dwebble and pivot to Crustle/Ogerpon.
+  4. Opening Hand Energy Attachment: If opening hand lacks Dwebble/Ogerpon/search items, attach any energy in hand immediately.
+  5. Lillie Supporter Sequencing: Always play all playable Pokémon, evolutions, and items BEFORE playing Lillie.
+  6. Ultra Ball Restriction: Only play Ultra Ball if needed to get Dwebble (< 2 in play), or to find Crustle / Ogerpon when needed.
+  7. Retreat Guard & Wall Safety: Never retreat if active takes 0 damage (walling). Only retreat if active takes damage AND a benched wall takes 0 damage.
+  8. Ogerpon Bench Limit: Never play more than 2 Ogerpon unless opponent active has an ability.
+  9. Boss's Orders Strict Conditions: Only play Boss's Orders if active has >= 3 energy AND can KO a benched target that has higher prize value or >= 2 more energy than opponent active.
 """
 
 import os
@@ -126,7 +127,7 @@ Pokégear      = 1122
 SUPPORTERS_SET = {Lillie, Petrel, Hilda, Colress, Morty, Xerosic, BossOrders}
 
 def get_card_name(cid):
-    if not cid: return "System Action / End Turn"
+    if not cid: return "Pre-Game Mulligan / Confirm Draw"
     names = {
         344: "Dwebble",
         345: "Crustle",
@@ -221,7 +222,7 @@ W = _load_weights()
 
 w_prize   = W.get("W_PRIZE_MULT", 1050.0) / 1000.0
 w_energy  = W.get("W_ENERGY_BASE", 8500.0) / 10000.0
-w_evolve  = W.get("W_EVOLVE_BASE", 9500.0) / 1000.0
+w_evolve  = W.get("W_EVOLVE_BASE", 9500.0) / 10000.0
 w_trainer = W.get("W_TRAINER_BASE", 10500.0) / 10000.0
 w_pokemon = W.get("W_POKEMON_BASE", 20000.0) / 20000.0
 w_attack  = W.get("W_ATTACK_SCORE", 1250.0) / 1000.0
@@ -360,9 +361,14 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
     energies = _get_val(pokemon, "energies") or []
     energy_count = len(energies)
     
+    # RULE 1: KANGASKHAN EX IS TOP PRIORITY ACTIVE LEAD IN EARLY GAME (Turn 0 Setup)!
+    if cid == Kangaskhan and is_early_game:
+        log_rule_execution(f"  [RULE APPLIED] Early-Game Kangaskhan Active Lead Priority: Kangaskhan ex (Card #756) assigned TOP Rank Score 1000.0!")
+        return 1000.0
+
     # HARD BAN: Never promote Kangaskhan ex to active in late game!
     if cid == Kangaskhan and not is_early_game:
-        log_rule_execution(f"  [IF EXECUTED] rank_active_candidate -> Late-game Kangaskhan Active Promotion HARD BANNED (-inf)")
+        log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Active Promotion HARD BANNED (-inf)")
         return -float('inf')
     
     energy_norm = min(energy_count / 3.0, 1.0)
@@ -377,8 +383,6 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
         score += W.get("W_DWEBBLE_ACTIVE_RANK", 75.0)
     elif cid == Ogerpon:
         score += W.get("W_OGERPON_ACTIVE_RANK", 60.0)
-    elif cid == Kangaskhan and is_early_game:
-        score += W.get("W_KANGASKHAN_EARLY_RANK", 50.0)
     return score
 
 def score_discard_option(cid, hand, bench_and_active_ids):
@@ -401,31 +405,39 @@ def score_discard_option(cid, hand, bench_and_active_ids):
     return 0.0
 
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
-    # ── 1. DWEBBLE SEARCH PRIORITY (POKÉMON SEARCH - Buddy Poffin / Ultra Ball) ──
-    if cid == Dwebble and dwebble_in_play < 2:
-        log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 1: Dwebble (Card #344) matched with dwebble_in_play={dwebble_in_play} (<2) -> MAX Score 100,000.0 assigned!")
-        return 100000.0  # Absolute MAX priority for Dwebble!
+    # ── 1. DWEBBLE SEARCH PRIORITY (< 2 IN PLAY) ──
+    if dwebble_in_play < 2:
+        if cid == Dwebble:
+            log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 1: Dwebble (Card #344) matched with dwebble_in_play={dwebble_in_play} (<2) -> MAX Score 100,000.0 assigned!")
+            return 100000.0  # Absolute MAX priority for Dwebble!
+        elif cid == Ogerpon and not opp_has_ability:
+            return -100.0  # Focus on Dwebble first when < 2 in play!
+    else:
+        # ── 2. ONCE 2 DWEBBLE/CRUSTLE IN PLAY: STOP SEARCHING DWEBBLE, PIVOT TO CRUSTLE/OGERPON ──
+        if cid == Dwebble:
+            log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 1: 2 Dwebble already in play -> Dwebble search deprioritized (Score 10.0)")
+            return 10.0
 
-    # ── 2. LILLIE SEARCH PRIORITY (POKÉGEAR 3.0 / SUPPORTER SEARCH) ──
+    # ── 3. LILLIE SEARCH PRIORITY (POKÉGEAR 3.0 / SUPPORTER SEARCH) ──
     if cid == Lillie:
         log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 2: Lillie (Card #1227) matched -> TOP Pokégear/Supporter Score 80,000.0 assigned!")
         return 80000.0   # Absolute MAX priority for Lillie!
 
-    # ── 3. CRUSTLE EVOLUTION SEARCH ──
+    # ── 4. CRUSTLE EVOLUTION SEARCH ──
     if cid == Crustle:
         if Dwebble in bench_and_active_ids:
             log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 3: Crustle matched with benched Dwebble -> Score 50,000.0 assigned!")
             return 50000.0
         return -1000.0
 
-    # ── 4. OTHER SUPPORTERS (POKÉGEAR FALLBACKS) ──
+    # ── 5. OTHER SUPPORTERS (POKÉGEAR FALLBACKS) ──
     if cid in SUPPORTERS_SET:
         if cid == BossOrders:
             return 100.0
         log_rule_execution(f"  [IF EXECUTED] score_search_option Branch 4: Fallback Supporter ({get_card_name(cid)}) matched -> Score 500.0 assigned")
         return 500.0
 
-    # ── 5. OGERPON SEARCH LIMIT ──
+    # ── 6. OGERPON SEARCH LIMIT ──
     if cid == Ogerpon:
         if opp_has_ability or bench_and_active_ids.count(Ogerpon) < 1:
             return 20000.0
@@ -434,7 +446,7 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
             return -float('inf')
         return -100.0
 
-    # ── 6. KANGASKHAN SEARCH ──
+    # ── 7. KANGASKHAN SEARCH ──
     if cid == Kangaskhan:
         if not is_early_game:
             if bench_count < 2: return 1000.0
@@ -525,6 +537,11 @@ def agent(obs_dict: dict) -> list[int]:
 
         is_early_game = (turn_num <= 4 or my_prizes >= 5)
 
+        # ── SPECIAL HANDLING FOR CONTEXT 41 / 42 / 38 (PRE-GAME SETUP & MULLIGAN PROMPT) ──
+        if raw_context_val in {41, 42, 38}:
+            log_rule_execution(f"\n[PRE-GAME SETUP] Context {raw_context_val}: Confirming Mulligan / Initial Card Draw (Option 0)")
+            return sanitize_action([0], select_data)
+
         # Directive 1 Check: Opening hand energy attachment requirement
         has_setup_pieces = any(c in {Dwebble, Ogerpon, BuddyPuffin, UltraBall} for c in hand)
         must_attach_opening_energy = (turn_num <= 2 and not has_setup_pieces)
@@ -585,7 +602,9 @@ def agent(obs_dict: dict) -> list[int]:
                         matched_pkmn = b
                         break
                 r_score = rank_active_candidate(matched_pkmn, optimal_lead, is_early_game) if matched_pkmn else 0.0
-                if cid == optimal_lead:
+                if cid == Kangaskhan and is_early_game:
+                    r_score = 1000.0  # Early Game Kangaskhan Active Promotion gets Absolute Top Rank!
+                elif cid == optimal_lead:
                     r_score += W.get("W_WALL_MATCH_BONUS", 100.0)
                 elif cid == Dwebble:
                     r_score += W.get("W_DWEBBLE_ACTIVE_RANK", 75.0)
@@ -594,11 +613,6 @@ def agent(obs_dict: dict) -> list[int]:
                         r_score += 150.0
                     else:
                         r_score += W.get("W_OGERPON_ACTIVE_RANK", 60.0)
-                elif cid == Kangaskhan:
-                    if is_early_game:
-                        r_score += W.get("W_KANGASKHAN_EARLY_RANK", 50.0)
-                    else:
-                        r_score = -float('inf')
 
                 log_rule_execution(f"  [IF EXECUTED] Active Promotion Branch -> Option {idx} ({get_card_name(cid)}) Rank Score: {r_score}")
 
