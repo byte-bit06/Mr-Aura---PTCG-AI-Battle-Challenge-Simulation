@@ -916,7 +916,7 @@ def agent(obs_dict: dict) -> list[int]:
                         log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score {score} [{target_reason}]")
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
+            # ── BRANCH 6: BENCH PLAYS (EMERGENCY BENCH PROTECTION & SETUP) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
                 if cid == Ogerpon and not opp_has_ability and ogerpon_in_play >= 2:
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: 3rd Ogerpon Bench Deployment HARD BANNED (-inf): Opponent active has no ability!")
@@ -924,18 +924,22 @@ def agent(obs_dict: dict) -> list[int]:
                 elif cid == Kangaskhan and not is_early_game:
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: Late-Game Kangaskhan Bench Deployment HARD BANNED (-inf): User Rule — Never play Kangaskhan on bench late game!")
                     score = -float('inf')
+                elif bench_count == 0 and my_hp <= 40:
+                    score = 100000.0  # EMERGENCY BENCH-OUT PREVENTION: Prevents instant game-over loss!
+                    log_rule_execution(f"  [IF EXECUTED] Branch 6: EMERGENCY BENCH DEPLOYMENT MATCHED -> Score 100000.0 (Prevents Instant Loss)!")
+                    has_useful_pre_attack_action = True
                 elif cid == Dwebble and dwebble_in_play < 2:
                     subscore = w_pokemon * 5.0 + 50.0
-                    score = 900.0 + subscore
+                    score = 12000.0 + subscore
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: Early Dwebble Bench Play Priority Matched -> Score {score}!")
                     has_useful_pre_attack_action = True
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
                     subscore = w_pokemon * 5.0 + 10.0
-                    score = 800.0 + subscore
+                    score = 11000.0 + subscore
                     has_useful_pre_attack_action = True
                 else:
                     subscore = w_pokemon * 5.0
-                    score = 800.0 + subscore
+                    score = 10000.0 + subscore
                     has_useful_pre_attack_action = True
 
             # ── BRANCH 7: EVOLUTION (Evolve Dwebble to Crustle — TOP AGGRESSION & WALL PRIORITY!) ──
@@ -1027,9 +1031,11 @@ def agent(obs_dict: dict) -> list[int]:
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
                     score = -float('inf')
                 else:
-                    # Safety check: If we have NO benched Pokémon and our active is weak, don't suicide attack if we can build a wall instead
+                    # Emergency Suicide / Bench-Out Loss Prevention:
+                    # If bench_count == 0 and active HP <= 40 and we cannot KO opponent, HARD BAN attacking (-inf) to force bench deployment!
                     if bench_count == 0 and my_hp <= 40 and not (my_dmg >= opp_hp):
-                        score = 500.0  # Force a pause to build the bench/wall first!
+                        log_rule_execution(f"  [IF EXECUTED] Branch 10: Attack HARD BANNED (-inf): Emergency Bench-Out Loss Prevention (0 Bench & Active HP <= 40)!")
+                        score = -float('inf')
                     else:
                         prize_norm = (6 - my_prizes) / 6.0
                         subscore = w_attack * 5.0 + w_prize * prize_norm * 3.0
