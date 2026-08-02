@@ -5,12 +5,14 @@ Incorporates winning move-by-move analytics & strict hard-coded strategic rules:
 
 Hard-Coded Strategic Directives:
   1. Pokégear 3.0 Restriction: Never play Pokégear 3.0 if a supporter is already in hand or played this turn.
+     - Pokégear Search Selection: If hand < 4 cards, prioritize Lillie above all other supporters.
   2. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until at least 2 are in play.
-  3. Lillie Supporter Sequencing: Always play all playable Pokémon, evolutions, and items BEFORE playing Lillie.
-  4. Ultra Ball Restriction: Only play Ultra Ball if needed to get Dwebble (< 2 in play), or to find Crustle / Ogerpon when needed.
-  5. Retreat Guard & Wall Safety: Never retreat if active takes 0 damage (walling). Only retreat if active takes damage AND a benched wall takes 0 damage.
-  6. Ogerpon Bench Limit: Never play more than 2 Ogerpon unless opponent active has an ability.
-  7. Boss's Orders Strict Conditions: Only play Boss's Orders if active has >= 3 energy AND can KO a benched target that has higher prize value or >= 2 more energy than opponent active.
+  3. Opening Hand Energy Attachment: If opening hand lacks Dwebble/Ogerpon/search items, attach any energy in hand immediately.
+  4. Lillie Supporter Sequencing: Always play all playable Pokémon, evolutions, and items BEFORE playing Lillie.
+  5. Ultra Ball Restriction: Only play Ultra Ball if needed to get Dwebble (< 2 in play), or to find Crustle / Ogerpon when needed.
+  6. Retreat Guard & Wall Safety: Never retreat if active takes 0 damage (walling). Only retreat if active takes damage AND a benched wall takes 0 damage.
+  7. Ogerpon Bench Limit: Never play more than 2 Ogerpon unless opponent active has an ability.
+  8. Boss's Orders Strict Conditions: Only play Boss's Orders if active has >= 3 energy AND can KO a benched target that has higher prize value or >= 2 more energy than opponent active.
 """
 
 import os
@@ -305,7 +307,14 @@ def score_discard_option(cid, hand, bench_and_active_ids):
 
     return 0.0
 
-def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False):
+def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
+    # Rule Directive: If hand_size < 4 when using Pokégear / search, prioritize Lillie above all other supporters
+    if hand_size < 4:
+        if cid == Lillie:
+            return 25.0  # Highest priority search selection when hand is low!
+        elif cid in SUPPORTERS_SET:
+            return 2.0
+
     # Rule 2: Early game Dwebble search priority (< 2 in play)
     if dwebble_in_play < 2:
         if cid == Dwebble:
@@ -415,6 +424,11 @@ def agent(obs_dict: dict) -> list[int]:
 
         is_early_game = (turn_num <= 4 or my_prizes >= 5)
 
+        # Directive 1 Check: Opening hand energy attachment requirement
+        # When you don't have Dwebble, Ogerpon, or search items (Poffins/UltraBall) in opening hand, attach any energy you have immediately
+        has_setup_pieces = any(c in {Dwebble, Ogerpon, BuddyPuffin, UltraBall} for c in hand)
+        must_attach_opening_energy = (turn_num <= 2 and not has_setup_pieces)
+
         # Expected attack damage
         my_dmg = 0
         if my_active_id == Crustle and my_energy >= 3: my_dmg = 120
@@ -465,7 +479,6 @@ def agent(obs_dict: dict) -> list[int]:
                 elif cid == Dwebble:
                     r_score += W.get("W_DWEBBLE_ACTIVE_RANK", 75.0)
                 elif cid == Ogerpon:
-                    # Rule 5: If Ogerpon is active wall vs Ability, rank top!
                     if opp_has_ability:
                         r_score += 150.0
                     else:
@@ -496,7 +509,7 @@ def agent(obs_dict: dict) -> list[int]:
             if "DISCARD" in context_str:
                 score = score_discard_option(cid, hand, bench_and_active_ids)
             elif "SEARCH" in context_str or "DECK" in context_str:
-                score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game, dwebble_in_play, opp_has_ability)
+                score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game, dwebble_in_play, opp_has_ability, hand_size)
 
             # ── RULE 1: POKÉGEAR 3.0 RESTRICTION ──
             elif cid == Pokégear:
@@ -508,10 +521,6 @@ def agent(obs_dict: dict) -> list[int]:
 
             # ── RULE 4: ULTRA BALL RESTRICTION ──
             elif cid == UltraBall:
-                # Only use Ultra Ball if:
-                # A. dwebble_in_play < 2 and Dwebble NOT in hand
-                # B. Crustle NOT in hand and Dwebble in play (need Crustle)
-                # C. opp_has_ability and Ogerpon NOT in hand and ogerpon_in_play < 2
                 valid_ultraball = (
                     (dwebble_in_play < 2 and Dwebble not in hand) or
                     (Dwebble in bench_and_active_ids and Crustle not in hand) or
@@ -533,11 +542,9 @@ def agent(obs_dict: dict) -> list[int]:
 
             # ── RULE 7: BOSS'S ORDERS STRICT CONDITIONS ──
             elif cid == BossOrders:
-                # Active must have >= 3 energy (or my_dmg > 0)
                 if my_energy < 3 or my_dmg <= 0:
                     score = -float('inf')  # HARD BAN Boss's Orders if active cannot attack!
                 else:
-                    # Target must be KO'able AND (worth more prizes OR has >= 2 more energy than opp active)
                     valid_boss_target = False
                     opp_active_prizes = 2 if is_card_ex(info.get("opp_active_id")) else 1
                     
@@ -560,7 +567,6 @@ def agent(obs_dict: dict) -> list[int]:
 
             # ── RULE 2 & 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
-                # Rule 6: Never play > 2 Ogerpon unless active has an ability
                 if cid == Ogerpon and not opp_has_ability and ogerpon_in_play >= 2:
                     score = -float('inf')  # HARD BAN 3rd Ogerpon when opp active has no ability!
                 elif cid == Kangaskhan and not is_early_game:
@@ -569,8 +575,7 @@ def agent(obs_dict: dict) -> list[int]:
                         score = 800.0 + subscore
                         has_useful_pre_attack_action = True
                     else:
-                        score = -float('inf')  # HARD BAN playing Kangaskhan ex in late game when bench >= 2!
-                # Rule 2: Early game Dwebble priority (< 2 in play)
+                        score = -float('inf')
                 elif cid == Dwebble and dwebble_in_play < 2:
                     subscore = w_pokemon * 5.0 + 50.0  # Top Priority Dwebble deployment!
                     score = 900.0 + subscore
@@ -596,7 +601,7 @@ def agent(obs_dict: dict) -> list[int]:
                 score = 600.0 + subscore
                 has_useful_pre_attack_action = True
 
-            # ── TIER 5: FOCUSED ENERGY ATTACHMENT ──
+            # ── TIER 5: FOCUSED ENERGY ATTACHMENT (WITH DIRECTIVE 1 EXCEPTION) ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 tier_base = W.get("W_TIER_ENERGY", 500.0)
                 in_play_area = o.get("inPlayArea")
@@ -620,7 +625,11 @@ def agent(obs_dict: dict) -> list[int]:
                 elif is_active_target:
                     need_norm = (3 - target_energy) / 3.0
                     subscore = w_energy * 5.0 + need_norm * 3.0 + (1.0 if is_card_ex(my_active_id) else 0.0)
-                    score = tier_base + subscore
+                    # Directive 1: Opening hand energy attachment when lacking Dwebble/Ogerpon/search items
+                    if must_attach_opening_energy:
+                        score = 950.0 + subscore  # Top Priority Opening Energy Attachment!
+                    else:
+                        score = tier_base + subscore
                 else:
                     if my_energy < 3:
                         score = 100.0
@@ -654,9 +663,6 @@ def agent(obs_dict: dict) -> list[int]:
 
             # ── RULE 5: RETREAT GUARD & WALL SAFETY ──
             elif o_type in {12, 8} or "RETREAT" in ot_str:
-                # Rule 5 Directives:
-                # 1. Never retreat if active takes 0 damage (active is immune wall)
-                # 2. Only retreat if active WILL take damage AND benched wall takes 0 damage (or special condition)
                 if active_takes_zero_damage:
                     score = -float('inf')  # HARD BAN retreat when active is an immune wall!
                 else:
