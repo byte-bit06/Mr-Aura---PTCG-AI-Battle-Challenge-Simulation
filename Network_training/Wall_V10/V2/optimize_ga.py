@@ -5,12 +5,13 @@ Optimizes weight parameters in optimized_weights.json against meta gauntlet.
 Continuously saves best weights to optimized_weights.json and timestamped checkpoints
 to checkpoints/ directory. Final submission.tar.gz is built ONCE at the end of optimization.
 
-Variance Reduction & Selection Config:
-  - 4 Games per Opponent (2 going first as P1, 2 going second as P2) = 28 Games per Candidate
-  - Top 5% Selection & Elitism (Only top 5% of bots are bred to produce children)
-  - Population Size = 40 (Top 5% = 2 Elite Parents)
-  - Games per Generation = 40 x 28 = 1,120 Games
-  - 90 Generations x 1,120 Games = 100,800 Total Games!
+Prize Ratio & Multi-Objective Fitness Objective:
+  1. MAXIMIZES PRIZE RATIO: (Prizes_Taken + 0.01) / (Prizes_Conceded + 0.01) (+3000.0x)
+  2. Maximizes Prize Cards Taken Us (+1000.0x per prize)
+  3. Heavily Penalizes Prize Cards Conceded Opponent (-2500.0x per prize)
+  4. Maximizes Total HP Damage Given (+1.0x per HP damage dealt)
+  5. Minimizes Total HP Damage Taken (-1.5x per HP damage received)
+  6. Win Bonus (+5000.0x per victory)
 """
 
 import os
@@ -86,8 +87,9 @@ except ImportError:
 
 import Wall_V10.V2.main as v2_main
 
-# ── Fitness Multi-Objective Weight Config ──────────────────────────────────
-W_TAKEN_MULT     = float(os.environ.get("GA_W_TAKEN", "1000.0"))
+# ── Fitness Prize Ratio & Multi-Objective Weight Config ────────────────────
+W_RATIO_MULT     = float(os.environ.get("GA_W_RATIO", "3000.0"))   # DIRECT PRIZE RATIO MAXIMIZER!
+W_TAKEN_MULT     = float(os.environ.get("GA_W_TAKEN", "1000.0"))   # Rewards Prizes Taken Us
 W_CONCEDED_MULT  = float(os.environ.get("GA_W_CONCEDED", "2500.0")) # Heavy penalty for losing prizes!
 W_DMG_GIVEN_MULT = float(os.environ.get("GA_W_DMG_GIVEN", "1.0"))   # Reward for dealing damage!
 W_DMG_TAKEN_MULT = float(os.environ.get("GA_W_DMG_TAKEN", "1.5"))   # Penalty for taking damage!
@@ -208,7 +210,10 @@ def evaluate_genome(env, genome):
             my_p1 = p1_taken
             opp_p1 = p2_taken
             won1 = (w1 == 0)
-            fit1 = (W_TAKEN_MULT * my_p1) - (W_CONCEDED_MULT * opp_p1) + (W_DMG_GIVEN_MULT * d_given1) - (W_DMG_TAKEN_MULT * d_taken1) + (W_WIN_BONUS if won1 else 0.0)
+            
+            # Direct Prize Ratio Maximizer: (Prizes_Taken + 0.01) / (Prizes_Conceded + 0.01)
+            ratio1 = (my_p1 + 0.01) / (opp_p1 + 0.01)
+            fit1 = (W_RATIO_MULT * ratio1) + (W_TAKEN_MULT * my_p1) - (W_CONCEDED_MULT * opp_p1) + (W_DMG_GIVEN_MULT * d_given1) - (W_DMG_TAKEN_MULT * d_taken1) + (W_WIN_BONUS if won1 else 0.0)
 
             total_fitness += fit1
             total_my_prizes += my_p1
@@ -224,7 +229,10 @@ def evaluate_genome(env, genome):
             my_p2 = p2_taken
             opp_p2 = p1_taken
             won2 = (w2 == 1)
-            fit2 = (W_TAKEN_MULT * my_p2) - (W_CONCEDED_MULT * opp_p2) + (W_DMG_GIVEN_MULT * d_given2) - (W_DMG_TAKEN_MULT * d_taken2) + (W_WIN_BONUS if won2 else 0.0)
+
+            # Direct Prize Ratio Maximizer: (Prizes_Taken + 0.01) / (Prizes_Conceded + 0.01)
+            ratio2 = (my_p2 + 0.01) / (opp_p2 + 0.01)
+            fit2 = (W_RATIO_MULT * ratio2) + (W_TAKEN_MULT * my_p2) - (W_CONCEDED_MULT * opp_p2) + (W_DMG_GIVEN_MULT * d_given2) - (W_DMG_TAKEN_MULT * d_taken2) + (W_WIN_BONUS if won2 else 0.0)
 
             total_fitness += fit2
             total_my_prizes += my_p2
@@ -277,6 +285,7 @@ def save_best_genome(best_genome, fitness, win_rate, my_pz, opp_pz, dmg_g, dmg_t
         "win_rate": win_rate,
         "avg_my_prizes": my_pz,
         "avg_opp_prizes": opp_pz,
+        "prize_ratio": (my_pz + 0.01) / (opp_pz + 0.01),
         "avg_damage_given": dmg_g,
         "avg_damage_taken": dmg_t,
         "updated_at": timestamp
@@ -345,6 +354,7 @@ def run_ga():
     log_ga_history(f"  Top 5% Elite Count:    {TOP_5_PCT_COUNT} (Only top 5% of bots breed children)")
     log_ga_history(f"  Games per Generation:  {games_per_gen}")
     log_ga_history(f"  Total Target Games:    {total_target_games:,}")
+    log_ga_history(f"  Prize Ratio Mult:      +{W_RATIO_MULT}x (MAXIMIZES Prize Capture Ratio)")
     log_ga_history(f"  Prize Taken Mult:      +{W_TAKEN_MULT}x")
     log_ga_history(f"  Prize Conceded:       -{W_CONCEDED_MULT}x (Heavy Penalty)")
     log_ga_history(f"  Damage Given Mult:     +{W_DMG_GIVEN_MULT}x")
@@ -363,14 +373,16 @@ def run_ga():
         for idx, genome in enumerate(population):
             fit, wr, my_pz, opp_pz, dmg_g, dmg_t = evaluate_genome(env, genome)
             cum_games += games_per_indiv
+            p_ratio = (my_pz + 0.01) / (opp_pz + 0.01)
             eval_results.append((fit, wr, my_pz, opp_pz, dmg_g, dmg_t, genome))
-            log_ga_history(f"  Indiv {idx+1:02d}/{POPULATION_SIZE} (Game {cum_games:,}) -> Fit: {fit:+.1f} | WinRate: {wr:.1f}% | Prizes (Us: {my_pz:.2f}, Opp: {opp_pz:.2f}) | Damage (Given: {dmg_g:.0f}, Taken: {dmg_t:.0f})")
+            log_ga_history(f"  Indiv {idx+1:02d}/{POPULATION_SIZE} (Game {cum_games:,}) -> Fit: {fit:+.1f} | WinRate: {wr:.1f}% | PrizeRatio: {p_ratio:.2f} (Us: {my_pz:.2f}, Opp: {opp_pz:.2f}) | Damage (Given: {dmg_g:.0f}, Taken: {dmg_t:.0f})")
 
         # Sort population by fitness (descending)
         eval_results.sort(key=lambda x: x[0], reverse=True)
         best_gen_fit, best_gen_wr, best_gen_mypz, best_gen_opppz, best_gen_dmgg, best_gen_dmgt, best_gen_genome = eval_results[0]
 
-        log_ga_history(f"--> Gen {gen} Best -> Fit: {best_gen_fit:+.1f} | WinRate: {best_gen_wr:.1f}% | Prizes (Us: {best_gen_mypz:.2f}, Opp: {best_gen_opppz:.2f}) | Damage (Given: {best_gen_dmgg:.0f}, Taken: {best_gen_dmgt:.0f})")
+        best_p_ratio = (best_gen_mypz + 0.01) / (best_gen_opppz + 0.01)
+        log_ga_history(f"--> Gen {gen} Best -> Fit: {best_gen_fit:+.1f} | WinRate: {best_gen_wr:.1f}% | PrizeRatio: {best_p_ratio:.2f} (Us: {best_gen_mypz:.2f}, Opp: {best_gen_opppz:.2f}) | Damage (Given: {best_gen_dmgg:.0f}, Taken: {best_gen_dmgt:.0f})")
 
         # CONTINUOUS SAVING: Save weights immediately whenever a new best fitness is reached
         if best_gen_fit > best_overall_fitness:
