@@ -920,30 +920,30 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: EMERGENCY BENCH DEPLOYMENT MATCHED -> Score 100.0 (Prevents Instant Loss)!")
                     has_useful_pre_attack_action = True
                 elif cid == Dwebble and dwebble_in_play < 2:
-                    subscore = w_pokemon * 0.5 + 5.0
-                    score = 35.0 + subscore
+                    subscore = w_pokemon * 0.1 + 1.0
+                    score = 87.0 + subscore
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: Early Dwebble Bench Play Priority Matched -> Score {score}!")
                     has_useful_pre_attack_action = True
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
-                    subscore = w_pokemon * 0.5 + 2.0
-                    score = 32.0 + subscore
+                    subscore = w_pokemon * 0.1
+                    score = 86.5 + subscore
                     has_useful_pre_attack_action = True
                 else:
-                    subscore = w_pokemon * 0.5
-                    score = 30.0 + subscore
+                    subscore = w_pokemon * 0.1
+                    score = 86.0 + subscore
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 7: EVOLUTION (Evolve Dwebble to Crustle) ──
+            # ── BRANCH 7: EVOLUTION (Evolve Dwebble to Crustle — Pre-Attack Wall Priority) ──
             elif (o_type in {4, 6, 7, 9} or "EVOLVE" in ot_str) and (cid == Crustle):
-                subscore = w_evolve * 0.5 + (3.0 if optimal_lead == Crustle else 0.0)
-                score = 55.0 + subscore
+                subscore = w_evolve * 0.2 + (1.0 if optimal_lead == Crustle else 0.0)
+                score = 88.0 + subscore
                 log_rule_execution(f"  [IF EXECUTED] Branch 7: Crustle Evolution Matched -> Score {score}!")
                 has_useful_pre_attack_action = True
 
             # ── BRANCH 8: OTHER DRAW SUPPORTERS / ITEMS ──
             elif o_type in {7, 3} and (cid in SUPPORTERS_SET or cid in {BuddyPuffin, UltraBall, Pokégear, HerosCape, CommunityCenter, TRFactory, JumboIceCream}):
-                subscore = w_trainer * 0.5 + (2.0 if hand_size <= 3 else 0.0)
-                score = 20.0 + subscore
+                subscore = w_trainer * 0.2 + (1.0 if hand_size <= 3 else 0.0)
+                score = 86.0 + subscore
                 log_rule_execution(f"  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
@@ -973,14 +973,14 @@ def agent(obs_dict: dict) -> list[int]:
 
                 if cond_1 or cond_2 or cond_3:
                     reason_str = "Cond 1 (Energy Swap)" if cond_1 else ("Cond 2 (Crustle EX Pivot)" if cond_2 else "Cond 3 (Ogerpon Ability Pivot)")
-                    score = 48.0
-                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard Allowed -> Score 48.0 [{reason_str}]!")
+                    score = 87.5
+                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard Allowed -> Score 87.5 [{reason_str}]!")
                     has_useful_pre_attack_action = True
                 else:
                     log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): Strict conditions not met!")
                     score = -float('inf')
 
-            # ── BALANCED BRANCH 9: ENERGY ATTACHMENT (0.0 TO 100.0 SCALE) ──
+            # ── BRANCH 9: ENERGY ATTACHMENT (FAST PRE-ATTACK ATTACHMENT: 90.0 - 95.0 SCALE) ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
@@ -1004,14 +1004,14 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
                     score = -float('inf')
                 else:
-                    tier_base = 70.0 if is_active_target else 60.0
-                    urgency = (max_needed_energy - target_energy) * 2.5 if is_active_target else (max_needed_energy - target_energy) * 1.5
+                    tier_base = 93.0 if is_active_target else 90.0
+                    urgency = (max_needed_energy - target_energy) * 0.5 if is_active_target else (max_needed_energy - target_energy) * 0.3
                     score = tier_base + urgency
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Attachment Matched -> Score {score}!")
 
-            # ── BALANCED BRANCH 10: ATTACKING (0.0 TO 100.0 SCALE) ──
+            # ── BRANCH 10: STANDARD ATTACKING (85.0 - 90.0 SCALE: EXECUTES AT END OF TURN) ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
-                tier_base = 85.0  # High priority to attack when ready
+                tier_base = 85.0  # Executed at end of turn after all setup actions
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
                     score = -float('inf')
@@ -1023,7 +1023,7 @@ def agent(obs_dict: dict) -> list[int]:
                         prize_norm = (6 - my_prizes) / 6.0
                         subscore = w_attack * 0.5 + w_prize * prize_norm * 0.3
                         if my_dmg >= opp_hp and opp_hp > 0:
-                            subscore += 10.0  # Lethal KO Bonus (Total = 95.0+)
+                            subscore += 10.0  # Guaranteed Lethal KO Bonus (Total = 95.0+)
                         score = tier_base + subscore
                 log_rule_execution(f"  [IF EXECUTED] Branch 10: ATTACK MATCHED -> Score {score}!")
 
