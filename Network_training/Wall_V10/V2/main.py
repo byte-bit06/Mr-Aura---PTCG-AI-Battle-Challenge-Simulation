@@ -593,7 +593,7 @@ def agent(obs_dict: dict) -> list[int]:
 
         # Helper state checks for strict rules
         has_other_supporter_in_hand = any(c in {Lillie, Petrel, Hilda, Colress, Morty, Xerosic} for c in hand)
-        supporter_played = getattr(current, "supporterPlayed", False) or False
+        supporter_played = current.get("supporterPlayed", False) if isinstance(current, dict) else False
 
         # Rule 3 Helper: Check if hand contains ANY playable Pokemon, evolution, or item BEFORE Lillie
         has_playable_before_lillie = False
@@ -704,7 +704,7 @@ def agent(obs_dict: dict) -> list[int]:
                 if b_retreat == 0 and cid in {Kangaskhan, Abomasnow, Snorlax, Archaludon}:
                     b_retreat = 3
 
-                opp_active_hp = _get_val(my_active, "hp", 999) if isinstance(my_active, dict) else 999
+                opp_active_hp = info.get("opp_active_hp", 999)
                 opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
 
                 cond_A = (my_energy >= 3 and my_dmg > 0 and my_dmg >= b_hp and not opp_active_can_be_kodd)
@@ -763,7 +763,7 @@ def agent(obs_dict: dict) -> list[int]:
             elif cid == BossOrders:
                 valid_boss_target = False
                 target_reason = ""
-                opp_active_hp = _get_val(my_active, "hp", 999) if isinstance(my_active, dict) else 999
+                opp_active_hp = info.get("opp_active_hp", 999)
                 opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
 
                 for b in opp_bench:
