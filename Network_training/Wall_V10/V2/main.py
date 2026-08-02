@@ -498,7 +498,59 @@ def _get_val(obj, key, default=None):
         return obj.get(key, default)
     return getattr(obj, key, default)
 
-def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
+def calculate_lead_priority(active_card, opponent_active=None, opponent_deck_archetype="default"):
+    """
+    Calculates dynamic active lead priority score based on type-advantage, HP, damage output,
+    retreat cost, prize vulnerability, and opponent archetype (e.g., Dragapult spread).
+    Returns a score on the normalized 0.0 to 100.0 scale.
+    """
+    if not active_card or not isinstance(active_card, dict):
+        return -float('inf')
+    
+    cid = _get_val(active_card, "id")
+    hp = get_card_hp(cid) or _get_val(active_card, "hp", 0)
+    max_hp = get_card_hp(cid) or _get_val(active_card, "maxHp", 200)
+    retreat = get_card_retreat_cost(cid)
+    max_dmg = get_card_attack_damage(cid)
+    is_ex = is_card_ex(cid)
+    has_ability = card_has_ability(cid)
+
+    opp_cid = _get_val(opponent_active, "id") if isinstance(opponent_active, dict) else None
+    opp_is_ex = is_card_ex(opp_cid) if opp_cid else False
+    opp_has_ability = card_has_ability(opp_cid) if opp_cid else False
+
+    score = 50.0  # Base neutral score
+
+    # 1. Immunity-First Wall Mechanics
+    if opp_is_ex and cid == Crustle:
+        log_rule_execution(f"  [MATCHUP MATRIX] Crustle EX Immunity Matchup -> MAX Rank Score 100.0")
+        return 100.0  # Crustle is 100% immune to EX Pokemon!
+    if opp_has_ability and cid == Ogerpon:
+        log_rule_execution(f"  [MATCHUP MATRIX] Ogerpon ex Ability Immunity Matchup -> MAX Rank Score 100.0")
+        return 100.0  # Cornerstone Mask Ogerpon ex is 100% immune to Ability Pokemon!
+
+    # 2. Archetype-Specific Prize Vulnerability (e.g., Dragapult spread damage)
+    is_spread_archetype = ("dragapult" in str(opponent_deck_archetype).lower() or 
+                           (opp_cid and "dragapult" in get_card_name(opp_cid).lower()))
+    
+    if is_spread_archetype and is_ex and cid == Kangaskhan:
+        # Penalize multi-prize basic leads against spread damage to prevent early 2-prize deficits!
+        score -= 50.0
+        log_rule_execution(f"  [MATCHUP MATRIX] Kangaskhan ex penalized (-50.0) vs Spread Archetype ({opponent_deck_archetype})")
+
+    # 3. Defensive HP & Prize Efficiency
+    if is_ex and opp_is_ex:
+        score += (hp / float(max_hp) if max_hp else 0.5) * 20.0
+        score += (max_dmg / 200.0) * 15.0
+    elif is_ex and not opp_is_ex:
+        score -= 15.0
+
+    # 4. Low Retreat Cost Bonus
+    score -= retreat * 5.0
+
+    return max(0.0, min(100.0, score))
+
+def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False, opponent_active=None, opponent_deck_archetype="default"):
     if not pokemon: return -float('inf')
     cid = _get_val(pokemon, "id")
     hp = _get_val(pokemon, "hp", 0)
@@ -506,12 +558,16 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
     energies = _get_val(pokemon, "energies") or []
     energy_count = len(energies)
     
-    # RULE 1: KANGASKHAN EX IS TOP PRIORITY ACTIVE LEAD IN EARLY GAME (Turn 0 Setup)!
-    if cid == Kangaskhan and is_early_game:
-        log_rule_execution(f"  [RULE APPLIED] Early-Game Kangaskhan Active Lead Priority: Kangaskhan ex (Card #756) assigned TOP Rank Score 1000.0!")
-        return 1000.0
+    # Calculate dynamic matchup lead priority score!
+    matchup_lead_score = calculate_lead_priority(pokemon, opponent_active, opponent_deck_archetype)
 
-    # HARD BAN: Never promote Kangaskhan ex to active in late game!
+    if cid == Kangaskhan and is_early_game:
+        if "dragapult" in str(opponent_deck_archetype).lower():
+            log_rule_execution(f"  [RULE APPLIED] Early Kangaskhan Lead PENALIZED vs Dragapult Spread Archetype!")
+            return 30.0
+        log_rule_execution(f"  [RULE APPLIED] Early-Game Kangaskhan Active Lead Priority Score 100.0!")
+        return 100.0
+
     if cid == Kangaskhan and not is_early_game:
         log_rule_execution(f"  [RULE APPLIED] Late-Game Kangaskhan Active Promotion HARD BANNED (-inf)")
         return -float('inf')
@@ -528,7 +584,8 @@ def rank_active_candidate(pokemon, optimal_active_id, is_early_game=False):
         score += W.get("W_DWEBBLE_ACTIVE_RANK", 75.0)
     elif cid == Ogerpon:
         score += W.get("W_OGERPON_ACTIVE_RANK", 60.0)
-    return score
+        
+    return score + (matchup_lead_score * 0.2)
 
 def score_discard_option(cid, hand, bench_and_active_ids):
     if cid in {BossOrders, Lillie, Petrel, Hilda, Colress, Morty, Xerosic}:
@@ -604,19 +661,47 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
         
     return 100.0
 
-def sanitize_action(chosen_indices: list[int], select_data: dict) -> list[int]:
-    options = select_data.get("option", [])
+def _log_fallback_state(obs_dict: dict, reason: str = ""):
+    """Logs fallback [0] state attributes into live_rule_executions.log for automated GA tuning."""
+    try:
+        current = obs_dict.get("current", {}) if isinstance(obs_dict, dict) else {}
+        my_idx = current.get("yourIndex", 0)
+        players = current.get("player", [])
+        my_p = players[my_idx] if (isinstance(players, list) and len(players) > my_idx and isinstance(players[my_idx], dict)) else {}
+        
+        my_active = my_p.get("active", {}) if isinstance(my_p, dict) else {}
+        hand = my_p.get("hand", []) if isinstance(my_p, dict) else []
+        bench = my_p.get("bench", []) if isinstance(my_p, dict) else []
+        
+        active_id = my_active.get("id") if isinstance(my_active, dict) else None
+        active_hp = my_active.get("hp", 0) if isinstance(my_active, dict) else 0
+        hand_count = len(hand) if isinstance(hand, list) else 0
+        board_state = f"Active ID={active_id}, HP={active_hp}, BenchCount={len(bench)}, HandCount={hand_count}"
+        
+        log_rule_execution(f"  [FALLBACK LOGGED] Reason: {reason} | Attributes: board_state='{board_state}', active_hp={active_hp}, hand_count={hand_count}, active_id={active_id}")
+    except Exception as e:
+        log_rule_execution(f"  [FALLBACK LOGGING EXCEPTION] {e}")
+
+def sanitize_action(chosen_indices: list[int], select_data: dict, obs_dict: dict = None) -> list[int]:
+    options = select_data.get("option", []) if isinstance(select_data, dict) else []
     n_opts = len(options)
     if n_opts == 0:
+        if obs_dict:
+            _log_fallback_state(obs_dict, reason="No options available in select_data")
         return [0]
 
-    max_count = select_data.get("maxCount", 1)
-    min_count = select_data.get("minCount", 1)
+    max_count = select_data.get("maxCount", 1) if isinstance(select_data, dict) else 1
+    min_count = select_data.get("minCount", 1) if isinstance(select_data, dict) else 1
 
     unique = []
     for idx in chosen_indices:
         if 0 <= idx < n_opts and idx not in unique:
             unique.append(idx)
+
+    if not unique:
+        if obs_dict:
+            _log_fallback_state(obs_dict, reason="Fallback [0] triggered due to empty valid chosen_indices")
+        unique = [0]
 
     if len(unique) < min_count:
         for i in range(n_opts):
@@ -707,7 +792,8 @@ def agent(obs_dict: dict) -> list[int]:
 
         # Helper state checks for strict rules
         has_other_supporter_in_hand = any(c in {Lillie, Petrel, Hilda, Colress, Morty, Xerosic} for c in hand)
-        supporter_played = current.get("supporterPlayed", False) if isinstance(current, dict) else False
+        supporter_already_played = current.get("supporterPlayed", False) if isinstance(current, dict) else False
+        supporter_played = supporter_already_played
 
         # Rule 3 Helper: Check if hand contains ANY playable Pokemon, evolution, or item BEFORE Lillie
         has_playable_before_lillie = False
@@ -907,64 +993,84 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 4: Lillie Supporter Allowed -> Score {score}")
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS (DIRECTIVE A, B, C & OGERPON RULE) ──
+            # ── BRANCH 5: BOSS'S ORDERS RELAXED CONDITIONS (DIRECTIVE 9 FIX) ──
             elif cid == BossOrders:
-                valid_boss_target = False
-                is_cond_A_ko = False
-                target_reason = ""
-                opp_active_hp = info.get("opp_active_hp", 999)
-                opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
-                opp_active_has_ability = card_has_ability(info.get("opp_active_id"))
-
-                for b in opp_bench:
-                    if not isinstance(b, dict): continue
-                    b_id = _get_val(b, "id")
-                    b_hp = _get_val(b, "hp", 999)
-                    b_energies = len(_get_val(b, "energies") or [])
-                    b_retreat_cost = _get_val(b, "retreatCost", 0) or _get_val(b, "retreat_cost", 0)
-                    b_has_ability = card_has_ability(b_id)
-                    
-                    if b_retreat_cost == 0 and b_id in {Kangaskhan, Abomasnow, Snorlax, Archaludon}:
-                        b_retreat_cost = 3
-
-                    if my_active_id == Ogerpon:
-                        if b_has_ability and not opp_active_has_ability:
-                            valid_boss_target = True
-                            target_reason = f"Ogerpon Immunity Rule (Targeting {get_card_name(b_id)} with Ability)"
-                            break
-                        continue
-
-                    cond_A = (my_energy >= 3 and my_dmg > 0 and my_dmg >= b_hp and not opp_active_can_be_kodd)
-                    b_is_building = (b_energies >= 2 or (b_energies >= 1 and is_card_ex(b_id)))
-                    opp_active_is_sacrifice = (opp_active_energy == 0)
-                    cond_B = (b_is_building and opp_active_is_sacrifice)
-                    cond_C = (b_retreat_cost >= 3 and b_energies == 0)
-
-                    if cond_A:
-                        valid_boss_target = True
-                        is_cond_A_ko = True
-                        target_reason = f"Condition A EASY PRIZE CARD KO on {get_card_name(b_id)}!"
-                        break
-                    elif cond_B:
-                        valid_boss_target = True
-                        target_reason = f"Condition B (Targeting building {get_card_name(b_id)} vs 0-energy sacrifice active)"
-                        break
-                    elif cond_C:
-                        valid_boss_target = True
-                        target_reason = f"Condition C (Trapping heavy {get_card_name(b_id)} with 0 energy & retreat >= 3)"
-                        break
-
-                if not valid_boss_target:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): Strict conditions not met!")
+                if supporter_already_played:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): Supporter already played this turn!")
                     score = -float('inf')
                 else:
-                    if is_cond_A_ko:
-                        score = 92.0  # TOP PRIORITY: Pull weak benched Pokemon for immediate KO!
-                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Condition A Matched -> TOP PRIZE CARD KO SCORE {score} [{target_reason}]!")
+                    valid_boss_target = False
+                    is_immediate_prize_ko = False
+                    is_disruptive_engine = False
+                    target_reason = ""
+                    opp_active_hp = info.get("opp_active_hp", 999)
+                    opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
+                    opp_active_has_ability = card_has_ability(info.get("opp_active_id"))
+
+                    ENGINE_PIECES = {
+                        "drakloak", "bidoof", "natu", "rotom", "kirlia", "pidgey", "pidgeotto",
+                        "charmander", "dwebble", "drakloak ex", "bibarel", "xatu", "ralts",
+                        "comfey", "squirtle", "bulbasaur", "pidgeot"
+                    }
+
+                    for b in opp_bench:
+                        if not isinstance(b, dict): continue
+                        b_id = _get_val(b, "id")
+                        b_name = get_card_name(b_id).lower()
+                        b_hp = _get_val(b, "hp", 999)
+                        b_energies = len(_get_val(b, "energies") or [])
+                        b_retreat_cost = get_card_retreat_cost(b_id) or _get_val(b, "retreatCost", 0)
+                        b_has_ability = card_has_ability(b_id)
+                        
+                        if b_retreat_cost == 0 and b_id in {Kangaskhan, Abomasnow, Snorlax, Archaludon}:
+                            b_retreat_cost = 3
+
+                        if my_active_id == Ogerpon:
+                            if b_has_ability and not opp_active_has_ability:
+                                valid_boss_target = True
+                                target_reason = f"Ogerpon Immunity Rule (Targeting {get_card_name(b_id)} with Ability)"
+                                break
+                            continue
+
+                        # Sub-Condition 1: Immediate Prize Condition (Active HAS energy and CAN KO benched target)
+                        cond_1_immediate_prize = (my_energy >= 3 and my_dmg > 0 and my_dmg >= b_hp and not opp_active_can_be_kodd)
+
+                        # Sub-Condition 2: Disruptive Engine Target (Opponent engine piece on bench, REGARDLESS of active energy!)
+                        is_engine_card = any(engine_kw in b_name for engine_kw in ENGINE_PIECES) or b_has_ability
+                        cond_2_disruptive_engine = (is_engine_card and (opp_active_energy == 0 or not is_card_ex(info.get("opp_active_id"))))
+
+                        # Condition C: Heavy trap (retreat >= 3 and 0 energy)
+                        cond_3_heavy_trap = (b_retreat_cost >= 3 and b_energies == 0)
+
+                        if cond_1_immediate_prize:
+                            valid_boss_target = True
+                            is_immediate_prize_ko = True
+                            target_reason = f"Sub-Condition 1: Immediate Prize KO on {get_card_name(b_id)}!"
+                            break
+                        elif cond_2_disruptive_engine:
+                            valid_boss_target = True
+                            is_disruptive_engine = True
+                            target_reason = f"Sub-Condition 2: Disruptive Engine Target ({get_card_name(b_id)})"
+                            break
+                        elif cond_3_heavy_trap:
+                            valid_boss_target = True
+                            target_reason = f"Condition C: Heavy Trap on {get_card_name(b_id)} (Retreat {b_retreat_cost}, 0 Energy)"
+                            break
+
+                    if not valid_boss_target:
+                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): No valid target met!")
+                        score = -float('inf')
                     else:
-                        score = 45.0 + w_trainer * 0.5
-                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score {score} [{target_reason}]")
-                    has_useful_pre_attack_action = True
+                        if is_immediate_prize_ko:
+                            score = 95.0  # TOP PRIORITY KO
+                            log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Immediate Prize KO -> Score {score} [{target_reason}]!")
+                        elif is_disruptive_engine:
+                            score = 87.0  # Disruptive Engine Boss Play
+                            log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Disruptive Engine -> Score {score} [{target_reason}]!")
+                        else:
+                            score = 45.0 + w_trainer * 0.5
+                            log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score {score} [{target_reason}]")
+                        has_useful_pre_attack_action = True
 
             # ── BRANCH 6: BENCH PLAYS (EMERGENCY BENCH PROTECTION & SETUP) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
@@ -1127,7 +1233,7 @@ def agent(obs_dict: dict) -> list[int]:
         log_rule_execution(f"  => FINAL EXECUTION SELECTION: Option {best_idx} ({get_card_name(chosen_cid)}) with Highest Score: {best_score}\n")
 
         desc_indices = [i for _, i in scored_options]
-        return sanitize_action(desc_indices, select_data)
+        return sanitize_action(desc_indices, select_data, obs_dict)
     except Exception as e:
         log_rule_execution(f"  [EXCEPTION] {e}")
-        return sanitize_action([0], select_data)
+        return sanitize_action([0], select_data, obs_dict)
