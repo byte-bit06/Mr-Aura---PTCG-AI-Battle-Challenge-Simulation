@@ -806,12 +806,16 @@ def agent(obs_dict: dict) -> list[int]:
                     score = tier_base + subscore
                 log_rule_execution(f"  [IF EXECUTED] Branch 10: Attack Option Matched -> Score {score}")
 
-            # ── BRANCH 11: STADIUMS, HEALING & TOOLS ──
-            elif o_type in {7, 10} or cid in {CommunityCenter, JumboIceCream, TRFactory, HerosCape}:
+            # ── BRANCH 11: HERO'S CAPE & STADIUMS / HEALING ──
+            elif o_type in {7, 10} or cid in {HerosCape, CommunityCenter, JumboIceCream, TRFactory}:
                 tier_base = W.get("W_TIER_TOOL_HEAL", 300.0)
-                subscore = w_tool * 5.0
-                score = tier_base + subscore
-                log_rule_execution(f"  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score {score}")
+                if cid == HerosCape:
+                    score = 850.0 + w_tool * 5.0  # Hero's Cape +100 HP Tool equipped immediately!
+                    log_rule_execution(f"  [IF EXECUTED] Branch 11: Hero's Cape +100 HP Tool Equipping Matched -> Score {score}")
+                else:
+                    subscore = w_tool * 5.0
+                    score = tier_base + subscore
+                    log_rule_execution(f"  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score {score}")
                 has_useful_pre_attack_action = True
 
             # ── BRANCH 12: RETREAT GUARD & WALL SAFETY ──
