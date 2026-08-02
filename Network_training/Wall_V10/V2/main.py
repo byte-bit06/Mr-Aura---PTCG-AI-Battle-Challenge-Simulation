@@ -498,6 +498,40 @@ def _get_val(obj, key, default=None):
         return obj.get(key, default)
     return getattr(obj, key, default)
 
+DRAGAPULT_LINE_IDS = {119, 120, 121}
+
+def detect_opponent_archetype(info: dict, obs_dict: dict = None) -> str:
+    """
+    Dynamically inspects the raw game payload (Active, Bench, Discard)
+    to identify the opponent's deck archetype (e.g., 'dragapult_spread', 'default').
+    """
+    opp_active_id = info.get("opp_active_id") if isinstance(info, dict) else None
+    opp_bench = info.get("opp_bench", []) if isinstance(info, dict) else []
+    opp_bench_ids = [_get_val(b, "id") for b in opp_bench if isinstance(b, dict) and _get_val(b, "id")]
+
+    opp_discard = []
+    if isinstance(obs_dict, dict):
+        current = obs_dict.get("current", {}) if isinstance(obs_dict, dict) else {}
+        players = current.get("player", []) if isinstance(current, dict) else []
+        my_idx = current.get("yourIndex", 0) if isinstance(current, dict) else 0
+        opp_idx = 1 if my_idx == 0 else 0
+        if isinstance(players, list) and len(players) > opp_idx and isinstance(players[opp_idx], dict):
+            opp_p = players[opp_idx]
+            opp_discard = [_get_val(c, "id") for c in opp_p.get("discard", []) if isinstance(c, dict) and _get_val(c, "id")]
+
+    all_visible_opp_ids = [opp_active_id] + opp_bench_ids + opp_discard
+
+    # Check for Dragapult Spread Archetype from IDs (#119 Dreepy, #120 Drakloak, #121 Dragapult ex) and names
+    for cid in all_visible_opp_ids:
+        if not cid: continue
+        if cid in DRAGAPULT_LINE_IDS:
+            return "dragapult_spread"
+        cname = get_card_name(cid).lower()
+        if any(kw in cname for kw in ["dragapult", "drakloak", "dreepy"]):
+            return "dragapult_spread"
+
+    return "default"
+
 def calculate_lead_priority(active_card, opponent_active=None, opponent_deck_archetype="default"):
     """
     Calculates dynamic active lead priority score based on type-advantage, HP, damage output,
@@ -754,6 +788,7 @@ def agent(obs_dict: dict) -> list[int]:
         opp_is_ex = info.get("opp_is_ex", False)
         opp_has_ability = info.get("opp_has_ability", False)
         optimal_lead = info.get("optimal_active", Crustle)
+        opponent_deck_archetype = detect_opponent_archetype(info, obs_dict)
 
         bench_and_active_ids = [_get_val(b, "id") for b in my_bench if _get_val(b, "id")]
         if my_active_id: bench_and_active_ids.append(my_active_id)
