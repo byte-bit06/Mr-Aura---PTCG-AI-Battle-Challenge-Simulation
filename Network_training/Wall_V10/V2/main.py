@@ -213,6 +213,19 @@ def has_enough_energy_for_highest_attack(p_dict):
     current_energy = get_energy_count(p_dict)
     return current_energy >= req
 
+def get_card_attack_damage(cid):
+    if cid == Ogerpon: return 140      # Cornerstone Mask Ogerpon ex #117: Demolish (140 HP damage)
+    elif cid == Crustle: return 120    # Crustle #345: Superb Scissors (120 HP damage)
+    elif cid == Kangaskhan: return 200 # Mega Kangaskhan ex #756: Rapid-Fire Combo (200 HP damage)
+    elif cid == Dwebble: return 0      # Dwebble #344: Ascension (0 HP damage)
+    if cid in _CARD_DB:
+        try:
+            dmg_str = _CARD_DB[cid].get("Damage", "0").replace("×", "").replace("+", "").replace("?", "").strip()
+            return int(dmg_str)
+        except (ValueError, TypeError):
+            pass
+    return 0
+
 # ── Weights Loader ─────────────────────────────────────────────────────────────
 _WEIGHT_DEFAULTS = {
     "W_TIER_EARLY_BENCH":       800.0,
@@ -641,10 +654,8 @@ def agent(obs_dict: dict) -> list[int]:
         # Expected attack damage (Check if active has enough energy for highest attack!)
         my_active_has_enough_energy = has_enough_energy_for_highest_attack(my_active)
         my_dmg = 0
-        if my_active_has_enough_energy:
-            if my_active_id == Crustle: my_dmg = 120
-            elif my_active_id == Ogerpon: my_dmg = 140
-            elif my_active_id == Kangaskhan: my_dmg = 100
+        if my_active_has_enough_energy and my_active_id:
+            my_dmg = get_card_attack_damage(my_active_id)
 
         # Helper state checks for strict rules
         has_other_supporter_in_hand = any(c in {Lillie, Petrel, Hilda, Colress, Morty, Xerosic} for c in hand)
