@@ -692,33 +692,54 @@ def agent(obs_dict: dict) -> list[int]:
                     score = 600.0 + w_trainer * 5.0
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS ──
+            # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS (DIRECTIVE A, B, C) ──
             elif cid == BossOrders:
-                if my_energy < 3 or my_dmg <= 0:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): Active energy < 3 to attack!")
+                valid_boss_target = False
+                target_reason = ""
+                opp_active_hp = _get_val(my_active, "hp", 999) if isinstance(my_active, dict) else 999
+                opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
+
+                for b in opp_bench:
+                    if not isinstance(b, dict): continue
+                    b_id = _get_val(b, "id")
+                    b_hp = _get_val(b, "hp", 999)
+                    b_energies = len(_get_val(b, "energies") or [])
+                    b_retreat_cost = _get_val(b, "retreatCost", 0) or _get_val(b, "retreat_cost", 0)
+                    
+                    if b_retreat_cost == 0 and b_id in {Kangaskhan, Abomasnow, Snorlax, Archaludon}:
+                        b_retreat_cost = 3
+
+                    # Condition A: Can KO bench Pokemon AND cannot KO active
+                    cond_A = (my_energy >= 3 and my_dmg > 0 and my_dmg >= b_hp and not opp_active_can_be_kodd)
+
+                    # Condition B: Opponent building benched Pokemon (energy >= 2 or EX/evolved) vs sacrifice active (0 energy)
+                    b_is_building = (b_energies >= 2 or (b_energies >= 1 and is_card_ex(b_id)))
+                    opp_active_is_sacrifice = (opp_active_energy == 0 or not is_card_ex(info.get("opp_active_id")))
+                    cond_B = (b_is_building and opp_active_is_sacrifice)
+
+                    # Condition C: Benched Pokemon has retreat cost >= 3 and 0 energy attached
+                    cond_C = (b_retreat_cost >= 3 and b_energies == 0)
+
+                    if cond_A:
+                        valid_boss_target = True
+                        target_reason = f"Condition A (Bench KO on {get_card_name(b_id)} while active un-KOable)"
+                        break
+                    elif cond_B:
+                        valid_boss_target = True
+                        target_reason = f"Condition B (Targeting building {get_card_name(b_id)} vs sacrifice active)"
+                        break
+                    elif cond_C:
+                        valid_boss_target = True
+                        target_reason = f"Condition C (Trapping heavy {get_card_name(b_id)} with 0 energy & retreat >= 3)"
+                        break
+
+                if not valid_boss_target:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): None of Conditions A, B, or C met!")
                     score = -float('inf')
                 else:
-                    valid_boss_target = False
-                    opp_active_prizes = 2 if is_card_ex(info.get("opp_active_id")) else 1
-                    
-                    for b in opp_bench:
-                        b_id = _get_val(b, "id")
-                        b_hp = _get_val(b, "hp", 999)
-                        b_energies = len(_get_val(b, "energies") or [])
-                        b_prizes = 2 if is_card_ex(b_id) else 1
-
-                        if my_dmg >= b_hp:
-                            if (b_prizes > opp_active_prizes) or (b_energies >= opp_active_energy + 2):
-                                valid_boss_target = True
-                                break
-
-                    if not valid_boss_target:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): No target meets KO + Prize/Energy condition!")
-                        score = -float('inf')
-                    else:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score 650.0")
-                        score = 650.0 + w_trainer * 5.0
-                        has_useful_pre_attack_action = True
+                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score 700.0 [{target_reason}]")
+                    score = 700.0 + w_trainer * 5.0
+                    has_useful_pre_attack_action = True
 
             # ── BRANCH 6: BENCH PLAYS (Dwebble Priority & Ogerpon Limit) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
