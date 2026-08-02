@@ -146,19 +146,29 @@ def get_card_name(cid):
         return getattr(c, 'name').strip()
     return f"Card #{cid}"
 
+def get_energy_count(p_dict):
+    if not p_dict or not isinstance(p_dict, dict): return 0
+    e_cards = p_dict.get("energyCards")
+    if isinstance(e_cards, list) and len(e_cards) > 0:
+        return len(e_cards)
+    e_val = p_dict.get("energies")
+    if isinstance(e_val, list):
+        return len(e_val)
+    elif isinstance(e_val, (int, float)):
+        return int(e_val)
+    return 0
+
 def format_pokemon_summary(p_dict):
     if not p_dict or not isinstance(p_dict, dict): return "None"
     cid = p_dict.get("id")
     c_name = get_card_name(cid)
     hp = p_dict.get("hp", 0)
     max_hp = p_dict.get("maxHp", 0)
-    e_cards = p_dict.get("energyCards") or []
-    e_names = [get_card_name(e.get("id") if isinstance(e, dict) else e) for e in e_cards]
-    e_str = f"{len(e_cards)} ({', '.join(e_names)})" if e_names else f"{len(e_cards)}"
+    e_cnt = get_energy_count(p_dict)
     t_cards = p_dict.get("tools") or []
     t_names = [get_card_name(t.get("id") if isinstance(t, dict) else t) for t in t_cards]
     t_str = f"Tools: {', '.join(t_names)}" if t_names else "Tools: None"
-    return f"{c_name} (ID #{cid}) [HP: {hp}/{max_hp} | Energy: {e_str} | {t_str}]"
+    return f"{c_name} (ID #{cid}) [HP: {hp}/{max_hp} | Energy: {e_cnt} | {t_str}]"
 
 # ── Weights Loader ─────────────────────────────────────────────────────────────
 _WEIGHT_DEFAULTS = {
@@ -363,12 +373,12 @@ def extract_board_info(obs_dict):
         "my_active_id": my_active.get("id") if my_active else None,
         "my_active_hp": my_active.get("hp", 0) if my_active else 0,
         "my_active_max_hp": my_active.get("maxHp", 0) if my_active else 0,
-        "my_active_energy": len(my_active.get("energies", [])) if my_active else 0,
+        "my_active_energy": get_energy_count(my_active),
         "my_bench": my_bench,
         "opp_active": opp_active,
         "opp_active_id": opp_active_id,
         "opp_active_hp": opp_active.get("hp", 0) if opp_active else 0,
-        "opp_active_energy": len(opp_active.get("energies", [])) if opp_active else 0,
+        "opp_active_energy": get_energy_count(opp_active),
         "opp_bench": opp_bench,
         "opp_is_ex": opp_is_ex,
         "opp_has_ability": opp_has_ability,
@@ -922,14 +932,13 @@ def agent(obs_dict: dict) -> list[int]:
                 is_active_target = (in_play_area in {3, 4, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
                 
                 target_cid = my_active_id if is_active_target else None
-                target_energy = my_energy if is_active_target else 0
+                target_energy = get_energy_count(my_active) if is_active_target else 0
                 
                 if not is_active_target:
                     if in_play_idx is not None and 0 <= in_play_idx < len(my_bench):
                         b_pkmn = my_bench[in_play_idx]
                         target_cid = _get_val(b_pkmn, "id")
-                        b_energies = _get_val(b_pkmn, "energies") or []
-                        target_energy = len(b_energies)
+                        target_energy = get_energy_count(b_pkmn)
 
                 # Determine highest attack energy requirement for the target Pokemon
                 max_needed_energy = 3
