@@ -264,12 +264,23 @@ def resolve_card_id(o, info, current, select_data):
             c_val = looking[idx]
             return c_val.get('id') if isinstance(c_val, dict) else c_val
             
-    # Area 4 = Bench / Active
-    if area == 4:
+    # Area 4 / 5 / 6 / 14 = Bench / Active / Opponent Field
+    if area in {4, 5, 6, 14}:
         my_bench = info.get('my_bench', [])
-        if isinstance(my_bench, list) and idx is not None and 0 <= idx < len(my_bench):
-            c_val = my_bench[idx]
-            return c_val.get('id') if isinstance(c_val, dict) else c_val
+        opp_bench = info.get('opp_bench', [])
+        if idx is not None:
+            if area == 4 and isinstance(my_bench, list) and 0 <= idx < len(my_bench):
+                c_val = my_bench[idx]
+                return c_val.get('id') if isinstance(c_val, dict) else c_val
+            elif area in {5, 6, 14} and isinstance(opp_bench, list) and 0 <= idx < len(opp_bench):
+                c_val = opp_bench[idx]
+                return c_val.get('id') if isinstance(c_val, dict) else c_val
+            elif isinstance(opp_bench, list) and 0 <= idx < len(opp_bench):
+                c_val = opp_bench[idx]
+                return c_val.get('id') if isinstance(c_val, dict) else c_val
+            elif isinstance(my_bench, list) and 0 <= idx < len(my_bench):
+                c_val = my_bench[idx]
+                return c_val.get('id') if isinstance(c_val, dict) else c_val
 
     return None
 
@@ -649,13 +660,49 @@ def agent(obs_dict: dict) -> list[int]:
             cid = resolve_card_id(o, info, current, select_data)
             c_name = get_card_name(cid)
 
-            # ── BRANCH 1: DISCARD / DECK SEARCH SELECTION MODAL ──
+            # ── BRANCH 1: DISCARD / DECK SEARCH / OPPONENT BENCH TARGET SELECTION MODAL ──
             if "DISCARD" in context_str:
                 log_rule_execution(f"  [IF EXECUTED] Branch 1A: Discard Context matched for Option {idx} ({c_name})")
                 score = score_discard_option(cid, hand, bench_and_active_ids)
             elif is_search_modal:
                 log_rule_execution(f"  [IF EXECUTED] Branch 1B: Deck Search Modal matched for Option {idx} ({c_name})")
                 score = score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game, dwebble_in_play, opp_has_ability, hand_size)
+            elif ("TARGET" in context_str or "BENCH" in context_str or "SELECT" in context_str or raw_context_val in {3, 4, 14, 15}) and len(opp_bench) > 0:
+                # Target Selection Modal for Opponent Benched Pokemon (Boss's Orders target selection!)
+                b_hp = 999
+                b_energies = 0
+                b_retreat = 0
+                b_match = None
+                for b_item in opp_bench:
+                    if isinstance(b_item, dict) and _get_val(b_item, "id") == cid:
+                        b_match = b_item
+                        b_hp = _get_val(b_item, "hp", 999)
+                        b_energies = len(_get_val(b_item, "energies") or [])
+                        b_retreat = _get_val(b_item, "retreatCost", 0) or _get_val(b_item, "retreat_cost", 0)
+                        break
+
+                if b_retreat == 0 and cid in {Kangaskhan, Abomasnow, Snorlax, Archaludon}:
+                    b_retreat = 3
+
+                opp_active_hp = _get_val(my_active, "hp", 999) if isinstance(my_active, dict) else 999
+                opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
+
+                cond_A = (my_energy >= 3 and my_dmg > 0 and my_dmg >= b_hp and not opp_active_can_be_kodd)
+                cond_B = (b_energies >= 2 or (b_energies >= 1 and is_card_ex(cid))) and (opp_active_energy == 0 or not is_card_ex(info.get("opp_active_id")))
+                cond_C = (b_retreat >= 3 and b_energies == 0)
+
+                if cond_A:
+                    score = 95000.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 1C: Boss's Target Selected (Condition A KO: {c_name}) -> Score 95000.0!")
+                elif cond_B:
+                    score = 90000.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 1C: Boss's Target Selected (Condition B Building: {c_name}) -> Score 90000.0!")
+                elif cond_C:
+                    score = 85000.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 1C: Boss's Target Selected (Condition C Trap: {c_name}) -> Score 85000.0!")
+                else:
+                    score = 500.0 + (100.0 if is_card_ex(cid) else 0.0)
+                    log_rule_execution(f"  [IF EXECUTED] Branch 1C: Default Opponent Bench Target Selected ({c_name}) -> Score {score}")
 
             # ── BRANCH 2: POKÉGEAR 3.0 RESTRICTION ──
             elif cid == Pokégear:
