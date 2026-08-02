@@ -1110,6 +1110,9 @@ def agent(obs_dict: dict) -> list[int]:
                     else:
                         r_score = 5.0
 
+                elif matched_pkmn and has_enough_energy_for_highest_attack(matched_pkmn):
+                    r_score = 90.0  # Condition 1: Energy Attacker Swap Priority!
+                    log_rule_execution(f"  [IF EXECUTED] Active Promotion -> {get_card_name(cid)} Priority 90.0 (Energy Attacker Ready!)")
                 elif is_going_second and has_crustle_in_hand:
                     if cid == Dwebble:
                         r_score = 45.0 # Going 2nd with Crustle in hand -> Evolve Dwebble on turn 1!
@@ -1386,12 +1389,12 @@ def agent(obs_dict: dict) -> list[int]:
                 cond_3 = (opp_has_ability and not opp_is_ex and my_active_id != Ogerpon and benched_ogerpon_ready)
 
                 if cond_1 or cond_2 or cond_3:
-                    reason_str = "Cond 1 (Energy Swap)" if cond_1 else ("Cond 2 (Crustle EX Pivot)" if cond_2 else "Cond 3 (Ogerpon Ability Pivot)")
-                    score = 87.5
-                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard Allowed -> Score 87.5 [{reason_str}]!")
+                    reason_str = "Cond 1 (Energy Attacker Swap)" if cond_1 else ("Cond 2 (Crustle EX Pivot)" if cond_2 else "Cond 3 (Ogerpon Ability Pivot)")
+                    score = 95.0  # TOP PRIORITY: SwitchCard takes priority over energy attachments and setup plays!
+                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard Allowed -> MAX SWITCH SCORE 95.0 [{reason_str}]!")
                     has_useful_pre_attack_action = True
                 else:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): Strict conditions not met!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): Strict conditions 1, 2, 3 not met!")
                     score = -float('inf')
 
             # ── BRANCH 9: ENERGY ATTACHMENT (FAST PRE-ATTACK ATTACHMENT: 90.0 - 95.0 SCALE) ──
