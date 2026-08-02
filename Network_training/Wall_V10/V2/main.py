@@ -40,10 +40,13 @@ except Exception:
     pass
 
 # ── Card Database & Deck Loader ───────────────────────────────────────────────
+# ── Card Database & Deck Loader ───────────────────────────────────────────────
 _CARD_DB = {}
+_CARD_INFO_CACHE = {}
+
 def _load_card_database():
-    global _CARD_DB
-    if _CARD_DB: return
+    global _CARD_DB, _CARD_INFO_CACHE
+    if _CARD_INFO_CACHE: return
     try:
         base_dir = os.path.dirname(__file__)
     except NameError:
@@ -61,11 +64,54 @@ def _load_card_database():
                         reader = csv.DictReader(f)
                         for row in reader:
                             try:
-                                cid = int(row["Card ID"])
+                                cid_raw = row.get("Card ID", "").strip()
+                                if not cid_raw: continue
+                                cid = int(cid_raw)
+                                if cid not in _CARD_INFO_CACHE:
+                                    _CARD_INFO_CACHE[cid] = {
+                                        "name": row.get("Card Name", "").strip(),
+                                        "is_ex": False,
+                                        "has_ability": False,
+                                        "hp": 0,
+                                        "retreat": 0,
+                                        "max_damage": 0,
+                                        "rows": []
+                                    }
+                                c_info = _CARD_INFO_CACHE[cid]
+                                c_info["rows"].append(row)
+
+                                # Parse EX status from Rule, Stage, and Card Name
+                                rule = row.get("Rule", "").lower()
+                                stage = row.get("Stage (Pokémon)/Type (Energy and Trainer)", "").lower()
+                                cname = row.get("Card Name", "").lower()
+                                if "ex" in rule or "ex" in stage or " ex" in cname or "ex " in cname or cname.endswith("ex"):
+                                    c_info["is_ex"] = True
+
+                                # Parse Ability status (Move Name starts with [Ability] or Category is Ability)
+                                move_name = row.get("Move Name", "")
+                                cat = row.get("Category", "").lower()
+                                if "[ability]" in move_name.lower() or cat == "ability":
+                                    c_info["has_ability"] = True
+
+                                # Parse HP
+                                hp_val = row.get("HP", "")
+                                if hp_val and hp_val.isdigit():
+                                    c_info["hp"] = max(c_info["hp"], int(hp_val))
+
+                                # Parse Move Damage
+                                dmg_val = row.get("Damage", "").replace("×", "").replace("+", "").replace("?", "").strip()
+                                if dmg_val.isdigit():
+                                    c_info["max_damage"] = max(c_info["max_damage"], int(dmg_val))
+
+                                # Parse Retreat Cost
+                                ret_val = row.get("Retreat", "").strip()
+                                if ret_val.isdigit():
+                                    c_info["retreat"] = max(c_info["retreat"], int(ret_val))
+
                                 _CARD_DB[cid] = row
-                            except: pass
-                    if _CARD_DB: return
-                except: pass
+                            except Exception: pass
+                    if _CARD_INFO_CACHE: return
+                except Exception: pass
 
 def load_deck():
     try:
@@ -92,22 +138,31 @@ except Exception:
 
 def is_card_ex(cid):
     if not cid: return False
+    if cid in _CARD_INFO_CACHE:
+        return _CARD_INFO_CACHE[cid]["is_ex"]
     c = _CG_CARD_TABLE.get(cid)
     if c: return getattr(c, 'ex', False) or getattr(c, 'megaEx', False)
-    if cid in _CARD_DB:
-        r = _CARD_DB[cid].get("Rule", "").lower()
-        stg = _CARD_DB[cid].get("Stage (Pokémon)/Type (Energy and Trainer)", "").lower()
-        return "ex" in r or "ex" in stg
     return False
 
 def card_has_ability(cid):
     if not cid: return False
+    if cid in _CARD_INFO_CACHE:
+        return _CARD_INFO_CACHE[cid]["has_ability"]
     c = _CG_CARD_TABLE.get(cid)
     if c: return len(getattr(c, 'abilities', [])) > 0 or getattr(c, 'ability', None) is not None
-    if cid in _CARD_DB:
-        eff = _CARD_DB[cid].get("Effect Explanation", "")
-        return "[Ability]" in eff or "Ability" in eff
     return False
+
+def get_card_attack_damage(cid):
+    if not cid: return 0
+    if cid in _CARD_INFO_CACHE:
+        return _CARD_INFO_CACHE[cid]["max_damage"]
+    return 0
+
+def get_card_retreat_cost(cid):
+    if not cid: return 0
+    if cid in _CARD_INFO_CACHE:
+        return _CARD_INFO_CACHE[cid]["retreat"]
+    return 0
 
 # ── Correct Card Constants ─────────────────────────────────────────────────────
 Dwebble       = 344
@@ -214,16 +269,9 @@ def has_enough_energy_for_highest_attack(p_dict):
     return current_energy >= req
 
 def get_card_attack_damage(cid):
-    if cid == Ogerpon: return 140      # Cornerstone Mask Ogerpon ex #117: Demolish (140 HP damage)
-    elif cid == Crustle: return 120    # Crustle #345: Superb Scissors (120 HP damage)
-    elif cid == Kangaskhan: return 200 # Mega Kangaskhan ex #756: Rapid-Fire Combo (200 HP damage)
-    elif cid == Dwebble: return 0      # Dwebble #344: Ascension (0 HP damage)
-    if cid in _CARD_DB:
-        try:
-            dmg_str = _CARD_DB[cid].get("Damage", "0").replace("×", "").replace("+", "").replace("?", "").strip()
-            return int(dmg_str)
-        except (ValueError, TypeError):
-            pass
+    if not cid: return 0
+    if cid in _CARD_INFO_CACHE:
+        return _CARD_INFO_CACHE[cid]["max_damage"]
     return 0
 
 # ── Weights Loader ─────────────────────────────────────────────────────────────
