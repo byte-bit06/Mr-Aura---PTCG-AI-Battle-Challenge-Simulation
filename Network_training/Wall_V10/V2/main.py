@@ -602,17 +602,17 @@ def agent(obs_dict: dict) -> list[int]:
                         matched_pkmn = b
                         break
                 r_score = rank_active_candidate(matched_pkmn, optimal_lead, is_early_game) if matched_pkmn else 0.0
-                if cid == Kangaskhan and is_early_game:
-                    r_score = 1000.0  # Early Game Kangaskhan Active Promotion gets Absolute Top Rank!
-                elif cid == optimal_lead:
-                    r_score += W.get("W_WALL_MATCH_BONUS", 100.0)
+                if cid == optimal_lead:
+                    r_score = 1000.0  # Optimal Wall (Crustle vs EX / Ogerpon vs Ability) is top active lead!
                 elif cid == Dwebble:
-                    r_score += W.get("W_DWEBBLE_ACTIVE_RANK", 75.0)
+                    r_score = 500.0   # 1-Prize basic starter
                 elif cid == Ogerpon:
-                    if opp_has_ability:
-                        r_score += 150.0
+                    r_score = 300.0
+                elif cid == Kangaskhan:
+                    if is_early_game:
+                        r_score = 50.0 # Low active rank to avoid feeding 2 prizes early!
                     else:
-                        r_score += W.get("W_OGERPON_ACTIVE_RANK", 60.0)
+                        r_score = -float('inf') # HARD BAN late game active promotion!
 
                 log_rule_execution(f"  [IF EXECUTED] Active Promotion Branch -> Option {idx} ({get_card_name(cid)}) Rank Score: {r_score}")
 
