@@ -297,7 +297,9 @@ def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_g
         return 10.0  # Search ready-to-evolve Stage 1!
     
     if cid == Kangaskhan and not is_early_game:
-        return -float('inf')
+        if bench_count < 2:
+            return 3.0  # Emergency basic search in late game when bench < 2 to stay in game
+        return -float('inf')  # HARD BAN searching Kangaskhan in late game when bench >= 2
 
     if cid in bench_and_active_ids and bench_count >= 5:
         return -4.0
@@ -433,7 +435,13 @@ def agent(obs_dict: dict) -> list[int]:
             # ── TIER 8 (Base 800.0): EARLY BENCH PRIORITY (Play Basics to Bench) ──
             elif (o_type in {1, 7} or "PLAY" in ot_str) and cid in {Dwebble, Ogerpon, Kangaskhan} and bench_count < 5:
                 if cid == Kangaskhan and not is_early_game:
-                    score = -float('inf')  # HARD BAN playing Kangaskhan ex in late game!
+                    if bench_count < 2:
+                        # Emergency bench play in late game when fewer than 2 benched Pokemon to stay in game
+                        subscore = w_pokemon * 2.0 + ((2 - bench_count) / 2.0) * 1.0
+                        score = 800.0 + subscore
+                        has_useful_pre_attack_action = True
+                    else:
+                        score = -float('inf')  # HARD BAN playing Kangaskhan ex in late game when bench >= 2!
                 elif cid == Ogerpon and optimal_lead == Ogerpon:
                     subscore = w_pokemon * 5.0 + ((5 - bench_count) / 5.0) * 2.0 + 3.0  # High priority vs Ability opponents
                     score = 800.0 + subscore
