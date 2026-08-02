@@ -57,6 +57,12 @@ opponents = [
     ('Archaludon Cinderace', archaludon_cinderace_agent.agent),
 ]
 
+try:
+    import alakazam_agent
+    opponents.append(('Alakazam ex V21', alakazam_agent.agent))
+except ImportError:
+    pass
+
 import Wall_V10.V2.main as v2_main
 
 # ── Fitness Weight Config (Prize Capture vs Prize Denial) ───────────────────

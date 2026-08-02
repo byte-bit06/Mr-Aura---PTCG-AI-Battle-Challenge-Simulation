@@ -1,12 +1,12 @@
 """
-evaluate_v10.py — Evaluation Harness & Genetic Algorithm Fitness Evaluator
-========================================================================
-Runs matches of Wall_V10 against Meta Gauntlet.
+evaluate_v10.py — Evaluation Harness & GA Fitness Evaluator
+===========================================================
+Runs matches of Wall_V10 against Meta Gauntlet opponents.
 Calculates:
   - Win Rate %
-  - Average Prizes Taken (Us) [0 - 6]
-  - Average Prizes Conceded (Opponent) [0 - 6]
-  - Prize Differential Fitness Score = (Prizes Taken Us - Prizes Conceded Opponent)
+  - Average Prizes Taken by Wall_V10 [0 - 6]
+  - Average Prizes Conceded to Opponent [0 - 6]
+  - Prize Differential Score = (Prizes Taken Us - Prizes Conceded Opponent)
 """
 
 import os
@@ -49,6 +49,7 @@ import abomasnow_agent
 import mcts_lucario_agent
 import archaludon_cinderace_agent
 
+# Meta Gauntlet Opponents (Past models Wall_V1 & Wall_V6 removed per directive)
 opponents = {
     'Lucario ex': lucario_agent.agent,
     'Iono Deck': iono_agent.agent,
@@ -63,16 +64,6 @@ try:
     opponents['Alakazam ex V21'] = alakazam_agent.agent
 except ImportError:
     pass
-
-try:
-    import Wall_V1.main as v1_module
-    opponents['Wall_V1 (Baseline)'] = v1_module.agent
-except Exception: pass
-
-try:
-    import Wall_V6.main as v6_module
-    opponents['Wall_V6 (Previous)'] = v6_module.agent
-except Exception: pass
 
 replays_dir = os.path.join(os.path.dirname(__file__), 'replays')
 os.makedirs(replays_dir, exist_ok=True)
@@ -89,7 +80,7 @@ def play_match(env, p1_name, p1_agent, p2_name, p2_agent, match_name):
     p1_prizes_remaining = 6
     p2_prizes_remaining = 6
 
-    # Extract final prize counts from observation
+    # Extract final remaining prize counts from observation
     for agent_step in last_step:
         if isinstance(agent_step, dict):
             obs = agent_step.get("observation") or {}
@@ -103,6 +94,7 @@ def play_match(env, p1_name, p1_agent, p2_name, p2_agent, match_name):
                     pz = players[1].get("prize") or players[1].get("prizes")
                     p2_prizes_remaining = len(pz) if isinstance(pz, list) else int(pz or 6)
 
+    # Determine winner based on environment reward signals
     if (r1 or 0) > (r2 or 0):
         winner = p1_name
         p1_prizes_remaining = 0
@@ -118,7 +110,7 @@ def play_match(env, p1_name, p1_agent, p2_name, p2_agent, match_name):
         else:
             winner = "Tie"
 
-    # Convert remaining prizes to Prizes Taken (out of 6)
+    # Calculate actual prizes taken (out of 6)
     p1_prizes_taken = max(0, min(6, 6 - p1_prizes_remaining))
     p2_prizes_taken = max(0, min(6, 6 - p2_prizes_remaining))
 
@@ -134,14 +126,14 @@ def play_match(env, p1_name, p1_agent, p2_name, p2_agent, match_name):
     with open(replay_path, 'w', encoding='utf-8') as f:
         f.write(html)
         
-    print(f'  -> Winner: {winner} (P1 Prizes: {p1_prizes_taken}, P2 Prizes: {p2_prizes_taken}, Steps: {len(steps)})', flush=True)
+    print(f'  -> Winner: {winner} | {p1_name} Prizes: {p1_prizes_taken}/6 | {p2_name} Prizes: {p2_prizes_taken}/6 (Steps: {len(steps)})', flush=True)
     return winner, p1_prizes_taken, p2_prizes_taken
 
 def main():
     env = make('cabt', debug=False)
     results = {}
     
-    print(f'Starting evaluations for {primary_name} (GA Fitness Mode: Prize Maximization & Denial)...', flush=True)
+    print(f'Starting Meta Gauntlet evaluations for {primary_name}...', flush=True)
     
     num_trials = 10
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
@@ -175,7 +167,7 @@ def main():
             else:
                 results[opp_name]['tie'] += 1
             
-    print('\n=== FINAL V10 EVALUATION & GA FITNESS RESULTS ===', flush=True)
+    print('\n=== FINAL V10 META GAUNTLET EVALUATION RESULTS ===', flush=True)
     total_wins = 0
     total_losses = 0
     total_ties = 0
@@ -185,7 +177,7 @@ def main():
         avg_my_pz = stats['my_prizes'] / max(1, n_games)
         avg_opp_pz = stats['opp_prizes'] / max(1, n_games)
         diff = avg_my_pz - avg_opp_pz
-        print(f"vs {opp_name}: {stats['win']} Wins, {stats['loss']} Losses, {stats['tie']} Ties | Avg Prizes (Us: {avg_my_pz:.2f}, Opp: {avg_opp_pz:.2f}, Diff: {diff:+.2f})", flush=True)
+        print(f"vs {opp_name}: {stats['win']} Wins, {stats['loss']} Losses, {stats['tie']} Ties | Avg Prizes ({primary_name}: {avg_my_pz:.2f}, Opp: {avg_opp_pz:.2f}, Diff: {diff:+.2f})", flush=True)
         total_wins += stats['win']
         total_losses += stats['loss']
         total_ties += stats['tie']
@@ -196,12 +188,12 @@ def main():
     overall_avg_opp_pz = total_opp_prizes / max(1, total_games)
     overall_prize_diff = overall_avg_my_pz - overall_avg_opp_pz
 
-    print(f"\n[GA Fitness Summary]", flush=True)
+    print(f"\n[Meta Gauntlet Summary]", flush=True)
     print(f"  Total Games Evaluated: {total_games}", flush=True)
     print(f"  Overall Win Rate:      {win_rate:.1f}%", flush=True)
     print(f"  Avg Prizes Taken (Us): {overall_avg_my_pz:.2f} / 6.00", flush=True)
     print(f"  Avg Prizes Conceded:   {overall_avg_opp_pz:.2f} / 6.00", flush=True)
-    print(f"  Prize Differential:    {overall_prize_diff:+.2f} (GA Primary Fitness Metric)", flush=True)
+    print(f"  Prize Differential:    {overall_prize_diff:+.2f}", flush=True)
 
 if __name__ == '__main__':
     main()
