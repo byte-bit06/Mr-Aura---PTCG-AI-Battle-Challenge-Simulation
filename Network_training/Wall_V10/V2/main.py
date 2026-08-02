@@ -871,13 +871,8 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 6: 3rd Ogerpon Bench Deployment HARD BANNED (-inf): Opponent active has no ability!")
                     score = -float('inf')
                 elif cid == Kangaskhan and not is_early_game:
-                    if bench_count < 2:
-                        subscore = w_pokemon * 2.0
-                        score = 800.0 + subscore
-                        has_useful_pre_attack_action = True
-                    else:
-                        log_rule_execution(f"  [IF EXECUTED] Branch 6: Late-Game Kangaskhan Bench Deployment HARD BANNED (-inf)")
-                        score = -float('inf')
+                    log_rule_execution(f"  [IF EXECUTED] Branch 6: Late-Game Kangaskhan Bench Deployment HARD BANNED (-inf): User Rule — Never play Kangaskhan on bench late game!")
+                    score = -float('inf')
                 elif cid == Dwebble and dwebble_in_play < 2:
                     subscore = w_pokemon * 5.0 + 50.0
                     score = 900.0 + subscore
