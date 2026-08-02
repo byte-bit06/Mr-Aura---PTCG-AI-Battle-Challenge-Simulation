@@ -41,5 +41,12 @@
   "W_LETHAL_KO_BONUS": 5.0,
   "W_BENCH_OUT_BONUS": 10.0,
   "W_PRIZE_DIFFERENTIAL_WEIGHT": 3.0,
-  "VERSION": "V2_GA_Fully_Editable_20260802"
+  "VERSION": "V2_GA_Gen1_20260802_155251",
+  "generation_stats": {
+    "generation": 1,
+    "fitness": -64.58333333333333,
+    "win_rate": 41.66666666666667,
+    "avg_my_prizes": 2.9166666666666665,
+    "avg_opp_prizes": 4.583333333333333
+  }
 }
