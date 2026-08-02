@@ -5,7 +5,7 @@ Incorporates winning move-by-move analytics & strict hard-coded strategic rules:
 
 Hard-Coded Strategic Directives:
   1. Pokégear 3.0 Restriction: Never play Pokégear 3.0 if a supporter is already in hand or played this turn.
-     - Pokégear Search Selection: If hand < 4 cards, prioritize Lillie above all other supporters (Score: 80,000).
+     - Pokégear Search Selection: ALWAYS prioritize Lillie (Score: 80,000) over any other Supporter in Pokégear top 7.
   2. Early-Game Dwebble Priority: Put Dwebble down immediately and prioritize searching Dwebble until at least 2 are in play (Score: 100,000 in Search Modal).
   3. Opening Hand Energy Attachment: If opening hand lacks Dwebble/Ogerpon/search items, attach any energy in hand immediately.
   4. Lillie Supporter Sequencing: Always play all playable Pokémon, evolutions, and items BEFORE playing Lillie.
@@ -308,37 +308,40 @@ def score_discard_option(cid, hand, bench_and_active_ids):
     return 0.0
 
 def score_search_option(cid, hand, bench_and_active_ids, bench_count, is_early_game=True, dwebble_in_play=0, opp_has_ability=False, hand_size=5):
-    # Rule 2: Early game Dwebble search priority (< 2 in play)
-    if dwebble_in_play < 2:
-        if cid == Dwebble:
-            return 100000.0  # ABSOLUTE MAXIMUM SEARCH PRIORITY FOR DWEBBLE!
-        elif cid == Crustle and Dwebble in bench_and_active_ids:
+    # ── 1. DWEBBLE SEARCH PRIORITY (POKEMON SEARCH) ──
+    if cid == Dwebble and dwebble_in_play < 2:
+        return 100000.0  # Absolute MAX priority for Dwebble in Pokemon search!
+
+    # ── 2. LILLIE SEARCH PRIORITY (POKÉGEAR / SUPPORTER SEARCH) ──
+    if cid == Lillie:
+        return 80000.0   # Absolute MAX priority for Lillie in Supporter/Pokégear search!
+
+    # ── 3. CRUSTLE EVOLUTION SEARCH ──
+    if cid == Crustle:
+        if Dwebble in bench_and_active_ids:
             return 50000.0
-        elif cid == Ogerpon and not opp_has_ability:
-            return -100.0  # Focus on Dwebble first!
-
-    # Rule Directive: If hand_size < 4 when using Pokégear / search, prioritize Lillie above all other supporters
-    if hand_size < 4:
-        if cid == Lillie:
-            return 80000.0  # Top priority search selection when hand is low!
-        elif cid in SUPPORTERS_SET:
-            return 500.0
-
-    # Rule 1: Mask Stage 1 evolution if no matching Basic is in play!
-    if cid == Crustle and Dwebble not in bench_and_active_ids:
         return -1000.0
-    
-    if cid == Crustle and Dwebble in bench_and_active_ids:
-        return 50000.0
 
-    # Rule 6: Never search Ogerpon if already >= 2 in play unless opponent active has an ability
-    if cid == Ogerpon and not opp_has_ability and bench_and_active_ids.count(Ogerpon) >= 2:
-        return -float('inf')
-    
-    if cid == Kangaskhan and not is_early_game:
-        if bench_count < 2:
-            return 1000.0
-        return -float('inf')
+    # ── 4. OTHER SUPPORTERS (POKÉGEAR FALLBACKS) ──
+    if cid in SUPPORTERS_SET:
+        if cid == BossOrders:
+            return 100.0  # Reserve Boss's Orders unless specifically needed
+        return 500.0
+
+    # ── 5. OGERPON SEARCH LIMIT ──
+    if cid == Ogerpon:
+        if opp_has_ability or bench_and_active_ids.count(Ogerpon) < 1:
+            return 20000.0
+        if bench_and_active_ids.count(Ogerpon) >= 2:
+            return -float('inf')
+        return -100.0
+
+    # ── 6. KANGASKHAN SEARCH ──
+    if cid == Kangaskhan:
+        if not is_early_game:
+            if bench_count < 2: return 1000.0
+            return -float('inf')
+        return 2000.0
 
     if cid in bench_and_active_ids and bench_count >= 5:
         return -100.0
