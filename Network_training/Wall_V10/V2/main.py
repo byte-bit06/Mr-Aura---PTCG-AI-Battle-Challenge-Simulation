@@ -1397,7 +1397,7 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): Strict conditions 1, 2, 3 not met!")
                     score = -float('inf')
 
-            # ── BRANCH 9: ENERGY ATTACHMENT (FAST PRE-ATTACK ATTACHMENT: 90.0 - 95.0 SCALE) ──
+            # ── BRANCH 9: OPTIMIZED ENERGY ATTACHMENT PRIORITY (ACTIVE EX/WALL FIRST: 92.0 - 98.0 SCALE) ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
@@ -1421,10 +1421,21 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
                     score = -float('inf')
                 else:
-                    tier_base = 93.0 if is_active_target else 90.0
-                    urgency = (max_needed_energy - target_energy) * 0.5 if is_active_target else (max_needed_energy - target_energy) * 0.3
-                    score = tier_base + urgency
-                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Attachment Matched -> Score {score}!")
+                    # User Directive 2: Strongly favor primary active ex/wall (Crustle/Ogerpon) with 0 or low energy!
+                    if is_active_target:
+                        if target_cid in {Crustle, Ogerpon, Dwebble}:
+                            tier_base = 96.0
+                            urgency = 2.0 if target_energy == 0 else (1.0 if target_energy == 1 else 0.5)
+                            score = tier_base + urgency  # Score 98.0 for 0-energy active Crustle/Ogerpon!
+                        else:
+                            score = 93.0
+                    else:
+                        if target_cid in {Crustle, Ogerpon, Dwebble}:
+                            score = 92.0
+                        else:
+                            score = 85.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Optimized Energy Attachment Matched -> Score {score} for {get_card_name(target_cid)}!")
+                    has_useful_pre_attack_action = True
 
             # ── BRANCH 10: STANDARD ATTACKING (85.0 - 90.0 SCALE: EXECUTES AT END OF TURN) ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
@@ -1467,10 +1478,14 @@ def agent(obs_dict: dict) -> list[int]:
                 log_rule_execution(f"  [IF EXECUTED] Branch 12: Retreat HARD BANNED (-inf): User Rule — Never retreat to preserve energies!")
                 score = -float('inf')
 
-            # ── BRANCH 13: END TURN ──
+            # ── BRANCH 13: END TURN (PREVENT PREMATURE TURN ENDING WHILE PLAYABLE CARDS REMAIN) ──
             elif o_type in {14} or "END" in ot_str:
-                score = 0.0
-                log_rule_execution(f"  [IF EXECUTED] Branch 13: End Turn Matched -> Score {score}")
+                if has_useful_pre_attack_action:
+                    score = -float('inf') # User Directive 3: HARD BAN ending turn while playable items/supporters remain!
+                    log_rule_execution(f"  [IF EXECUTED] Branch 13: End Turn HARD BANNED (-inf): Playable pre-attack actions still remain in hand!")
+                else:
+                    score = 0.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 13: End Turn Matched -> Score {score}")
 
             else:
                 score = 10.0
