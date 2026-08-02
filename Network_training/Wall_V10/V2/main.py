@@ -163,11 +163,33 @@ def get_opponent_max_threat(op_player, opp_is_ex=False, opp_has_ability=False) -
             
     return max_dmg
 
+def get_prize_count(player_obj) -> int:
+    """
+    Safely retrieves the number of REMAINING prize cards for a player.
+    Supports list format (player.prize), integer format (player.prizeCount), and dict fallback.
+    In Pokemon TCG, each player starts with 6 prizes; Prizes Taken = 6 - remaining_prizes.
+    """
+    if player_obj is None: return 6
+    if isinstance(player_obj, dict):
+        p_val = player_obj.get("prize")
+        if isinstance(p_val, list): return len(p_val)
+        elif isinstance(p_val, (int, float)): return int(p_val)
+        p_cnt = player_obj.get("prizeCount")
+        if p_cnt is not None: return int(p_cnt)
+        return 6
+    
+    p_val = getattr(player_obj, "prize", None)
+    if isinstance(p_val, list): return len(p_val)
+    elif isinstance(p_val, (int, float)): return int(p_val)
+    p_cnt = getattr(player_obj, "prizeCount", None)
+    if p_cnt is not None: return int(p_cnt)
+    return 6
+
 def evaluate_simulated_state(obs) -> float:
     """
     Evaluates a future simulated state (after 1-turn rollout) across 4 core dimensions:
     1. Wall Stability & Damage Threats (-3000.0 penalty if exposed to KO, +5000.0 if immune wall)
-    2. Prize Differential (+2000.0 per prize taken, -2500.0 per prize conceded)
+    2. Prize Differential (+2500.0 per prize taken by us, -3000.0 per prize taken by opponent)
     3. Resource & Engine Health (+500.0 for hand > 3, -1000.0 if hand <= 2, +300.0 per active energy)
     4. Setup Progression (+800.0 for Crustle, +500.0 for Dwebble backup)
     """
@@ -190,11 +212,15 @@ def evaluate_simulated_state(obs) -> float:
     
     val = 0.0
     
-    # ── 1. Prize Differential ──
-    me_prizes = len(getattr(me, "prize", []))
-    op_prizes = len(getattr(op, "prize", []))
-    val += (6 - me_prizes) * 2000.0
-    val -= (6 - op_prizes) * 2500.0
+    # ── 1. Prize Differential (Accurate 6 - Remaining Prizes Calculation) ──
+    me_prizes_remaining = get_prize_count(me)
+    op_prizes_remaining = get_prize_count(op)
+    
+    me_prizes_taken = max(0, 6 - me_prizes_remaining)
+    op_prizes_taken = max(0, 6 - op_prizes_remaining)
+    
+    val += me_prizes_taken * 2500.0  # Reward for prize cards taken by us!
+    val -= op_prizes_taken * 3000.0  # Penalty for prize cards taken by opponent!
 
     # ── 2. Wall Stability & Damage Threats ──
     my_active = me.active[0] if (getattr(me, "active", None) and len(me.active) > 0) else None
