@@ -759,12 +759,13 @@ def agent(obs_dict: dict) -> list[int]:
                     score = 600.0 + w_trainer * 5.0
                     has_useful_pre_attack_action = True
 
-            # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS (DIRECTIVE A, B, C) ──
+            # ── BRANCH 5: BOSS'S ORDERS STRICT CONDITIONS (DIRECTIVE A, B, C & OGERPON RULE) ──
             elif cid == BossOrders:
                 valid_boss_target = False
                 target_reason = ""
                 opp_active_hp = info.get("opp_active_hp", 999)
                 opp_active_can_be_kodd = (my_dmg > 0 and my_dmg >= opp_active_hp)
+                opp_active_has_ability = card_has_ability(info.get("opp_active_id"))
 
                 for b in opp_bench:
                     if not isinstance(b, dict): continue
@@ -772,16 +773,26 @@ def agent(obs_dict: dict) -> list[int]:
                     b_hp = _get_val(b, "hp", 999)
                     b_energies = len(_get_val(b, "energies") or [])
                     b_retreat_cost = _get_val(b, "retreatCost", 0) or _get_val(b, "retreat_cost", 0)
+                    b_has_ability = card_has_ability(b_id)
                     
                     if b_retreat_cost == 0 and b_id in {Kangaskhan, Abomasnow, Snorlax, Archaludon}:
                         b_retreat_cost = 3
 
+                    # Special Ogerpon Active Rule:
+                    # If Ogerpon ex is active, ONLY use Boss's Orders to pull a benched Pokemon WITH AN ABILITY (for complete immunity!)
+                    if my_active_id == Ogerpon:
+                        if b_has_ability and not opp_active_has_ability:
+                            valid_boss_target = True
+                            target_reason = f"Ogerpon Immunity Rule (Targeting {get_card_name(b_id)} with Ability)"
+                            break
+                        continue  # Skip non-ability targets when Ogerpon is active!
+
                     # Condition A: Can KO bench Pokemon AND cannot KO active
                     cond_A = (my_energy >= 3 and my_dmg > 0 and my_dmg >= b_hp and not opp_active_can_be_kodd)
 
-                    # Condition B: Opponent building benched Pokemon (energy >= 2 or EX/evolved) vs sacrifice active (0 energy)
+                    # Condition B: Opponent building benched Pokemon (energy >= 2 or EX) vs sacrifice active (MUST have 0 energy!)
                     b_is_building = (b_energies >= 2 or (b_energies >= 1 and is_card_ex(b_id)))
-                    opp_active_is_sacrifice = (opp_active_energy == 0 or not is_card_ex(info.get("opp_active_id")))
+                    opp_active_is_sacrifice = (opp_active_energy == 0)
                     cond_B = (b_is_building and opp_active_is_sacrifice)
 
                     # Condition C: Benched Pokemon has retreat cost >= 3 and 0 energy attached
@@ -793,7 +804,7 @@ def agent(obs_dict: dict) -> list[int]:
                         break
                     elif cond_B:
                         valid_boss_target = True
-                        target_reason = f"Condition B (Targeting building {get_card_name(b_id)} vs sacrifice active)"
+                        target_reason = f"Condition B (Targeting building {get_card_name(b_id)} vs 0-energy sacrifice active)"
                         break
                     elif cond_C:
                         valid_boss_target = True
@@ -801,7 +812,7 @@ def agent(obs_dict: dict) -> list[int]:
                         break
 
                 if not valid_boss_target:
-                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): None of Conditions A, B, or C met!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders HARD BANNED (-inf): Strict conditions (Ogerpon Ability / Cond A, B, C) not met!")
                     score = -float('inf')
                 else:
                     log_rule_execution(f"  [IF EXECUTED] Branch 5: Boss's Orders Allowed -> Score 700.0 [{target_reason}]")
