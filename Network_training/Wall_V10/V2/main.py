@@ -243,9 +243,9 @@ def resolve_card_id(o, info, current, select_data):
     looking = current.get('looking', []) if isinstance(current, dict) else []
     deck = select_data.get('deck', []) if isinstance(select_data, dict) else []
 
-    # Area 2 = Hand
-    if area == 2 or (area is None and idx is not None and o.get('type') in {1, 3, 7, 8, 9}):
-        if isinstance(hand, list) and idx is not None and 0 <= idx < len(hand):
+    # Area 2 = Hand (or missing area with hand index)
+    if area == 2 or (area is None and idx is not None):
+        if isinstance(hand, list) and 0 <= idx < len(hand):
             c_val = hand[idx]
             return c_val.get('id') if isinstance(c_val, dict) else c_val
             
@@ -317,6 +317,8 @@ def extract_board_info(obs_dict):
         if not b: continue
         if isinstance(b, dict): opp_bench.append(b)
         elif isinstance(b, (int, float)): opp_bench.append({"id": int(b), "hp": 200, "energies": []})
+
+    log_rule_execution(f"  [RAW BOARD INSPECTION] opp_active={opp_active} | opp_bench_count={len(opp_bench)} | opp_bench={opp_bench}")
     
     opp_active_id = opp_active.get("id") if opp_active else None
     opp_is_ex = is_card_ex(opp_active_id)
