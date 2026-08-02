@@ -957,9 +957,9 @@ def agent(obs_dict: dict) -> list[int]:
                 log_rule_execution(f"  [IF EXECUTED] Branch 8B: SwitchCard HARD BANNED (-inf): User Rule — Never switch or retreat!")
                 score = -float('inf')
 
-            # ── AGGRESSIVE BRANCH 9: ENERGY ATTACHMENT (FAST-TRACK TO ATTACK) ──
+            # ── BALANCED BRANCH 9: ENERGY ATTACHMENT (FUELED BUT CONTROLLED) ──
             elif o_type in {8, 4} or "ATTACH" in ot_str:
-                tier_base = 150000.0  # Massive priority to power up and attack instantly!
+                tier_base = 25000.0  # High enough to prioritize over random items, but below critical bench setup
                 in_play_area = o.get("inPlayArea")
                 in_play_idx = o.get("inPlayIndex", 0)
                 is_active_target = (in_play_area in {3, 4, 'active', 'ACTIVE'} or (in_play_area is None and in_play_idx == 0))
@@ -982,24 +982,28 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
                     score = -float('inf')
                 else:
-                    active_urgency_bonus = 50000.0 if is_active_target else 1000.0
-                    score = tier_base + active_urgency_bonus + (max_needed_energy - target_energy) * 10000.0
-                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Fast-Track Energy Attachment Matched -> Score {score}!")
-                has_useful_pre_attack_action = False  # Don't let setup block energy/attacks
+                    # Prioritize active, but allow bench energy growth if bench is safe
+                    urgency = 10000.0 if is_active_target else 2000.0
+                    score = tier_base + urgency + (max_needed_energy - target_energy) * 1000.0
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Balanced Energy Attachment Matched -> Score {score}!")
 
-            # ── AGGRESSIVE BRANCH 10: ATTACKING (THE ULTIMATE PRIORITY) ──
+            # ── BALANCED BRANCH 10: ATTACKING (STRONG, BUT NOT BLIND) ──
             elif o_type in {13, 5} or "ATTACK" in ot_str:
-                tier_base = 999999.0  # Absolute highest score on the board
+                tier_base = 95000.0  # High priority to attack when ready, but lets critical setup happen first if turn 1-2
                 recoil_dmg = _get_val(o, "recoilDamage", 0) or _get_val(o, "selfDamage", 0)
                 if recoil_dmg > 0 and (recoil_dmg >= my_hp or (my_dmg < 20 and my_dmg < opp_hp)):
                     score = -float('inf')
                 else:
-                    prize_norm = (6 - my_prizes) / 6.0
-                    subscore = w_attack * 10.0 + w_prize * prize_norm * 5.0
-                    if my_dmg >= opp_hp and opp_hp > 0:
-                        subscore += 50000.0  # Massive bonus for securing a guaranteed KO!
-                    score = tier_base + subscore
-                log_rule_execution(f"  [IF EXECUTED] Branch 10: HYPER-AGGRESSIVE ATTACK MATCHED -> Score {score}!")
+                    # Safety check: If we have NO benched Pokémon and our active is weak, don't suicide attack if we can build a wall instead
+                    if bench_count == 0 and my_hp <= 40 and not (my_dmg >= opp_hp):
+                        score = 500.0  # Force a pause to build the bench/wall first!
+                    else:
+                        prize_norm = (6 - my_prizes) / 6.0
+                        subscore = w_attack * 5.0 + w_prize * prize_norm * 3.0
+                        if my_dmg >= opp_hp and opp_hp > 0:
+                            subscore += 20000.0  # Great bonus for securing a KO
+                        score = tier_base + subscore
+                log_rule_execution(f"  [IF EXECUTED] Branch 10: BALANCED ATTACK MATCHED -> Score {score}!")
 
             # ── BRANCH 11: HERO'S CAPE & STADIUMS / HEALING ──
             elif o_type in {7, 10} or cid in {HerosCape, CommunityCenter, JumboIceCream, TRFactory}:
