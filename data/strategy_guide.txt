@@ -1,20 +1,33 @@
-# MEGA LUCARIO EX - MASTER STRATEGY GUIDE
+=== PTCG AI Strategy Guide (Auto-Generated) ===
+Last Updated: 2026-08-02 14:35:14
+Based on analysis of 10 winning replay(s).
 
-[DUMP ALL YOUR STRATEGIES, COMBOS, AND YOUTUBE TRANSCRIPTS HERE]
+--- Data-Driven Strategic Insights ---
 
-## Core Win Conditions
-- (Write your win conditions here)
+1. ENERGY TIMING:
+   - 0% of winning games featured energy attachment in the EARLY phase (turns 1-3).
+   - Prioritize attaching energy to your primary attacker within the first 3 turns.
+   - Average turn of first attack: 0.0
 
-## Opponent Matchups
-- (How to beat Charizard)
-- (How to beat Gardevoir)
+2. ATTACK TIMING:
+   - Average turn of first prize capture: 0.0
+   - Begin offensive attacks by the MID phase (turns 4-8) to maintain prize pressure.
+   - 0 winning attacks occurred during the MID phase across all replays.
 
-## Rules of Thumb
-- Never retreat unless...
-- Always prioritize attaching energy to...
+3. SETUP EFFICIENCY:
+   - Bench PokÃ©mon and play Trainer cards during EARLY phase for maximum value.
+   - Reduce setup actions during LATE phase â€” focus on attacks and positioning.
 
+4. EVOLUTION TIMING:
+   - Evolve as early as possible to unlock higher HP pools and stronger attacks.
+   - 0 evolution actions observed in winning replays.
 
---- Learned Winner Strategy Insights ---
-- Always prioritize energy placement on benched primary attackers before executing active attacks.
-- Timing evolutionary leaps (e.g. Riolu -> Mega Lucario ex) with immediate prize knockouts maximizes win probability.
-- Maintain continuous attack momentum; avoid empty turns without damage or setups.
+5. RETREAT DISCIPLINE:
+   - Only retreat when HP is critically low (<30%) or under a status condition.
+   - Loser analysis shows excessive retreating correlates with losses.
+
+--- Phase-Specific Priorities ---
+
+EARLY (Turns 1-3): Bench basics > Attach energy > Draw cards > Evolve
+MID (Turns 4-8):   Attack > Evolve > Attach energy > Play supporters
+LATE (Turns 9+):   Attack > Boss's Orders > Position for final prizes

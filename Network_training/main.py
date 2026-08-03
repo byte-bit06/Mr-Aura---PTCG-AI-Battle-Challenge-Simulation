@@ -192,11 +192,20 @@ def agent(obs_dict: dict) -> list[int]:
     """
     select_data = obs_dict.get("select")
     if select_data is None:
-        return my_deck
+        if obs_dict.get("step", 0) == 0:
+            return my_deck
+        return []
 
     options = select_data.get("option", [])
     if not options:
-        return []
+        return [0]
+
+    max_count = select_data.get("maxCount", 1)
+    current = obs_dict.get("current")
+
+    # Handle Pre-Game Preparation Phase (Coin toss, IsFirst, Pre-game setup when current is None)
+    if current is None:
+        return [0] * max_count
 
     _load_card_database()
     state = extract_state(obs_dict)

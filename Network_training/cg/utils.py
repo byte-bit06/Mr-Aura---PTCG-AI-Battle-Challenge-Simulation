@@ -23,7 +23,9 @@ def to_dataclass(dic: dict, cls: type):
 
     for key, value in dic.items():
         if key in field_types:
-            if isinstance(value, dict):
+            if value is None:
+                d[key] = None
+            elif isinstance(value, dict):
                 c = field_types[key]
                 if hasattr(c, "__args__"):
                     c = c.__args__[0]
@@ -37,9 +39,13 @@ def to_dataclass(dic: dict, cls: type):
                 if not hasattr(c, "__dataclass_fields__"):
                     d[key] = value
                 else:
-                    d[key] = [to_dataclass(v, c) for v in value]
+                    d[key] = [to_dataclass(v, c) for v in value if v is not None]
             else:
                 d[key] = value
+
+    for fname in field_types:
+        if fname not in d:
+            d[fname] = None
 
     return cls(**d)
 

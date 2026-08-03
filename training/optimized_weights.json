@@ -14,5 +14,21 @@
   "W_TRAINER_BASE": 10000,
   "W_POKEMON_BASE": 20000,
   "W_RETREAT_SCORE": 2000,
-  "W_ATTACK_SCORE": 1053
+  "W_ATTACK_SCORE": 1053,
+  "W_ENERGY_EARLY_MULT": 1.4,
+  "W_ENERGY_MID_MULT": 1.0,
+  "W_ENERGY_LATE_MULT": 0.6,
+  "W_ATTACK_EARLY_MULT": 0.5,
+  "W_ATTACK_MID_MULT": 1.2,
+  "W_ATTACK_LATE_MULT": 1.5,
+  "W_SETUP_EARLY_MULT": 1.5,
+  "W_SETUP_MID_MULT": 0.8,
+  "W_SETUP_LATE_MULT": 0.3,
+  "VERSION": "V2_Adapted_20260802_143514",
+  "generation_stats": {
+    "replays_analyzed": 10,
+    "avg_prizes": 0.0,
+    "attack_quality": 0.0,
+    "energy_quality": 0.0
+  }
 }

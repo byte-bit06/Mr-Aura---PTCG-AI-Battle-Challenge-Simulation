@@ -57,11 +57,20 @@ def agent(obs_dict: dict) -> list[int]:
     """
     select_data = obs_dict.get("select")
     if select_data is None:
-        return my_deck
+        if obs_dict.get("step", 0) == 0:
+            return my_deck
+        return []
 
     options = select_data.get("option", [])
     if not options:
-        return []
+        return [0]
+
+    max_count = select_data.get("maxCount", 1)
+    current = obs_dict.get("current")
+
+    # Handle Pre-Game Preparation Phase (Coin toss, IsFirst, Pre-game setup when current is None)
+    if current is None:
+        return [0] * max_count
 
     context = select_data.get("context", "")
 
@@ -78,25 +87,25 @@ def agent(obs_dict: dict) -> list[int]:
             # In a full CABT parser, we extract `cid` from `_dict_get_card(obs_dict, "HAND", o["index"])`
             # For demonstration in this stub, we apply generic bonuses to the PLAY action
             # to show where the genetic weights hook in.
-            score += W["play_poffin_dwebble_bonus"] * 0.1
-            score += W["heal_jumbo_ice_cream_bonus"] * 0.1
-            score += W["play_lillie_draw_bonus"] * 0.1
-            score += W["play_factory_petrel_combo_bonus"] * 0.1
-            score += W["play_boss_orders_disrupt_bonus"] * 0.1
-            score += W["play_xerosic_disrupt_bonus"] * 0.1
+            score += W.get("play_poffin_dwebble_bonus", 0.0) * 0.1
+            score += W.get("heal_jumbo_ice_cream_bonus", 0.0) * 0.1
+            score += W.get("play_lillie_draw_bonus", 0.0) * 0.1
+            score += W.get("play_factory_petrel_combo_bonus", 0.0) * 0.1
+            score += W.get("play_boss_orders_disrupt_bonus", 0.0) * 0.1
+            score += W.get("play_xerosic_disrupt_bonus", 0.0) * 0.1
             
         elif context == "SETUP_ACTIVE_POKEMON" or context == "TO_ACTIVE":
             # If we are specifically placing a Pokemon in the active spot, reward Kangaskhan
             # A full implementation would inspect obs_dict to see if the chosen card is Kangaskhan
-            score += W["play_kangaskhan_active_bonus"]
+            score += W.get("play_kangaskhan_active_bonus", 0.0)
         elif ot == "EVOLVE":
-            score += W["evolve_dwebble_bonus"]
+            score += W.get("evolve_dwebble_bonus", 0.0)
         elif ot == "ATTACH":
-            score += W["attach_energy_ogerpon_bonus"]
+            score += W.get("attach_energy_ogerpon_bonus", 0.0)
         elif ot == "RETREAT":
-            score += W["base_retreat_score"]
+            score += W.get("base_retreat_score", 0.0)
         elif ot == "ATTACK":
-            score += W["base_attack_score"]
+            score += W.get("base_attack_score", 0.0)
         else:
             score += 1.0
             

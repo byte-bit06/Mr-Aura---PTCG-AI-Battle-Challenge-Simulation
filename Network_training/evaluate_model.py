@@ -52,21 +52,23 @@ if not os.path.exists('replays'):
 def play_match(env, p1_name, p1_agent, p2_name, p2_agent, match_name):
     print(f'Match: {p1_name} vs {p2_name} ({match_name})', flush=True)
     steps = env.run([p1_agent, p2_agent])
-    r1 = steps[-1][0].reward
-    r2 = steps[-1][1].reward
+    last_step = steps[-1]
+    
+    r1 = last_step[0].get("reward", 0) if isinstance(last_step[0], dict) else 0
+    r2 = last_step[1].get("reward", 0) if (len(last_step) > 1 and isinstance(last_step[1], dict)) else 0
     
     html = env.render(mode='html')
     with open(f'replays/{match_name}.html', 'w', encoding='utf-8') as f:
         f.write(html)
         
-    if r1 == 1:
+    if (r1 or 0) > (r2 or 0):
         winner = p1_name
-    elif r2 == 1:
+    elif (r2 or 0) > (r1 or 0):
         winner = p2_name
     else:
         winner = 'Tie'
         
-    print(f'Winner: {winner}', flush=True)
+    print(f'  -> Winner: {winner}', flush=True)
     return winner
 
 def main():
@@ -93,12 +95,12 @@ def main():
         v3 = my_agent.agent
         
     try:
-        import Wall_V4.main as v4_module
-        v4 = v4_module.agent
+        import Wall_V10.main as v10_module
+        v10 = v10_module.agent
     except:
-        v4 = my_agent.agent
+        v10 = my_agent.agent
 
-    for v_name, v_agent in [('Wall_V2', wall_v2_agent.agent), ('Wall_V3', v3), ('Wall_V4', v4)]:
+    for v_name, v_agent in [('Wall_V2', wall_v2_agent.agent), ('Wall_V3', v3), ('Wall_V4', v4), ('Wall_V10', v10)]:
         print(f'\nStarting showdown against {v_name}...', flush=True)
         results[v_name] = {'win': 0, 'loss': 0, 'tie': 0}
         for i in range(3):

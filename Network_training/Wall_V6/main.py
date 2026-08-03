@@ -37,7 +37,7 @@ def load_deck():
                 with open(p) as f:
                     return [int(line) for line in f if line.strip()]
             except: pass
-    return [344]*4 + [345]*4 + [117]*3 + [1227]*4 + [1182]*4 + [1219]*4 + [1194]*2 + [1225]*2 + [1197] + [1187] + [1122]*4 + [1147]*4 + [1121]*3 + [1086]*2 + [1123] + [1159] + [1257] + [1242] + [11]*4 + [18]*4 + [14]*3 + [20]*2 + [1]
+    return [344]*4 + [345]*4 + [117]*3 + [1227]*4 + [1182]*4 + [1219]*4 + [1194]*2 + [1225]*2 + [1197] + [1187] + [1122]*4 + [1147]*4 + [1121]*3 + [1086]*2 + [1123] + [1159] + [1257] + [1242] + [11]*4 + [18]*4 + [14]*3 + [20]*2 + [18]
 
 my_deck = load_deck()
 _load_card_database()
@@ -182,22 +182,34 @@ def check_boss_conditions(info):
 # ── Main Agent Function ────────────────────────────────────────────────────────
 def agent(obs_dict: dict) -> list[int]:
     select_data = obs_dict.get("select")
-    if select_data is None: return my_deck
+    if select_data is None:
+        if obs_dict.get("step", 0) == 0:
+            return my_deck
+        return []
+
     options = select_data.get("option", [])
-    if not options: return []
-    
+    if not options:
+        return [0]
+
+    max_count = select_data.get("maxCount", 1)
+    current = obs_dict.get("current")
+
+    # Handle Pre-Game Preparation Phase (Coin toss, IsFirst, Pre-game setup when current is None)
+    if current is None:
+        return [0] * max_count
+
     info = extract_board_info(obs_dict)
     
     # ── Phase 1: Setup / Mulligan Lead Selection ──────────────────────────────
     context = select_data.get("context", "")
-    if "SETUP" in str(context).upper() or "ACTIVE" in str(context).upper():
+    if "SETUP" in str(context).upper() or "ACTIVE" in str(context).upper() or "FIRST" in str(context).upper():
         optimal_lead = info.get("optimal_active", Crustle)
         for lead_choice in [optimal_lead, Dwebble, Ogerpon]:
             for idx, o in enumerate(options):
                 cid = o.get("cardId") or o.get("id")
                 if cid == lead_choice:
-                    return [idx]
-        return [0]
+                    return [idx] * max_count
+        return [0] * max_count
 
     # ── Option Scoring Engine ─────────────────────────────────────────────────
     scored_options = []
