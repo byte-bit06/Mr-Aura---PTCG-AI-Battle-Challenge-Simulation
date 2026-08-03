@@ -38,8 +38,8 @@ _opp_dir = os.path.join(_network_training_dir, 'opponents')
 if _opp_dir not in sys.path:
     sys.path.insert(0, _opp_dir)
 
-import Wall_V10_V3.V3.main as v10_module
-primary_agent = v10_module.agent
+import Wall_V10.V3.main as v3_module
+primary_agent = v3_module.agent
 primary_name = "Wall_V10_V3"
 
 import lucario_agent
