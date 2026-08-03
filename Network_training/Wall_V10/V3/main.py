@@ -187,11 +187,12 @@ def get_prize_count(player_obj) -> int:
 
 def evaluate_simulated_state(initial_obs, final_obs) -> float:
     """
-    Evaluates a future simulated state (after full turn rollout) using normalized state-based heuristics (0.0 to 100.0 scale):
-    1. Prize Progress & Turn Delta (Prizes Won vs Conceded)
-    2. Damage Dealt vs Taken & Active HP Percentage
-    3. Fully Powered Attackers (Pokémon with >= 3 energy)
-    4. Wall Immunity & Defensive Threat Stability
+    Evaluates a future simulated state compared to the initial state (after full turn rollout)
+    using impactful board delta scoring heuristics on a normalized 0.0 to 100.0 scale:
+    1. Prize Cards Delta (Won vs Given during turn & Total Prize Lead)
+    2. Damage Dealt vs Taken & Active HP Percentage Delta
+    3. Powered Attackers Delta (Pokémon with >= 3 energy)
+    4. Wall Immunity & KO Risk Threat Stability
     5. Bench Infrastructure & Hand Resource Health
     """
     if final_obs is None or getattr(final_obs, "current", None) is None: return -float('inf')
@@ -217,10 +218,10 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
     me_init = players_init[my_idx] if len(players_init) > my_idx else None
     op_init = players_init[op_idx] if len(players_init) > op_idx else None
 
-    # Base score on normalized 0-100 scale
+    # Base score on 0-100 scale
     score = 50.0
 
-    # ── 1. PRIZE CARDS HEURISTIC (0 - 100 Scale Weights) ──
+    # ── 1. PRIZE CARDS DELTA & HEURISTIC ──
     me_prizes_rem_init = get_prize_count(me_init) if me_init else 6
     op_prizes_rem_init = get_prize_count(op_init) if op_init else 6
 
@@ -235,36 +236,38 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
     prizes_won_this_turn = max(0, me_prizes_rem_init - me_prizes_rem_final)
     prizes_given_this_turn = max(0, op_prizes_rem_init - op_prizes_rem_final)
 
-    score += me_prizes_taken_total * 4.0   # Up to +24.0 for total prizes taken
-    score -= op_prizes_taken_total * 4.0   # Up to -24.0 for opponent prizes taken
-    score += prizes_won_this_turn * 15.0   # Immediate prize reward
-    score -= prizes_given_this_turn * 20.0 # Immediate prize penalty
+    score += me_prizes_taken_total * 15.0   # Impactful reward for net prizes taken
+    score -= op_prizes_taken_total * 25.0   # Impactful penalty for opponent prizes taken
+    score += prizes_won_this_turn * 30.0   # Immediate prize reward
+    score -= prizes_given_this_turn * 35.0 # Immediate prize penalty
 
-    # ── 2. POKEMON HEALTH PERCENTAGE & DAMAGE HEURISTIC ──
+    # ── 2. POKEMON HEALTH PERCENTAGE & DAMAGE DELTA ──
+    my_active_init = me_init.active[0] if (me_init and getattr(me_init, "active", None) and len(me_init.active) > 0) else None
+    op_active_init = op_init.active[0] if (op_init and getattr(op_init, "active", None) and len(op_init.active) > 0) else None
+
     my_active_final = me_final.active[0] if (getattr(me_final, "active", None) and len(me_final.active) > 0) else None
     op_active_final = op_final.active[0] if (getattr(op_final, "active", None) and len(op_final.active) > 0) else None
+
+    hp_me_init = getattr(my_active_init, "hp", 0) if my_active_init else 0
+    hp_op_init = getattr(op_active_init, "hp", 0) if op_active_init else 0
+
+    hp_me_final = getattr(my_active_final, "hp", 0) if my_active_final else 0
+    hp_op_final = getattr(op_active_final, "hp", 0) if op_active_final else 0
+
+    damage_dealt = max(0, hp_op_init - hp_op_final) if (op_active_init and op_active_final and op_active_init.id == op_active_final.id) else (hp_op_init if op_active_init else 0)
+    damage_taken = max(0, hp_me_init - hp_me_final) if (my_active_init and my_active_final and my_active_init.id == my_active_final.id) else (hp_me_init if my_active_init else 0)
+
+    score += min(15.0, (damage_dealt / 200.0) * 15.0)  # Impactful reward for damage dealt
+    score -= min(18.0, (damage_taken / 200.0) * 18.0)  # Impactful penalty for damage taken
 
     if my_active_final:
         hp = getattr(my_active_final, "hp", 0)
         max_hp = getattr(my_active_final, "maxHp", hp) or hp or 150
         hp_pct = (hp / float(max_hp)) if max_hp > 0 else 0.0
-        score += hp_pct * 10.0  # Scale score by active HP percentage (0.0 to 10.0)
-
-    # Team-wide average HP percentage
-    all_my_pkmn = ([my_active_final] if my_active_final else []) + list(getattr(me_final, "bench", []) or [])
-    all_hp_pcts = []
-    for p in all_my_pkmn:
-        if p is None: continue
-        p_hp = getattr(p, "hp", 0)
-        p_max = getattr(p, "maxHp", p_hp) or p_hp or 100
-        if p_max > 0:
-            all_hp_pcts.append(p_hp / float(p_max))
-
-    if all_hp_pcts:
-        avg_team_hp_pct = sum(all_hp_pcts) / len(all_hp_pcts)
-        score += avg_team_hp_pct * 5.0  # Up to +5.0 for overall team health
+        score += hp_pct * 15.0  # Up to +15.0 based on active HP percentage
 
     # ── 3. FULLY POWERED ATTACKERS (Amount of Pokémon with >= 3 energy) ──
+    all_my_pkmn = ([my_active_final] if my_active_final else []) + list(getattr(me_final, "bench", []) or [])
     powered_attackers_count = 0
     for p in all_my_pkmn:
         if p is None: continue
@@ -273,7 +276,7 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
         if e_count >= 3:
             powered_attackers_count += 1
 
-    score += powered_attackers_count * 8.0  # +8.0 per fully powered attacker (>= 3 energy)
+    score += powered_attackers_count * 12.0  # Impactful +12.0 per fully powered attacker
 
     # ── 4. WALL IMMUNITY & DEFENSIVE THREAT STABILITY ──
     opp_is_ex = is_card_ex(getattr(op_active_final, "id", None)) if op_active_final else False
@@ -287,23 +290,23 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
         is_ogerpon_immune = (active_id == Ogerpon and opp_has_ability)
         
         if is_crustle_immune or is_ogerpon_immune:
-            score += 15.0  # TOP WALL IMMUNITY BONUS
+            score += 25.0  # TOP WALL IMMUNITY IMPACT BONUS
 
         op_max_damage = get_opponent_max_threat(op_final, opp_is_ex, opp_has_ability)
         if op_max_damage >= active_hp and not is_crustle_immune and not is_ogerpon_immune:
-            score -= 25.0  # Exposing active to 1-hit KO penalty
+            score -= 30.0  # Exposing active to 1-hit KO penalty
 
     # ── 5. RESOURCE & BENCH INFRASTRUCTURE ──
     hand_count = len(getattr(me_final, "hand", []))
     if hand_count > 3:
-        score += 3.0
+        score += 8.0
     elif hand_count <= 2:
-        score -= 5.0
+        score -= 10.0
 
     me_bench = list(getattr(me_final, "bench", [])) if getattr(me_final, "bench", None) else []
     dwebble_backup_count = sum(1 for p in me_bench if p is not None and getattr(p, "id", None) in {Dwebble, Crustle})
     if dwebble_backup_count >= 2:
-        score += 5.0
+        score += 10.0
 
     # Normalize final score cleanly to 0.0 - 100.0 scale
     return max(0.0, min(100.0, score))
@@ -323,7 +326,6 @@ def rollout_full_turn(sid, cur_obs, your_index):
         sel = agent(obs_dict)
         if not sel: break
         
-        # Check if option chosen is OptionType.END
         if cur_obs.select.context == SelectContext.MAIN and cur_obs.select.option[sel[0]].type == OptionType.END:
             ar = search_step(sid, sel)
             if not (getattr(ar, "error", 0) != 0 or ar.state is None):
@@ -338,9 +340,9 @@ def rollout_full_turn(sid, cur_obs, your_index):
 
 def run_mcts_lookahead_search(obs_dict: dict, heuristic_candidates: list[int]) -> list[int]:
     """
-    MCTS Full Turn Evaluation:
-    Evaluates every candidate action by running a full turn rollout until turn end,
-    scoring each outcome using state heuristics (prizes won/given, damage dealt/taken, wall stability).
+    MCTS Full Turn Branch Evaluation:
+    Simulates ALL possible move candidates from the initial state through full turn rollouts.
+    Evaluates final board state compared to initial board state to pick the optimal branch.
     """
     if not _SEARCH_OK or not heuristic_candidates or len(heuristic_candidates) <= 1:
         return heuristic_candidates
@@ -350,11 +352,12 @@ def run_mcts_lookahead_search(obs_dict: dict, heuristic_candidates: list[int]) -
         if obs is None or obs.select is None or obs.select.context != SelectContext.MAIN:
             return heuristic_candidates
             
-        top_candidates = heuristic_candidates[:5]
+        all_candidates = list(dict.fromkeys(heuristic_candidates))
         best_val = -float('inf')
-        best_action = top_candidates[0]
+        best_action = all_candidates[0]
         
-        for cand in top_candidates:
+        # Evaluate ALL possible move choices
+        for cand in all_candidates:
             try:
                 sbi = search_begin(obs, your_deck=my_deck)
                 if getattr(sbi, "error", 0) != 0 or sbi.state is None: continue
@@ -371,9 +374,9 @@ def run_mcts_lookahead_search(obs_dict: dict, heuristic_candidates: list[int]) -
             except Exception:
                 pass
                 
-        if best_action != top_candidates[0]:
-            log_rule_execution(f"  [MCTS FULL-TURN LOOKAHEAD] Candidate {best_action} selected over {top_candidates[0]} with Rollout Score {best_val}!")
-            return [best_action] + [c for c in heuristic_candidates if c != best_action]
+        if best_action != all_candidates[0]:
+            log_rule_execution(f"  [MCTS FULL-TURN LOOKAHEAD] Candidate {best_action} selected over {all_candidates[0]} with Rollout Score {best_val}!")
+            return [best_action] + [c for c in all_candidates if c != best_action]
             
     except Exception as e:
         log_rule_execution(f"  [MCTS LOOKAHEAD EXCEPTION] {e}")
