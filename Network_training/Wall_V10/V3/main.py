@@ -502,6 +502,31 @@ def format_pokemon_summary(p_dict, my_idx=None):
     t_str = f"Tools: {', '.join(t_names)}" if t_names else "Tools: None"
     return f"[{team_label}] {info['name']} (ID #{info['id']}) [HP: {hp}/{max_hp} | Energy: {info['energy_count']} | {t_str}]"
 
+def get_pokemon_attached_energy_ids(p_dict) -> list[int]:
+    """Extracts all energy card IDs attached to a Pokemon."""
+    if not p_dict or not isinstance(p_dict, dict): return []
+    e_cards = p_dict.get("energyCards")
+    if isinstance(e_cards, list) and len(e_cards) > 0:
+        res = []
+        for e in e_cards:
+            eid = e.get("id") if isinstance(e, dict) else (e if isinstance(e, int) else None)
+            if eid: res.append(eid)
+        return res
+    e_val = p_dict.get("energies")
+    if isinstance(e_val, list):
+        res = []
+        for e in e_val:
+            eid = e.get("id") if isinstance(e, dict) else (e if isinstance(e, int) else None)
+            if eid: res.append(eid)
+        return res
+    return []
+
+def has_colored_energy_type(p_dict, required_energy_id) -> bool:
+    """Checks if a Pokemon has at least 1 energy card of the required energy ID (or rainbow/legacy energy)."""
+    attached_ids = get_pokemon_attached_energy_ids(p_dict)
+    # Check for specific required energy ID or legacy/special energy (e.g. 12)
+    return any(eid == required_energy_id or eid == 12 for eid in attached_ids)
+
 def get_attack_energy_requirement(cid):
     if cid == Crustle or cid == Dwebble: return 3
     elif cid == Ogerpon: return 3
@@ -509,11 +534,33 @@ def get_attack_energy_requirement(cid):
     return 3
 
 def has_enough_energy_for_highest_attack(p_dict):
+    """
+    Checks if a Pokemon has >= 3 energies AND satisfies color requirements:
+    - Ogerpon (#117): Must have >= 3 total energies AND at least 1 Fighting Energy (#6 or #20 Rock/Fighting).
+    - Crustle (#345) / Dwebble (#344): Must have >= 3 total energies AND at least 1 Grass Energy (#1).
+    """
     if not p_dict or not isinstance(p_dict, dict): return False
     cid = p_dict.get("id")
     req = get_attack_energy_requirement(cid)
     current_energy = get_energy_count(p_dict)
-    return current_energy >= req
+    if current_energy < req:
+        return False
+
+    attached_ids = get_pokemon_attached_energy_ids(p_dict)
+
+    # Ogerpon requires at least 1 Fighting/Rock Energy (6 = Basic Fighting, 20 = Rock Energy, 12 = Legacy)
+    if cid == Ogerpon:
+        has_fighting = any(eid in {6, 20, 12} for eid in attached_ids)
+        if not has_fighting and len(attached_ids) > 0:
+            return False
+
+    # Crustle/Dwebble requires at least 1 Grass Energy (1 = Basic Grass, 12 = Legacy)
+    if cid in {Crustle, Dwebble}:
+        has_grass = any(eid in {1, 12} for eid in attached_ids)
+        if not has_grass and len(attached_ids) > 0:
+            return False
+
+    return True
 
 def get_card_attack_damage(cid):
     if not cid: return 0
@@ -1456,26 +1503,36 @@ def agent(obs_dict: dict) -> list[int]:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
                     score = -float('inf')
                 else:
-                    # User Directive: Power up Kangaskhan ex on Active/Bench for heavy 200 HP knockout swings!
+                    # Specific Colored Energy Check (Fighting for Ogerpon, Grass for Crustle/Dwebble)
+                    attached_energy_ids = get_pokemon_attached_energy_ids(target_pkmn)
+                    is_missing_required_color = False
+                    
+                    if target_cid == Ogerpon:
+                        has_fighting = any(eid in {6, 20, 12} for eid in attached_energy_ids)
+                        if not has_fighting and cid in {6, 20, 12}:
+                            is_missing_required_color = True  # Urgently attach Fighting/Rock Energy!
+                    elif target_cid in {Crustle, Dwebble}:
+                        has_grass = any(eid in {1, 12} for eid in attached_energy_ids)
+                        if not has_grass and cid in {1, 12}:
+                            is_missing_required_color = True  # Urgently attach Grass Energy!
+
                     if is_active_target:
                         if target_cid in {Crustle, Ogerpon, Dwebble}:
                             tier_base = 96.0
-                            urgency = 2.0 if target_energy == 0 else (1.0 if target_energy == 1 else 0.5)
-                            score = tier_base + urgency  # Score 98.0 for 0-energy active Crustle/Ogerpon!
+                            urgency = 2.5 if is_missing_required_color else (2.0 if target_energy == 0 else 0.5)
+                            score = tier_base + urgency  # Score 98.5 when attaching missing required colored energy!
                         elif target_cid == Kangaskhan:
-                            # 200 HP Heavy Hitter Active Bonus (Score 96.0 when at 2 energies for immediate 200 HP swing!)
                             score = 96.0 if target_energy == 2 else 94.0
                         else:
                             score = 93.0
                     else:
                         if target_cid in {Crustle, Ogerpon, Dwebble}:
-                            score = 92.0
+                            score = 93.0 if is_missing_required_color else 92.0
                         elif target_cid == Kangaskhan:
-                            # Powering up benched 300 HP Heavy Hitter Kangaskhan ex
                             score = 88.0
                         else:
                             score = 85.0
-                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Optimized Energy Attachment Matched -> Score {score} for {get_card_name(target_cid)}!")
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Optimized Energy Attachment Matched -> Score {score} for {get_card_name(target_cid)} (Color Priority: {is_missing_required_color})!")
                     has_useful_pre_attack_action = True
 
             # ── BRANCH 10: STANDARD ATTACKING (85.0 - 90.0 SCALE: EXECUTES AT END OF TURN) ──
