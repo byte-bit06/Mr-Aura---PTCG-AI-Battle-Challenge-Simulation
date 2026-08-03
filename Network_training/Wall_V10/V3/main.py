@@ -187,19 +187,20 @@ def get_prize_count(player_obj) -> int:
 
 def evaluate_simulated_state(initial_obs, final_obs) -> float:
     """
-    Evaluates a future simulated state (after full turn rollout) using state-based heuristics:
-    1. Prizes Taken vs Conceded (Delta & Net count)
-    2. Damage Dealt vs Damage Taken (Net HP differential)
-    3. Wall Immunity & Active Stability (+5000.0 if immune wall active, -3000.0 if exposed to 1-hit KO)
-    4. Board Infrastructure & Resource Health (Bench setup & hand count)
+    Evaluates a future simulated state (after full turn rollout) using normalized state-based heuristics (0.0 to 100.0 scale):
+    1. Prize Progress & Turn Delta (Prizes Won vs Conceded)
+    2. Damage Dealt vs Taken & Active HP Percentage
+    3. Fully Powered Attackers (Pokémon with >= 3 energy)
+    4. Wall Immunity & Defensive Threat Stability
+    5. Bench Infrastructure & Hand Resource Health
     """
     if final_obs is None or getattr(final_obs, "current", None) is None: return -float('inf')
     st_final = final_obs.current
     if getattr(st_final, "result", None) is not None and st_final.result != -1:
         if st_final.result == st_final.yourIndex:
-            return 100000.0  # WIN!
+            return 100.0  # WIN!
         else:
-            return -100000.0 # LOSS!
+            return 0.0    # LOSS!
             
     my_idx = getattr(st_final, "yourIndex", 0)
     op_idx = 1 - my_idx
@@ -216,9 +217,10 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
     me_init = players_init[my_idx] if len(players_init) > my_idx else None
     op_init = players_init[op_idx] if len(players_init) > op_idx else None
 
-    val = 0.0
+    # Base score on normalized 0-100 scale
+    score = 50.0
 
-    # ── 1. PRIZE CARDS HEURISTIC (Prizes Won vs Prizes Given) ──
+    # ── 1. PRIZE CARDS HEURISTIC (0 - 100 Scale Weights) ──
     me_prizes_rem_init = get_prize_count(me_init) if me_init else 6
     op_prizes_rem_init = get_prize_count(op_init) if op_init else 6
 
@@ -233,82 +235,78 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
     prizes_won_this_turn = max(0, me_prizes_rem_init - me_prizes_rem_final)
     prizes_given_this_turn = max(0, op_prizes_rem_init - op_prizes_rem_final)
 
-    val += me_prizes_taken_total * 2500.0
-    val -= op_prizes_taken_total * 3000.0
-    val += prizes_won_this_turn * 4000.0   # Big bonus for taking prize card during turn!
-    val -= prizes_given_this_turn * 4500.0 # Heavy penalty if we lose a prize card during turn!
+    score += me_prizes_taken_total * 4.0   # Up to +24.0 for total prizes taken
+    score -= op_prizes_taken_total * 4.0   # Up to -24.0 for opponent prizes taken
+    score += prizes_won_this_turn * 15.0   # Immediate prize reward
+    score -= prizes_given_this_turn * 20.0 # Immediate prize penalty
 
-    # ── 2. DAMAGE DEALT VS DAMAGE TAKEN HEURISTIC ──
-    my_active_init = me_init.active[0] if (me_init and getattr(me_init, "active", None) and len(me_init.active) > 0) else None
-    op_active_init = op_init.active[0] if (op_init and getattr(op_init, "active", None) and len(op_init.active) > 0) else None
-
+    # ── 2. POKEMON HEALTH PERCENTAGE & DAMAGE HEURISTIC ──
     my_active_final = me_final.active[0] if (getattr(me_final, "active", None) and len(me_final.active) > 0) else None
     op_active_final = op_final.active[0] if (getattr(op_final, "active", None) and len(op_final.active) > 0) else None
 
-    hp_me_init = getattr(my_active_init, "hp", 0) if my_active_init else 0
-    hp_op_init = getattr(op_active_init, "hp", 0) if op_active_init else 0
+    if my_active_final:
+        hp = getattr(my_active_final, "hp", 0)
+        max_hp = getattr(my_active_final, "maxHp", hp) or hp or 150
+        hp_pct = (hp / float(max_hp)) if max_hp > 0 else 0.0
+        score += hp_pct * 10.0  # Scale score by active HP percentage (0.0 to 10.0)
 
-    hp_me_final = getattr(my_active_final, "hp", 0) if my_active_final else 0
-    hp_op_final = getattr(op_active_final, "hp", 0) if op_active_final else 0
+    # Team-wide average HP percentage
+    all_my_pkmn = ([my_active_final] if my_active_final else []) + list(getattr(me_final, "bench", []) or [])
+    all_hp_pcts = []
+    for p in all_my_pkmn:
+        if p is None: continue
+        p_hp = getattr(p, "hp", 0)
+        p_max = getattr(p, "maxHp", p_hp) or p_hp or 100
+        if p_max > 0:
+            all_hp_pcts.append(p_hp / float(p_max))
 
-    # Calculate damage dealt to opponent and damage taken by us
-    damage_dealt = max(0, hp_op_init - hp_op_final) if (op_active_init and op_active_final and op_active_init.id == op_active_final.id) else (hp_op_init if op_active_init else 0)
-    damage_taken = max(0, hp_me_init - hp_me_final) if (my_active_init and my_active_final and my_active_init.id == my_active_final.id) else (hp_me_init if my_active_init else 0)
+    if all_hp_pcts:
+        avg_team_hp_pct = sum(all_hp_pcts) / len(all_hp_pcts)
+        score += avg_team_hp_pct * 5.0  # Up to +5.0 for overall team health
 
-    val += damage_dealt * 10.0   # Reward dealing damage to opponent
-    val -= damage_taken * 12.0   # Penalize taking damage
+    # ── 3. FULLY POWERED ATTACKERS (Amount of Pokémon with >= 3 energy) ──
+    powered_attackers_count = 0
+    for p in all_my_pkmn:
+        if p is None: continue
+        energies = getattr(p, "energies", [])
+        e_count = len(energies) if isinstance(energies, list) else (int(energies) if isinstance(energies, (int, float)) else 0)
+        if e_count >= 3:
+            powered_attackers_count += 1
 
-    # ── 3. WALL IMMUNITY & ACTIVE THREAT STABILITY ──
+    score += powered_attackers_count * 8.0  # +8.0 per fully powered attacker (>= 3 energy)
+
+    # ── 4. WALL IMMUNITY & DEFENSIVE THREAT STABILITY ──
     opp_is_ex = is_card_ex(getattr(op_active_final, "id", None)) if op_active_final else False
     opp_has_ability = card_has_ability(getattr(op_active_final, "id", None)) if op_active_final else False
 
     if my_active_final:
         active_hp = getattr(my_active_final, "hp", 0)
         active_id = getattr(my_active_final, "id", None)
-        active_energies = len(getattr(my_active_final, "energies", []))
         
-        val += active_hp * 2.0
-        val += active_energies * 300.0
-        
-        # Wall Immunity bonus
         is_crustle_immune = (active_id == Crustle and opp_is_ex)
         is_ogerpon_immune = (active_id == Ogerpon and opp_has_ability)
         
         if is_crustle_immune or is_ogerpon_immune:
-            val += 5000.0  # TOP WALL IMMUNITY STABILITY BONUS!
+            score += 15.0  # TOP WALL IMMUNITY BONUS
 
-        # Threat Assessment & Fainting Risk Penalty
         op_max_damage = get_opponent_max_threat(op_final, opp_is_ex, opp_has_ability)
         if op_max_damage >= active_hp and not is_crustle_immune and not is_ogerpon_immune:
-            val -= 3000.0  # Heavy penalty for exposing active to a 1-hit KO!
+            score -= 25.0  # Exposing active to 1-hit KO penalty
 
-    # ── 4. RESOURCE & ENGINE HEALTH ──
+    # ── 5. RESOURCE & BENCH INFRASTRUCTURE ──
     hand_count = len(getattr(me_final, "hand", []))
     if hand_count > 3:
-        val += 500.0
+        score += 3.0
     elif hand_count <= 2:
-        val -= 1000.0  # Top-decking penalty
+        score -= 5.0
 
-    # ── 5. BENCH SETUP PROGRESSION ──
     me_bench = list(getattr(me_final, "bench", [])) if getattr(me_final, "bench", None) else []
-    dwebble_backup_count = 0
-    for p in me_bench:
-        if p is None: continue
-        p_id = getattr(p, "id", None)
-        p_energies = len(getattr(p, "energies", []))
-        val += p_energies * 200.0
-        
-        if p_id == Crustle:
-            val += 800.0
-            dwebble_backup_count += 1
-        elif p_id == Dwebble:
-            val += 500.0
-            dwebble_backup_count += 1
-
+    dwebble_backup_count = sum(1 for p in me_bench if p is not None and getattr(p, "id", None) in {Dwebble, Crustle})
     if dwebble_backup_count >= 2:
-        val += 1000.0  # 2-Dwebble setup readiness bonus!
+        score += 5.0
 
-    return val
+    # Normalize final score cleanly to 0.0 - 100.0 scale
+    return max(0.0, min(100.0, score))
 
 def rollout_full_turn(sid, cur_obs, your_index):
     """
