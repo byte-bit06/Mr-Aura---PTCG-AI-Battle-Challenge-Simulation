@@ -278,6 +278,30 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
 
     score += powered_attackers_count * 12.0  # Impactful +12.0 per fully powered attacker
 
+    # ── 3.5 LOW HP ENERGY ATTACHMENT DISCOURAGEMENT HEURISTIC ──
+    # Discourages attaching energies to low HP Pokemon (HP <= 40 or <= 35%) that have < 2 energies
+    # AND cannot knock out the opponent's active in one shot.
+    opp_active_hp_final = getattr(op_active_final, "hp", 999) if op_active_final else 999
+    
+    for p in all_my_pkmn:
+        if p is None: continue
+        p_hp = getattr(p, "hp", 0)
+        p_max_hp = getattr(p, "maxHp", p_hp) or p_hp or 150
+        p_hp_pct = (p_hp / float(p_max_hp)) if p_max_hp > 0 else 1.0
+        
+        energies = getattr(p, "energies", [])
+        e_count = len(energies) if isinstance(energies, list) else (int(energies) if isinstance(energies, (int, float)) else 0)
+        p_id = getattr(p, "id", None)
+        p_dmg = get_card_attack_damage(p_id)
+        
+        is_low_hp = (p_hp <= 40 or p_hp_pct <= 0.35)
+        has_low_energy = (e_count < 2)
+        cannot_one_shot_opp = (p_dmg < opp_active_hp_final)
+        
+        if is_low_hp and has_low_energy and cannot_one_shot_opp:
+            if e_count > 0:
+                score -= 20.0  # Discourage wasting energy attachments on vulnerable, low-energy Pokemon!
+
     # ── 4. WALL IMMUNITY & DEFENSIVE THREAT STABILITY ──
     opp_is_ex = is_card_ex(getattr(op_active_final, "id", None)) if op_active_final else False
     opp_has_ability = card_has_ability(getattr(op_active_final, "id", None)) if op_active_final else False
@@ -1496,11 +1520,20 @@ def agent(obs_dict: dict) -> list[int]:
                     target_cid = _get_val(b_pkmn, "id")
                     target_energy = get_energy_count(b_pkmn)
 
-                max_needed_energy = 3
-                target_pkmn = my_active if is_active_target else (my_bench[in_play_idx] if in_play_idx is not None and 0 <= in_play_idx < len(my_bench) else None)
+                # User Directive: Discourage/Ban attaching energy to low-HP Pokemon (< 40 HP or < 35% HP) that have < 2 energies AND cannot 1-shot opponent!
+                target_hp = _get_val(target_pkmn, "hp", 999) if target_pkmn else 999
+                target_max_hp = _get_val(target_pkmn, "maxHp", target_hp) or target_hp or 150
+                target_hp_pct = (target_hp / float(target_max_hp)) if target_max_hp > 0 else 1.0
+                target_dmg = get_card_attack_damage(target_cid)
+
+                is_low_hp_target = (target_hp <= 40 or target_hp_pct <= 0.35)
+                cannot_one_shot_opp = (target_dmg < opp_hp)
 
                 if has_enough_energy_for_highest_attack(target_pkmn) or target_energy >= max_needed_energy:
                     log_rule_execution(f"  [IF EXECUTED] Branch 9: Energy Cap Exceeded HARD BANNED (-inf): Target {get_card_name(target_cid)} already has {target_energy}/{max_needed_energy} energies!")
+                    score = -float('inf')
+                elif is_low_hp_target and target_energy < 2 and cannot_one_shot_opp:
+                    log_rule_execution(f"  [IF EXECUTED] Branch 9: Low-HP Low-Energy Non-KO Attachment HARD BANNED (-inf): Target {get_card_name(target_cid)} has HP {target_hp}/{target_max_hp}, {target_energy} energy, and cannot 1-shot opp!")
                     score = -float('inf')
                 else:
                     # Specific Colored Energy Check (Fighting for Ogerpon, Grass for Crustle/Dwebble)
