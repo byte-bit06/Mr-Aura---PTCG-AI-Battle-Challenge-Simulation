@@ -1,0 +1,1057 @@
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+Starting genetic tuning: up to 8.0h, 16 population x 20 matches/generation (320 games/generation)
+
+--- Generation 1 (0.00h elapsed) ---
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 1 complete. This-gen best: 15.0% | All-time best: 15.0% (gen 1)
+
+--- Generation 2 (0.04h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 2 complete. This-gen best: 20.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 3 (0.08h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 3 complete. This-gen best: 15.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 4 (0.12h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 4 complete. This-gen best: 15.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 5 (0.16h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 5 complete. This-gen best: 20.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 6 (0.20h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 6 complete. This-gen best: 20.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 7 (0.24h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 7 complete. This-gen best: 10.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 8 (0.28h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Generation 8 complete. This-gen best: 15.0% | All-time best: 20.0% (gen 2)
+
+--- Generation 9 (0.32h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 25.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 9 complete. This-gen best: 25.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 10 (0.36h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 10 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 11 (0.41h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 11 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 12 (0.45h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 12 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 13 (0.50h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Generation 13 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 14 (0.54h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 14 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 15 (0.58h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 15 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 16 (0.62h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 16 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 17 (0.67h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Generation 17 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 18 (0.71h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Generation 18 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 19 (0.75h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 19 complete. This-gen best: 10.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 20 (0.80h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 20 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 21 (0.84h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 21 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 22 (0.89h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 22 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 23 (0.93h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 23 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 24 (0.97h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 24 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 25 (1.01h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 25 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 26 (1.06h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 26 complete. This-gen best: 10.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 27 (1.10h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 27 complete. This-gen best: 10.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 28 (1.15h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 28 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 29 (1.19h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 29 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 30 (1.24h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 30 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 31 (1.28h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 31 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 32 (1.33h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 32 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 33 (1.38h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 33 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 34 (1.43h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 34 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 35 (1.48h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 35 complete. This-gen best: 10.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 36 (1.53h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 36 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 37 (1.57h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 25.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 37 complete. This-gen best: 25.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 38 (1.62h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 38 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 39 (1.67h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 39 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 40 (1.71h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 40 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 41 (1.76h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 41 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 42 (1.80h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 42 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 43 (1.84h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Generation 43 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 44 (1.88h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 44 complete. This-gen best: 10.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 45 (1.92h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 45 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 46 (1.96h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 25.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 46 complete. This-gen best: 25.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 47 (2.00h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 47 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 48 (2.04h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+Generation 48 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 49 (2.08h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 20.0%
+Generation 49 complete. This-gen best: 20.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 50 (2.13h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 50 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 51 (2.17h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+Generation 51 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 52 (2.21h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+Generation 52 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 53 (2.25h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+Generation 53 complete. This-gen best: 15.0% | All-time best: 25.0% (gen 9)
+
+--- Generation 54 (2.30h elapsed) ---
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 15.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 5.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 10.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%
+[Worker] Mutant evaluated -> Win Rate: 0.0%

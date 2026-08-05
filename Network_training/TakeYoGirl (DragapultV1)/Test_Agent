@@ -1,0 +1,282 @@
+"""
+End-to-end tests for agent.py against the harness contract.
+
+Run: python3 test_agent.py
+
+Covers both paths: heuristic-only (no cg.api present) and search-enabled
+(a stub cg package injected into a subprocess).
+"""
+import json
+import os
+import subprocess
+import sys
+import textwrap
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+
+
+# --- observation builders (raw dicts, exactly what the harness sends) -------
+
+
+def pkm(cid, hp=100, max_hp=100, energies=None, appeared=False):
+    return {"id": cid, "serial": cid * 10, "hp": hp, "maxHp": max_hp,
+            "appearThisTurn": appeared, "energies": energies or [],
+            "energyCards": [], "tools": [], "preEvolution": []}
+
+
+def player(active=None, bench=None, hand=None, prizes=6, deck=40, hand_count=None):
+    return {
+        "active": [active] if active else [],
+        "bench": bench or [],
+        "benchMax": 5,
+        "deckCount": deck,
+        "discard": [],
+        "prize": [None] * prizes,
+        "handCount": hand_count if hand_count is not None else len(hand or []),
+        "hand": [{"id": c, "serial": c, "playerIndex": 0} for c in hand] if hand is not None else None,
+        "poisoned": False, "burned": False, "asleep": False,
+        "paralyzed": False, "confused": False,
+    }
+
+
+def state(me, opp, turn=1, your_index=0):
+    return {"turn": turn, "turnActionCount": 0, "yourIndex": your_index,
+            "firstPlayer": 0, "supporterPlayed": False, "stadiumPlayed": False,
+            "energyAttached": False, "retreated": False, "result": -1,
+            "stadium": [], "looking": None, "players": [me, opp]}
+
+
+def option(otype, **kw):
+    o = {"type": otype, "number": None, "area": None, "index": None,
+         "playerIndex": None, "toolIndex": None, "energyIndex": None,
+         "count": None, "inPlayArea": None, "inPlayIndex": None,
+         "attackId": None, "cardId": None, "serial": None,
+         "specialConditionType": None}
+    o.update(kw)
+    return o
+
+
+def select(stype, ctx, options, min_count=1, max_count=1):
+    return {"type": stype, "context": ctx, "minCount": min_count,
+            "maxCount": max_count, "remainDamageCounter": 0,
+            "remainEnergyCost": 0, "option": options, "deck": None,
+            "contextCard": None, "effect": None}
+
+
+def obs(sel, cur, step=1):
+    return {"select": sel, "logs": [], "current": cur, "step": step,
+            "search_begin_input": None}
+
+
+# --- card ids --------------------------------------------------------------
+DREEPY, DRAKLOAK, DRAGAPULT = 119, 120, 121
+DUSKULL, DUSCLOPS, DUSKNOIR = 131, 132, 133
+MUNKIDORI, BUDEW, MEOWTH, LATIAS, FEZ = 112, 235, 1071, 184, 140
+POFFIN, LILLIE, POKEGEAR, PAD, CANDY = 1086, 1227, 1122, 1152, 1079
+BOSS, STRETCHER, ULTRA, ESEARCH, HAMMER, HILDA = 1182, 1097, 1121, 1119, 1120, 1225
+PSY, DARK, FIRE, NEO = 5, 7, 2, 10
+
+
+def run_tests():
+    import agent as A
+
+    failures = []
+
+    def check(name, cond, detail=""):
+        if cond:
+            print(f"[ok] {name}")
+        else:
+            print(f"[FAIL] {name} {detail}")
+            failures.append(name)
+
+    # 1. deck submission
+    deck = A.agent({"select": None, "current": None, "step": 0})
+    check("deck submission returns 60 cards", len(deck) == 60, f"got {len(deck)}")
+    check("deck contains 4 Dreepy", deck.count(DREEPY) == 4, f"got {deck.count(DREEPY)}")
+    check("deck contains 1 Darkness", deck.count(DARK) == 1)
+
+    # 2. setup lead: must not open a 2-prize liability when a 1-prize body exists
+    me = player(hand=[DREEPY, MEOWTH, LILLIE])
+    o = obs(select(1, 1, [option(3, cardId=MEOWTH, area=2, index=1),
+                          option(3, cardId=DREEPY, area=2, index=0)]),
+            state(me, player(), turn=0))
+    sel = A.agent(o)
+    picked = o["select"]["option"][sel[0]]["cardId"]
+    check("setup lead avoids Meowth ex", picked == DREEPY, f"picked {picked}")
+
+    # 3. main turn: develop rather than end
+    me = player(active=pkm(BUDEW, 70, 70),
+                bench=[pkm(DREEPY, 70, 70)],
+                hand=[POFFIN, PSY, LILLIE], deck=38, prizes=6)
+    opp = player(active=pkm(9005, 60, 60), prizes=6)
+    opts = [option(7, cardId=POFFIN, index=0),
+            option(8, cardId=PSY, index=1, inPlayArea=5, inPlayIndex=0),
+            option(14)]
+    o = obs(select(0, 0, opts), state(me, opp, turn=1))
+    sel = A.agent(o)
+    check("main action is not END", opts[sel[0]]["type"] != 14,
+          f"chose {opts[sel[0]]}")
+    check("single-select returns one index", len(sel) == 1, f"got {sel}")
+
+    # 4. discard 2: must shed the cheapest cards, never Dragapult
+    hand = [DRAGAPULT, HAMMER, POKEGEAR, LILLIE]
+    me = player(active=pkm(DRAKLOAK), hand=hand, deck=30)
+    opts = [option(3, cardId=c, area=2, index=i) for i, c in enumerate(hand)]
+    o = obs(select(1, 8, opts, min_count=2, max_count=2), state(me, player(), turn=5))
+    sel = A.agent(o)
+    chosen = {opts[i]["cardId"] for i in sel}
+    check("discard returns exactly 2", len(sel) == 2, f"got {sel}")
+    check("discard spares Dragapult", DRAGAPULT not in chosen, f"chose {chosen}")
+    check("discard spares Lillie", LILLIE not in chosen, f"chose {chosen}")
+
+    # 5. damage placement never lands on our own board
+    me = player(active=pkm(DRAGAPULT, 320, 320, [FIRE, PSY]),
+                bench=[pkm(DRAKLOAK)], hand=[], deck=25, prizes=3)
+    opp = player(active=pkm(9004, 330, 330), bench=[pkm(DRAKLOAK, 100, 100)], prizes=4)
+    opts = [option(3, cardId=DRAKLOAK, area=5, index=0, playerIndex=0),   # ours
+            option(3, cardId=DRAKLOAK, area=5, index=0, playerIndex=1)]   # theirs
+    o = obs(select(1, 14, opts), state(me, opp, turn=9))
+    sel = A.agent(o)
+    check("damage counters target the opponent",
+          opts[sel[0]]["playerIndex"] == 1, f"chose {opts[sel[0]]}")
+
+    # 6. Cursed Blast is gated when the opponent is on their last prize
+    me = player(active=pkm(DRAGAPULT, 320, 320, [FIRE, PSY]),
+                bench=[pkm(DUSKNOIR, 160, 160)], hand=[], deck=20, prizes=3)
+    opp = player(active=pkm(9004, 330, 330), bench=[pkm(9005, 60, 60)], prizes=1)
+    opts = [option(10, cardId=DUSKNOIR, area=5, index=0), option(14)]
+    o = obs(select(0, 0, opts), state(me, opp, turn=11))
+    sel = A.agent(o)
+    check("Cursed Blast refused on opponent's last prize",
+          opts[sel[0]]["cardId"] != DUSKNOIR, f"chose {opts[sel[0]]}")
+
+    # 7. go first
+    o = obs(select(9, 41, [option(1), option(2)]), state(player(), player(), turn=0))
+    sel = A.agent(o)
+    check("chooses to go first", o["select"]["option"][sel[0]]["type"] == 1)
+
+    # 8. malformed input never raises
+    for bad in [{}, {"select": {"option": []}}, {"select": {"option": None}, "current": {}},
+                {"select": select(0, 0, [option(14)]), "current": {"players": []}, "step": 3}]:
+        try:
+            r = A.agent(bad)
+            ok = isinstance(r, list)
+        except Exception as e:
+            ok = False
+            print("   raised:", e)
+        check(f"malformed input handled: {str(bad)[:40]}", ok)
+
+    # 9. min/max count respected across a sweep
+    hand = [DREEPY, DRAKLOAK, LILLIE, POFFIN, CANDY, ULTRA]
+    for mn, mx in [(1, 1), (1, 3), (2, 2), (0, 2), (3, 3)]:
+        opts = [option(3, cardId=c, area=2, index=i) for i, c in enumerate(hand)]
+        o = obs(select(1, 8, opts, min_count=mn, max_count=mx),
+                state(player(hand=hand, active=pkm(DRAKLOAK)), player(), turn=4))
+        sel = A.agent(o)
+        ok = (len(sel) <= mx and len(sel) >= min(mn, 1)
+              and all(0 <= i < len(opts) for i in sel) and len(set(sel)) == len(sel))
+        check(f"count bounds respected min={mn} max={mx}", ok, f"got {sel}")
+
+    return failures
+
+
+CG_STUB = '''
+"""Minimal cg.api stub so the agent's search path can be exercised."""
+class _CD:
+    def __init__(self, cid, name, ex=False):
+        self.cardId, self.name, self.ex, self.megaEx = cid, name, ex, False
+
+_NAMES = {119: "Dreepy", 120: "Drakloak", 121: "Dragapult ex", 131: "Duskull",
+          132: "Dusclops", 133: "Dusknoir", 112: "Munkidori", 235: "Budew",
+          1071: "Meowth ex", 184: "Latias ex", 140: "Fezandipiti ex",
+          9004: "Charizard ex", 9005: "Pidgey", 9001: "Psyduck"}
+
+def all_card_data():
+    return [_CD(c, n, n.endswith(" ex")) for c, n in _NAMES.items()]
+
+class _Ref:
+    def __init__(self, d): self.__dict__.update(d)
+
+def _conv(v):
+    if isinstance(v, dict): return _Ref({k: _conv(x) for k, x in v.items()})
+    if isinstance(v, list): return [_conv(x) for x in v]
+    return v
+
+def to_observation_class(obs):
+    return _conv(obs)
+
+_STATES, _NEXT = {}, [1]
+
+class _SearchState:
+    def __init__(self, obs, sid): self.observation, self.searchId = obs, sid
+
+class _ApiResult:
+    def __init__(self, state, error=0): self.state, self.error = state, error
+
+def _mk(obs):
+    sid = _NEXT[0]; _NEXT[0] += 1
+    _STATES[sid] = obs
+    return _SearchState(obs, sid)
+
+def search_begin(observation, your_deck=None, your_prize=None, opponent_deck=None,
+                 opponent_prize=None, opponent_hand=None, opponent_active=None,
+                 manual_coin=False):
+    return _ApiResult(_mk(observation))
+
+def search_step(search_id, select):
+    obs = _STATES.get(search_id)
+    if obs is None: return _ApiResult(None, 1)
+    # Terminal stub: one step ends our turn so the search reaches a leaf.
+    cur = getattr(obs, "current", None)
+    ended = _conv({"turn": getattr(cur, "turn", 1), "yourIndex": 1,
+                   "firstPlayer": 0, "supporterPlayed": False, "stadiumPlayed": False,
+                   "energyAttached": False, "retreated": False, "result": -1,
+                   "stadium": [], "looking": None,
+                   "players": [p.__dict__ if hasattr(p, "__dict__") else p
+                               for p in getattr(cur, "players", [])]})
+    nxt = _conv({"select": None, "logs": [], "current": None})
+    nxt.current = ended
+    return _ApiResult(_mk(nxt))
+
+def search_end(): pass
+def search_release(search_id): _STATES.pop(search_id, None)
+'''
+
+
+def run_with_stub():
+    """Re-run the same suite in a subprocess with a stub cg package present."""
+    import tempfile
+    tmp = tempfile.mkdtemp()
+    os.makedirs(os.path.join(tmp, "cg"), exist_ok=True)
+    open(os.path.join(tmp, "cg", "__init__.py"), "w").close()
+    with open(os.path.join(tmp, "cg", "api.py"), "w") as f:
+        f.write(CG_STUB)
+
+    script = textwrap.dedent(f"""
+        import sys
+        sys.path.insert(0, {tmp!r})
+        sys.path.insert(0, {BASE!r})
+        import test_agent
+        fails = test_agent.run_tests()
+        import agent
+        print("SEARCH_OK =", agent._SEARCH_OK)
+        print("PLAN stats:", agent.PLAN.stats)
+        sys.exit(1 if fails else 0)
+    """)
+    r = subprocess.run([sys.executable, "-c", script], cwd=BASE,
+                       capture_output=True, text=True)
+    print(r.stdout[-3000:])
+    if r.returncode != 0:
+        print(r.stderr[-2000:])
+    return r.returncode
+
+
+if __name__ == "__main__":
+    print("=== heuristic-only path (no cg.api) ===")
+    fails = run_tests()
+    print("\n=== search-enabled path (stub cg.api) ===")
+    rc = run_with_stub()
+    if fails or rc != 0:
+        print(f"\nFAILURES: {fails} (stub rc={rc})")
+        sys.exit(1)
+    print("\nall agent tests passed")

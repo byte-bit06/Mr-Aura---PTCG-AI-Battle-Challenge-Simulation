@@ -894,6 +894,19 @@ def _agent_dict(obs_dict: dict) -> list[int]:
 
 
 # ── Public entry point ────────────────────────────────────────────────────────
+
+# --- record every returned selection --------------------------------------
+_sanitize_action_impl = sanitize_action
+
+
+def sanitize_action(chosen_indices, select_data, obs_dict=None):
+    result = _sanitize_action_impl(chosen_indices, select_data, obs_dict)
+    try:
+        BATTLE_LOG.observe(obs_dict, result)
+    except Exception:
+        pass
+    return result
+
 def agent(obs_dict: dict) -> list[int]:
     """
     Unified agent entry point.

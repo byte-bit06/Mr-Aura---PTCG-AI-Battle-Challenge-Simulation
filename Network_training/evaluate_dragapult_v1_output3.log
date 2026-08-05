@@ -1,0 +1,156 @@
+  [DECK LOADED] 60 cards | unique=27
+  [CARDS] indexed 1267 cards from cg.api
+Loading environment open_spiel_env failed: No module named 'pokerkit'
+Loading environment werewolf failed: No module named 'litellm'
+Starting evaluations for TakeYoGirl_DragapultV1...
+Match: TakeYoGirl_DragapultV1 vs Alakazam ex V21 (TakeYoGirl_DragapultV1_vs_AlakazamexV21_1)
+Winner: Alakazam ex V21
+Match: Alakazam ex V21 vs TakeYoGirl_DragapultV1 (AlakazamexV21_vs_TakeYoGirl_DragapultV1_2)
+Winner: Alakazam ex V21
+Match: TakeYoGirl_DragapultV1 vs Alakazam ex V21 (TakeYoGirl_DragapultV1_vs_AlakazamexV21_3)
+Winner: Alakazam ex V21
+Match: Alakazam ex V21 vs TakeYoGirl_DragapultV1 (AlakazamexV21_vs_TakeYoGirl_DragapultV1_4)
+Winner: Alakazam ex V21
+Match: TakeYoGirl_DragapultV1 vs Alakazam ex V21 (TakeYoGirl_DragapultV1_vs_AlakazamexV21_5)
+Winner: Alakazam ex V21
+Match: Alakazam ex V21 vs TakeYoGirl_DragapultV1 (AlakazamexV21_vs_TakeYoGirl_DragapultV1_6)
+Winner: Alakazam ex V21
+Match: TakeYoGirl_DragapultV1 vs Alakazam ex V21 (TakeYoGirl_DragapultV1_vs_AlakazamexV21_7)
+Winner: Alakazam ex V21
+Match: Alakazam ex V21 vs TakeYoGirl_DragapultV1 (AlakazamexV21_vs_TakeYoGirl_DragapultV1_8)
+Winner: Alakazam ex V21
+Match: TakeYoGirl_DragapultV1 vs Alakazam ex V21 (TakeYoGirl_DragapultV1_vs_AlakazamexV21_9)
+Winner: Alakazam ex V21
+Match: Alakazam ex V21 vs TakeYoGirl_DragapultV1 (AlakazamexV21_vs_TakeYoGirl_DragapultV1_10)
+Winner: Alakazam ex V21
+Match: TakeYoGirl_DragapultV1 vs Lucario ex (TakeYoGirl_DragapultV1_vs_Lucarioex_1)
+Winner: Lucario ex
+Match: Lucario ex vs TakeYoGirl_DragapultV1 (Lucarioex_vs_TakeYoGirl_DragapultV1_2)
+Winner: Lucario ex
+Match: TakeYoGirl_DragapultV1 vs Lucario ex (TakeYoGirl_DragapultV1_vs_Lucarioex_3)
+Winner: Lucario ex
+Match: Lucario ex vs TakeYoGirl_DragapultV1 (Lucarioex_vs_TakeYoGirl_DragapultV1_4)
+Winner: Lucario ex
+Match: TakeYoGirl_DragapultV1 vs Lucario ex (TakeYoGirl_DragapultV1_vs_Lucarioex_5)
+Winner: Lucario ex
+Match: Lucario ex vs TakeYoGirl_DragapultV1 (Lucarioex_vs_TakeYoGirl_DragapultV1_6)
+Winner: TakeYoGirl_DragapultV1
+Match: TakeYoGirl_DragapultV1 vs Lucario ex (TakeYoGirl_DragapultV1_vs_Lucarioex_7)
+Winner: TakeYoGirl_DragapultV1
+Match: Lucario ex vs TakeYoGirl_DragapultV1 (Lucarioex_vs_TakeYoGirl_DragapultV1_8)
+Winner: Lucario ex
+Match: TakeYoGirl_DragapultV1 vs Lucario ex (TakeYoGirl_DragapultV1_vs_Lucarioex_9)
+Winner: Lucario ex
+Match: Lucario ex vs TakeYoGirl_DragapultV1 (Lucarioex_vs_TakeYoGirl_DragapultV1_10)
+Winner: Lucario ex
+Match: TakeYoGirl_DragapultV1 vs Iono Deck (TakeYoGirl_DragapultV1_vs_IonoDeck_1)
+Winner: TakeYoGirl_DragapultV1
+Match: Iono Deck vs TakeYoGirl_DragapultV1 (IonoDeck_vs_TakeYoGirl_DragapultV1_2)
+Winner: Iono Deck
+Match: TakeYoGirl_DragapultV1 vs Iono Deck (TakeYoGirl_DragapultV1_vs_IonoDeck_3)
+Winner: Iono Deck
+Match: Iono Deck vs TakeYoGirl_DragapultV1 (IonoDeck_vs_TakeYoGirl_DragapultV1_4)
+Winner: Iono Deck
+Match: TakeYoGirl_DragapultV1 vs Iono Deck (TakeYoGirl_DragapultV1_vs_IonoDeck_5)
+Winner: Iono Deck
+Match: Iono Deck vs TakeYoGirl_DragapultV1 (IonoDeck_vs_TakeYoGirl_DragapultV1_6)
+Winner: Iono Deck
+Match: TakeYoGirl_DragapultV1 vs Iono Deck (TakeYoGirl_DragapultV1_vs_IonoDeck_7)
+Winner: Iono Deck
+Match: Iono Deck vs TakeYoGirl_DragapultV1 (IonoDeck_vs_TakeYoGirl_DragapultV1_8)
+Winner: Iono Deck
+Match: TakeYoGirl_DragapultV1 vs Iono Deck (TakeYoGirl_DragapultV1_vs_IonoDeck_9)
+Winner: Iono Deck
+Match: Iono Deck vs TakeYoGirl_DragapultV1 (IonoDeck_vs_TakeYoGirl_DragapultV1_10)
+Winner: Iono Deck
+Match: TakeYoGirl_DragapultV1 vs Dragapult ex (TakeYoGirl_DragapultV1_vs_Dragapultex_1)
+Winner: Dragapult ex
+Match: Dragapult ex vs TakeYoGirl_DragapultV1 (Dragapultex_vs_TakeYoGirl_DragapultV1_2)
+Winner: Dragapult ex
+Match: TakeYoGirl_DragapultV1 vs Dragapult ex (TakeYoGirl_DragapultV1_vs_Dragapultex_3)
+Winner: Dragapult ex
+Match: Dragapult ex vs TakeYoGirl_DragapultV1 (Dragapultex_vs_TakeYoGirl_DragapultV1_4)
+Winner: Dragapult ex
+Match: TakeYoGirl_DragapultV1 vs Dragapult ex (TakeYoGirl_DragapultV1_vs_Dragapultex_5)
+Winner: Dragapult ex
+Match: Dragapult ex vs TakeYoGirl_DragapultV1 (Dragapultex_vs_TakeYoGirl_DragapultV1_6)
+Winner: Dragapult ex
+Match: TakeYoGirl_DragapultV1 vs Dragapult ex (TakeYoGirl_DragapultV1_vs_Dragapultex_7)
+Winner: Dragapult ex
+Match: Dragapult ex vs TakeYoGirl_DragapultV1 (Dragapultex_vs_TakeYoGirl_DragapultV1_8)
+Winner: Dragapult ex
+Match: TakeYoGirl_DragapultV1 vs Dragapult ex (TakeYoGirl_DragapultV1_vs_Dragapultex_9)
+Winner: Dragapult ex
+Match: Dragapult ex vs TakeYoGirl_DragapultV1 (Dragapultex_vs_TakeYoGirl_DragapultV1_10)
+Winner: Dragapult ex
+Match: TakeYoGirl_DragapultV1 vs Abomasnow ex (TakeYoGirl_DragapultV1_vs_Abomasnowex_1)
+Winner: Abomasnow ex
+Match: Abomasnow ex vs TakeYoGirl_DragapultV1 (Abomasnowex_vs_TakeYoGirl_DragapultV1_2)
+Winner: Abomasnow ex
+Match: TakeYoGirl_DragapultV1 vs Abomasnow ex (TakeYoGirl_DragapultV1_vs_Abomasnowex_3)
+Winner: Abomasnow ex
+Match: Abomasnow ex vs TakeYoGirl_DragapultV1 (Abomasnowex_vs_TakeYoGirl_DragapultV1_4)
+Winner: Abomasnow ex
+Match: TakeYoGirl_DragapultV1 vs Abomasnow ex (TakeYoGirl_DragapultV1_vs_Abomasnowex_5)
+Winner: Abomasnow ex
+Match: Abomasnow ex vs TakeYoGirl_DragapultV1 (Abomasnowex_vs_TakeYoGirl_DragapultV1_6)
+Winner: Abomasnow ex
+Match: TakeYoGirl_DragapultV1 vs Abomasnow ex (TakeYoGirl_DragapultV1_vs_Abomasnowex_7)
+Winner: Abomasnow ex
+Match: Abomasnow ex vs TakeYoGirl_DragapultV1 (Abomasnowex_vs_TakeYoGirl_DragapultV1_8)
+Winner: Abomasnow ex
+Match: TakeYoGirl_DragapultV1 vs Abomasnow ex (TakeYoGirl_DragapultV1_vs_Abomasnowex_9)
+Winner: Abomasnow ex
+Match: Abomasnow ex vs TakeYoGirl_DragapultV1 (Abomasnowex_vs_TakeYoGirl_DragapultV1_10)
+Winner: Abomasnow ex
+Match: TakeYoGirl_DragapultV1 vs MCTS Lucario (TakeYoGirl_DragapultV1_vs_MCTSLucario_1)
+Winner: MCTS Lucario
+Match: MCTS Lucario vs TakeYoGirl_DragapultV1 (MCTSLucario_vs_TakeYoGirl_DragapultV1_2)
+Winner: MCTS Lucario
+Match: TakeYoGirl_DragapultV1 vs MCTS Lucario (TakeYoGirl_DragapultV1_vs_MCTSLucario_3)
+Winner: MCTS Lucario
+Match: MCTS Lucario vs TakeYoGirl_DragapultV1 (MCTSLucario_vs_TakeYoGirl_DragapultV1_4)
+Winner: MCTS Lucario
+Match: TakeYoGirl_DragapultV1 vs MCTS Lucario (TakeYoGirl_DragapultV1_vs_MCTSLucario_5)
+Winner: MCTS Lucario
+Match: MCTS Lucario vs TakeYoGirl_DragapultV1 (MCTSLucario_vs_TakeYoGirl_DragapultV1_6)
+Winner: MCTS Lucario
+Match: TakeYoGirl_DragapultV1 vs MCTS Lucario (TakeYoGirl_DragapultV1_vs_MCTSLucario_7)
+Winner: MCTS Lucario
+Match: MCTS Lucario vs TakeYoGirl_DragapultV1 (MCTSLucario_vs_TakeYoGirl_DragapultV1_8)
+Winner: MCTS Lucario
+Match: TakeYoGirl_DragapultV1 vs MCTS Lucario (TakeYoGirl_DragapultV1_vs_MCTSLucario_9)
+Winner: MCTS Lucario
+Match: MCTS Lucario vs TakeYoGirl_DragapultV1 (MCTSLucario_vs_TakeYoGirl_DragapultV1_10)
+Winner: MCTS Lucario
+Match: TakeYoGirl_DragapultV1 vs Archaludon Cinderace (TakeYoGirl_DragapultV1_vs_ArchaludonCinderace_1)
+Winner: Archaludon Cinderace
+Match: Archaludon Cinderace vs TakeYoGirl_DragapultV1 (ArchaludonCinderace_vs_TakeYoGirl_DragapultV1_2)
+Winner: Archaludon Cinderace
+Match: TakeYoGirl_DragapultV1 vs Archaludon Cinderace (TakeYoGirl_DragapultV1_vs_ArchaludonCinderace_3)
+Winner: Archaludon Cinderace
+Match: Archaludon Cinderace vs TakeYoGirl_DragapultV1 (ArchaludonCinderace_vs_TakeYoGirl_DragapultV1_4)
+Winner: Archaludon Cinderace
+Match: TakeYoGirl_DragapultV1 vs Archaludon Cinderace (TakeYoGirl_DragapultV1_vs_ArchaludonCinderace_5)
+Winner: Archaludon Cinderace
+Match: Archaludon Cinderace vs TakeYoGirl_DragapultV1 (ArchaludonCinderace_vs_TakeYoGirl_DragapultV1_6)
+Winner: Archaludon Cinderace
+Match: TakeYoGirl_DragapultV1 vs Archaludon Cinderace (TakeYoGirl_DragapultV1_vs_ArchaludonCinderace_7)
+Winner: Archaludon Cinderace
+Match: Archaludon Cinderace vs TakeYoGirl_DragapultV1 (ArchaludonCinderace_vs_TakeYoGirl_DragapultV1_8)
+Winner: Archaludon Cinderace
+Match: TakeYoGirl_DragapultV1 vs Archaludon Cinderace (TakeYoGirl_DragapultV1_vs_ArchaludonCinderace_9)
+Winner: Archaludon Cinderace
+Match: Archaludon Cinderace vs TakeYoGirl_DragapultV1 (ArchaludonCinderace_vs_TakeYoGirl_DragapultV1_10)
+Winner: Archaludon Cinderace
+
+=== FINAL TakeYoGirl_DragapultV1 RESULTS ===
+vs Alakazam ex V21: 0 Wins, 10 Losses, 0 Ties
+vs Lucario ex: 2 Wins, 8 Losses, 0 Ties
+vs Iono Deck: 1 Wins, 9 Losses, 0 Ties
+vs Dragapult ex: 0 Wins, 10 Losses, 0 Ties
+vs Abomasnow ex: 0 Wins, 10 Losses, 0 Ties
+vs MCTS Lucario: 0 Wins, 10 Losses, 0 Ties
+vs Archaludon Cinderace: 0 Wins, 10 Losses, 0 Ties
+
+Overall Win Rate: 4.3%

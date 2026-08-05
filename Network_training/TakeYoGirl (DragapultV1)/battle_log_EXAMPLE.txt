@@ -1,0 +1,67 @@
+DRAGAPULT BATTLE LOG — paste this whole file
+
+══ GAME 1 ══  seat 0 · going first
+
+── my turn 1 (engine turn 5) ──
+  hand  Rare Candy, Basic {P} Energy, Lillie's Determination
+  me    ACT Budew 70/70 e1[{R}] · BENCH Dreepy 70/70 e0, Duskull 60/60 e0
+        prizes 6 · deck 31
+  opp   ACT Charizard ex 330/330 e2[{D}{D}] · BENCH Pidgey 60/60 e0
+        prizes 6 · hand 4
+  · ABILITY Drakloak                                   [search sep=0.04]
+  · RETREAT Budew                                      [policy]
+  · DISCARD ENERGY Basic {R} Energy  (retreat/attack cost) [policy]  ⚠ ENERGY PAID
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 1 · net -1 · energy in hand at start 1   ⚠ MISSED ATTACHMENT   ⚠ NET ENERGY LOSS
+
+── my turn 2 (engine turn 7) ──
+  hand  Basic {P} Energy, Ultra Ball
+  me    ACT Dragapult ex 320/320 e1[{R}] · BENCH Drakloak 100/100 e0
+        prizes 5 · deck 28
+  opp   ACT Charizard ex 330/330 e2[{D}{D}] · BENCH Pidgey 60/60 e0
+        prizes 6 · hand 4
+  · PLAY Ultra Ball                                    [policy]
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
+
+── RESULT: LOSS at engine turn 7 ──
+  attach/turn 0.00 · lost to retreat 1 · retreats 1 · attacks 0 · damage placements 0
+  net energy on board -1 · evolutions 0 · abilities 1 · plays 1
+  ⚠ 2 turn(s) ended with energy in hand and no attachment made
+  ⚠ never placed a damage counter (no Phantom Dive)
+  ⚠ never attacked
+
+══ GAME 2 ══  seat 0 · going first
+
+── my turn 1 (engine turn 9) ──
+  hand  Boss's Orders, Lillie's Determination
+  me    ACT Dragapult ex 320/320 e2[{R}{P}] · BENCH Drakloak 100/100 e0, Dusknoir 160/160 e0
+        prizes 3 · deck 24
+  opp   ACT Charizard ex 330/330 e1[{D}] · BENCH Pidgey 60/60 e0, Drakloak 100/100 e0
+        prizes 4 · hand 3
+  · ATTACH Basic {P} Energy → Dragapult ex (active)    [search sep=0.11]
+  · ATTACK Dragapult ex (attackId 77)                  [search sep=0.11]
+  · DAMAGE → Drakloak (theirs)                         [policy]
+  · DAMAGE → Drakloak (theirs)                         [policy]
+  · DAMAGE → Drakloak (theirs)                         [policy]
+  · DAMAGE → Drakloak (theirs)                         [policy]
+  · DAMAGE → Drakloak (theirs)                         [policy]
+  · DAMAGE → Drakloak (theirs)                         [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── RESULT: WIN at engine turn 9 ──
+  attach/turn 1.00 · lost to retreat 0 · retreats 0 · attacks 1 · damage placements 6
+  net energy on board 1 · evolutions 0 · abilities 0 · plays 0
+
+══════════════════════════════════════════════════════════════
+AGGREGATE over 2 completed game(s)
+══════════════════════════════════════════════════════════════
+  win rate            50.0%
+  attach / own turn   0.33   (target 1.00)
+  energy attached     0.50 per game
+  energy discarded    0.50 per game   (100% of attached)
+  net energy          0.00 per game
+  retreats            0.50 per game
+  attacks             0.50 per game
+  damage placements   3.00 per game
+  missed attachments  2 turn(s) total
