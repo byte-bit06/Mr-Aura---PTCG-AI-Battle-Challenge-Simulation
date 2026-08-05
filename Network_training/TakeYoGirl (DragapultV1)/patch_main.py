@@ -26,7 +26,8 @@ PRIORITY_HELPER_CODE = """
 try:
     from dragapult_priorities import (
         build_attack_table, attack_score, retreat_veto, attach_veto,
-        end_turn_score, discard_veto)
+        end_turn_score, discard_veto, evolve_score, search_score,
+        activate_score, play_score, attach_energy_fit)
     try:
         from cg.api import all_attack as _all_attack
         build_attack_table(_all_attack)
@@ -48,12 +49,25 @@ def _priority_override(view, select_obj, options, o, otype):
         _ctx = getattr(_ctx, "value", _ctx)
         if _ctx in (8, 10):          # DISCARD, TO_DECK_BOTTOM
             return discard_veto(view, _resolve_cid(view, select_obj, o, otype))
+        if _ctx == 43:               # ACTIVATE — our own ability prompt
+            if otype in (OptionType.YES, OptionType.NO):
+                return activate_score(otype == OptionType.YES)
+        if _ctx in (7, 1):           # TO_HAND / DECK search target
+            return search_score(view, _resolve_cid(view, select_obj, o, otype))
+        if otype == OptionType.EVOLVE:
+            return evolve_score(view, _resolve_cid(view, select_obj, o, otype),
+                                o, _opt)
+        if otype == OptionType.PLAY:
+            return play_score(view, _resolve_cid(view, select_obj, o, otype))
         if otype == OptionType.ATTACK:
             return attack_score(view, o, _opt)
         if otype == OptionType.RETREAT:
             return retreat_veto(view)
         if otype == OptionType.ATTACH:
-            return attach_veto(view, o, _opt)
+            veto = attach_veto(view, o, _opt)
+            if veto is not None:
+                return veto
+            return attach_energy_fit(view, o, _opt)
         if otype == OptionType.END:
             return end_turn_score(options, _opt, OptionType.END, OptionType.NO)
     except Exception:
@@ -178,19 +192,22 @@ def sanitize_action(chosen_indices, select_data, obs_dict=None):
 ]
 
 
+MARK_START = "# >>> dragapult_patch:{slug} >>>"
+MARK_END = "# <<< dragapult_patch:{slug} <<<"
+
+
+def _slug(name):
+    return "".join(c if c.isalnum() else "_" for c in name).strip("_").lower()
+
+
 def _find_anchor(lines, patterns, skip_defs=True):
-    """
-    Locate an anchor by *content*, not exact whitespace — indentation and
-    surrounding formatting drift between edits of the file. Returns
-    (line_index, indent_string) or (None, None).
-    """
+    """Locate an anchor by content, not exact whitespace."""
     for pat in patterns:
         want = pat.strip()
         for i, line in enumerate(lines):
             stripped = line.strip()
             if want not in stripped:
                 continue
-            # Don't anchor a call-site pattern onto the function's own def.
             if skip_defs and stripped.startswith("def ") and not want.startswith("def "):
                 continue
             indent = line[:len(line) - len(line.lstrip())]
@@ -198,84 +215,142 @@ def _find_anchor(lines, patterns, skip_defs=True):
     return None, None
 
 
+LEGACY_SPANS = [
+    ("# --- battle transcript logging",
+     lambda l: '[BATTLE LOG] disabled' in l),
+    ("# --- record every returned selection",
+     lambda l: l.strip() == "return result"),
+    ("# --- transcript-driven priority fixes",
+     lambda l: l.startswith("def policy_rank(")),
+]
+
+LEGACY_SINGLES = (
+    'BATTLE_LOG.source(',
+    "ov = _priority_override(",
+    "if ov is not None:",
+    "s = ov",
+    "_legal_ranked = [i for _s, i in scored",
+    "if _legal_ranked:",
+    "return _legal_ranked",
+    "_noise_floor = max(m.spread",
+    "trusted = trusted and separation >= _noise_floor",
+    "if os.environ.get('DRAGAPULT_DISABLE_SEARCH')",
+)
+
+
+def _strip_legacy(work):
+    """
+    Remove blocks left by earlier, unmarked versions of this patcher.
+
+    This is the bug that made three rounds of fixes invisible: the old guard
+    saw `def _priority_override` already present and skipped the edit, so the
+    agent kept running the FIRST version of the rules while every later
+    version sat unused on disk. Silent, and invisible in the logs.
+    """
+    lines = work.split("\n")
+    out, i, removed = [], 0, 0
+    while i < len(lines):
+        line = lines[i]
+        hit = next((sp for sp in LEGACY_SPANS
+                    if line.strip().startswith(sp[0])), None)
+        if hit:
+            j = i + 1
+            while j < len(lines) and not hit[1](lines[j]):
+                j += 1
+            stop_before = (j < len(lines) and lines[j].startswith("def policy_rank("))
+            i = j if stop_before else j + 1
+            removed += 1
+            continue
+        if any(line.strip().startswith(tok) for tok in LEGACY_SINGLES):
+            i += 1
+            removed += 1
+            continue
+        if line.strip() == "trusted = False" and i and \
+                "DRAGAPULT_DISABLE_SEARCH" in lines[i - 1]:
+            i += 1
+            removed += 1
+            continue
+        out.append(line)
+        i += 1
+    return "\n".join(out), removed
+
+
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def patch(path=None, dry_run=False):
-    # Default to the main.py sitting NEXT TO this script, not the one in the
-    # current working directory. Invoking by absolute path from elsewhere
-    # (e.g. `python "C:/.../agent/patch_main.py"` from the repo root) would
-    # otherwise silently patch a completely different main.py.
     if path is None:
         path = os.path.join(_SCRIPT_DIR, "main.py")
     path = os.path.abspath(path)
-
     if not os.path.exists(path):
         print(f"! not found: {path}")
-        print(f"  (place patch_main.py beside the main.py you want to patch,")
-        print(f"   or pass the path explicitly: python patch_main.py <path>)")
         return 1
-
     print(f"patching: {path}")
 
-    # Warn about the classic mistake: a different main.py in the cwd.
     cwd_main = os.path.abspath(os.path.join(os.getcwd(), "main.py"))
     if cwd_main != path and os.path.exists(cwd_main):
-        print(f"note    : a different main.py also exists at {cwd_main}")
-        print(f"          it is NOT being touched.")
+        print(f"note    : a different main.py exists at {cwd_main} - NOT touched")
 
     src = open(path, encoding="utf-8", errors="replace").read()
     newline = "\r\n" if "\r\n" in src else "\n"
     work = src.replace("\r\n", "\n")
 
+    work, legacy = _strip_legacy(work)
+    if legacy:
+        print(f"cleaned : {legacy} block(s) from an older patcher version")
+
     lines = work.split("\n")
-    applied, skipped, missing = [], [], []
+    applied, missing = [], []
     for e in EDITS:
-        if e["guard"] in work:
-            skipped.append(e["name"])
-            continue
+        slug = _slug(e["name"])
+        start = MARK_START.format(slug=slug)
+        end = MARK_END.format(slug=slug)
+
         idx, indent = _find_anchor(lines, e["anchors"])
         if idx is None:
             missing.append(e)
             continue
+
         code = e["code"]
         if e["reindent"]:
-            # Re-indent to the anchor while PRESERVING relative structure —
-            # lstrip() on every line would flatten nested blocks.
             raw = [l for l in code.splitlines() if l.strip()]
             base = min(len(l) - len(l.lstrip()) for l in raw)
             code = "".join(indent + l[base:] + "\n" for l in raw)
-        insert_at = idx + 1 if e["after"] else idx
-        lines[insert_at:insert_at] = code.rstrip("\n").split("\n")
-        applied.append(f"{e['name']} (line {insert_at + 1})")
+        block = [indent + start] + code.rstrip("\n").split("\n") + [indent + end]
+
+        have = [k for k, l in enumerate(lines) if l.strip() == start.strip()]
+        if have:
+            a = have[0]
+            b = next((k for k in range(a, len(lines))
+                      if lines[k].strip() == end.strip()), a)
+            lines[a:b + 1] = block
+            applied.append(f"{e['name']} (updated)")
+        else:
+            at = idx + 1 if e["after"] else idx
+            lines[at:at] = block
+            applied.append(f"{e['name']} (line {at + 1})")
         work = "\n".join(lines)
 
     print(f"applied : {', '.join(applied) or 'none'}")
-    if skipped:
-        print(f"skipped : {', '.join(skipped)} (already present)")
     if missing:
         print("\n! could not find anchors for:")
         for e in missing:
-            print(f"\n  --- {e['name']} ---")
-            print("  tried anchors: " + ", ".join(repr(a[:50]) for a in e["anchors"]))
-            print(f"  paste this {'after' if e['after'] else 'before'} that line:")
+            print(f"  --- {e['name']} ---")
+            print("  tried: " + ", ".join(repr(a[:45]) for a in e["anchors"]))
+            print("  paste this " + ("after" if e["after"] else "before") + " that line:")
             print("\n".join("      " + l for l in e["code"].splitlines()))
-        print("\n(other edits were still applied)" if applied else "")
 
-    if dry_run:
-        print("\n[dry run] nothing written")
-        return 0
-    # Syntax-check BEFORE writing; never leave a broken agent on disk.
     try:
         import ast
         ast.parse(work)
     except SyntaxError as ex:
         print(f"\n! patched result does not parse: {ex}")
-        print("  nothing was written — your main.py is untouched.")
-        print("  (this usually means the source file already had a syntax error,")
-        print("   or an anchor matched inside a string/comment)")
+        print("  nothing written - your main.py is untouched.")
         return 1
 
+    if dry_run:
+        print("\n[dry run] nothing written")
+        return 0
     if applied:
         shutil.copy(path, path + ".bak")
         open(path, "w", encoding="utf-8").write(work.replace("\n", newline))

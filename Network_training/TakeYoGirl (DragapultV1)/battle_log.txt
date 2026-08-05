@@ -3,195 +3,161 @@ DRAGAPULT BATTLE LOG — paste this whole file
 ══ GAME 68 ══  seat 1 · going first
 
 ── my turn 1 (engine turn 0) ──
-  hand  Lillie's Determination, Neo Upper Energy, Ultra Ball, Dragapult ex, Ultra Ball, Latias ex, Meowth ex
+  hand  Dreepy, Basic {R} Energy, Ultra Ball, Night Stretcher, Boss’s Orders, Buddy-Buddy Poffin, Basic {R} Energy
   me    ACT — · BENCH —
         prizes 0 · deck 53
   opp   ACT — · BENCH —
         prizes 0 · hand 7
-  · SETUP ACTIVE Latias ex                             [policy]
-  · SETUP BENCH Meowth ex                              [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1
+  · SETUP ACTIVE Dreepy                                [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 2
 
 ── my turn 2 (engine turn 1) ──
-  hand  Lillie's Determination, Neo Upper Energy, Ultra Ball, Dragapult ex, Ultra Ball, Dusclops
-  me    ACT Latias ex 210/210 e0 · BENCH Meowth ex 170/170 e0
+  hand  Basic {R} Energy, Ultra Ball, Night Stretcher, Boss’s Orders, Buddy-Buddy Poffin, Basic {R} Energy, Boss’s Orders
+  me    ACT Dreepy 70/70 e0 · BENCH —
         prizes 6 · deck 46
   opp   ACT Cinderace 160/160 e0 · BENCH —
         prizes 6 · hand 6
+    avail  attach:Basic {R} Energy | play:Ultra Ball | *play:Buddy-Buddy Poffin | attach:Basic {R} Energy | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Budew                               [policy]
+    avail  attach:Basic {R} Energy | attach:Basic {R} Energy | *play:Ultra Ball | attach:Basic {R} Energy | attach:Basic {R} Energy | end
   · PLAY Ultra Ball                                    [policy]
-  · DISCARD: PICK Neo Upper Energy                     [policy]
-  · DISCARD: PICK Ultra Ball                           [policy]
+  · DISCARD: PICK Boss’s Orders                        [policy]
+  · DISCARD: PICK Boss’s Orders                        [policy]
   · TO_HAND: PICK Dreepy                               [policy]
+    avail  attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | *play:Dreepy | end
   · PLAY Dreepy                                        [policy]
-  · RETREAT Latias                                     [policy]
-  · SWITCH: PICK Dreepy                                [policy]
+    avail  *attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | end
+  · ATTACH Basic {R} Energy → Dreepy (active)          [policy]
+    avail  retreat:Dreepy | *end
   · END TURN                                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
 
 ── my turn 3 (engine turn 3) ──
-  hand  Lillie's Determination, Dragapult ex, Dusclops, Duskull
-  me    ACT Dreepy 70/70 e0 · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0
-        prizes 6 · deck 44
-  opp   ACT Cinderace 160/160 e0 · BENCH Relicanth 100/100 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 6 · hand 7
-  · PLAY Lillie's Determination                        [policy]
-  · EVOLVE → Drakloak                                  [policy]
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Duskull                              [policy]
-  · PLAY Poké Pad                                      [policy]
-  · TO_HAND: PICK Dreepy                               [policy]
-  · PLAY Dreepy                                        [policy]
-  · PLAY Poké Pad                                      [policy]
-  · TO_HAND: PICK Dreepy                               [policy]
-  · PLAY Dreepy                                        [policy]
-  · PLAY Fezandipiti ex                                [policy]
+  hand  Night Stretcher, Basic {R} Energy, Basic {D} Energy
+  me    ACT Dreepy 20/70 e1[{R}] · BENCH Budew 30/30 e0, Dreepy 70/70 e0
+        prizes 6 · deck 43
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
+        prizes 6 · hand 2
+    avail  attach:Basic {R} Energy | attach:Basic {R} Energy | *attach:Basic {R} Energy | attach:Basic {D} Energy | attach:Basic {D} Energy | attach:Basic {D} Energy | retreat:Dreepy | end
+  · ATTACH Basic {R} Energy → Dreepy (bench 1)         [policy]
+    avail  retreat:Dreepy | *end
   · END TURN                                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
 
-── my turn 4 (engine turn 5) ──
-  hand  Dragapult ex, Lillie's Determination, Rare Candy, Dragapult ex, Duskull, Rare Candy
-  me    ACT Drakloak 40/90 e0 · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Dreepy 70/70 e0, Dreepy 70/70 e0, Fezandipiti ex 210/210 e0
-        prizes 6 · deck 35
-  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Relicanth 100/100 e0, Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 6 · hand 7
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Energy Search                        [policy]
-  · EVOLVE → Dragapult ex                              [policy]
-  · PLAY Lillie's Determination                        [policy]
-  · EVOLVE → Drakloak                                  [policy]
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Basic {D} Energy                     [policy]
-  · ATTACH Basic {D} Energy → Dragapult ex (active)    [policy]
-  · PLAY Crushing Hammer                               [policy]
-  · ATTACK Dragapult ex (attackId 153)                 [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+── my turn 4 (engine turn 4) ──
+  hand  Night Stretcher, Basic {D} Energy
+  me    ACT — · BENCH Budew 30/30 e0, Dreepy 70/70 e1[{R}]
+        prizes 6 · deck 43
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 5 · hand 2
+  · TO_ACTIVE: PICK Budew                              [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
 
-── my turn 5 (engine turn 7) ──
-  hand  Lillie's Determination, Bloodmoon Ursaluna ex, Rare Candy, Pokégear 3.0, Munkidori, Hilda, Drakloak
-  me    ACT Dragapult ex 50/320 e1[{D}] · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Drakloak 90/90 e0, Dreepy 70/70 e0, Fezandipiti ex 210/210 e0
-        prizes 6 · deck 29
-  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Relicanth 100/100 e0, Cinderace 90/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 6 · hand 6
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Dragapult ex                         [policy]
-  · EVOLVE → Drakloak                                  [policy]
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Hilda                                [policy]
-  · EVOLVE → Dragapult ex                              [policy]
-  · PLAY Lillie's Determination                        [policy]
-  · PLAY Poké Pad                                      [policy]
-  · TO_HAND: PICK Drakloak                             [policy]
-  · PLAY Pokégear 3.0                                  [policy]
-  · ATTACK Dragapult ex (attackId 153)                 [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
-
-── my turn 6 (engine turn 8) ──
-  hand  Bloodmoon Ursaluna ex, Hilda, Buddy-Buddy Poffin, Duskull, Boss’s Orders, Buddy-Buddy Poffin, Drakloak
-  me    ACT — · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Dragapult ex 320/320 e0, Drakloak 90/90 e0, Fezandipiti ex 210/210 e0
-        prizes 6 · deck 24
-  opp   ACT Archaludon ex 260/300 e3[{M}{M}{M}] · BENCH Relicanth 100/100 e0, Cinderace 90/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 4 · hand 9
-  · TO_ACTIVE: PICK Dragapult ex                       [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
-
-── my turn 7 (engine turn 9) ──
-  hand  Bloodmoon Ursaluna ex, Hilda, Buddy-Buddy Poffin, Duskull, Boss’s Orders, Buddy-Buddy Poffin, Drakloak, Pokégear 3.0
-  me    ACT Dragapult ex 320/320 e0 · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Drakloak 90/90 e0, Fezandipiti ex 210/210 e0
-        prizes 6 · deck 23
-  opp   ACT Archaludon ex 260/300 e3[{M}{M}{M}] · BENCH Relicanth 100/100 e0, Cinderace 90/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 4 · hand 9
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Rare Candy                           [policy]
-  · PLAY Boss’s Orders                                 [policy]
-  · SWITCH: PICK Relicanth                             [policy]
-  · PLAY Buddy-Buddy Poffin                            [policy]
-  · TO_BENCH: PICK Duskull                             [policy]
-  · ABILITY Fezandipiti ex                             [policy]
-  · ATTACH Basic {R} Energy → Dragapult ex (active)    [policy]
-  · PLAY Pokégear 3.0                                  [policy]
-  · TO_HAND: PICK Lillie's Determination               [policy]
-  · ATTACK Dragapult ex (attackId 153)                 [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
-
-── my turn 8 (engine turn 11) ──
-  hand  Bloodmoon Ursaluna ex, Hilda, Duskull, Buddy-Buddy Poffin, Drakloak, Rare Candy, Hilda, Energy Search, Lillie's Determination, Night Stretcher
-  me    ACT Dragapult ex 320/320 e1[{R}] · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Drakloak 90/90 e0, Fezandipiti ex 210/210 e0, Duskull 60/60 e0
-        prizes 6 · deck 16
-  opp   ACT Relicanth 30/100 e0 · BENCH Archaludon ex 260/300 e3[{M}{M}{M}], Cinderace 90/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 4 · hand 8
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Basic {P} Energy                     [policy]
-  · ATTACH Basic {P} Energy → Dragapult ex (active)    [policy]
+── my turn 5 (engine turn 5) ──
+  hand  Night Stretcher, Basic {D} Energy, Dragapult ex
+  me    ACT Budew 30/30 e0 · BENCH Dreepy 70/70 e1[{R}]
+        prizes 6 · deck 42
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 5 · hand 2
+    avail  *play:Night Stretcher | attach:Basic {D} Energy | attach:Basic {D} Energy | attack:Budew | retreat:Budew | end
   · PLAY Night Stretcher                               [policy]
   · TO_HAND: PICK Dreepy                               [policy]
-  · PLAY Lillie's Determination                        [policy]
-  · EVOLVE → Dusclops                                  [policy]
-  · ATTACK Dragapult ex (attackId 154)                 [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · TO_HAND: PICK ?                                    [policy]
+    avail  attach:Basic {D} Energy | attach:Basic {D} Energy | *play:Dreepy | attack:Budew | retreat:Budew | end
+  · PLAY Dreepy                                        [policy]
+    avail  attach:Basic {D} Energy | attach:Basic {D} Energy | *attach:Basic {D} Energy | attack:Budew | retreat:Budew | end
+  · ATTACH Basic {D} Energy → Dreepy (bench 1)         [policy]
+    avail  *attack:Budew | retreat:Budew | end
+  · ATTACK Budew (attackId 323)                        [policy]
   turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
 
-── my turn 9 (engine turn 13) ──
-  hand  Basic {R} Energy, Munkidori, Basic {R} Energy, Basic {P} Energy, Dusclops, Dusknoir, Duskull, Dreepy, Basic {P} Energy
-  me    ACT Dragapult ex 100/320 e2[{R}{P}] · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Drakloak 90/90 e0, Fezandipiti ex 210/210 e0, Dusclops 90/90 e0
-        prizes 5 · deck 15
-  opp   ACT Archaludon ex 380/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 90/160 e1[{M}], Archaludon ex 300/300 e3[{M}{M}{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 4 · hand 6
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Dreepy                               [policy]
-  · EVOLVE → Dusknoir                                  [policy]
-  · ATTACH Basic {R} Energy → Dusknoir (bench 4)       [policy]
-  · ATTACK Dragapult ex (attackId 154)                 [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 4
+── my turn 6 (engine turn 6) ──
+  hand  Dragapult ex
+  me    ACT — · BENCH Dreepy 70/70 e1[{R}], Dreepy 70/70 e1[{D}]
+        prizes 6 · deck 42
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 4 · hand 4
+  · TO_ACTIVE: PICK Dreepy                             [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
-── my turn 10 (engine turn 14) ──
-  hand  Munkidori, Basic {R} Energy, Basic {P} Energy, Dusclops, Duskull, Dreepy, Basic {P} Energy, Dreepy
-  me    ACT — · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Drakloak 90/90 e0, Fezandipiti ex 210/210 e0, Dusknoir 160/160 e1[{R}]
-        prizes 5 · deck 14
-  opp   ACT Archaludon ex 290/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 30/160 e1[{M}], Archaludon ex 300/300 e3[{M}{M}{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 2 · hand 8
-  · TO_ACTIVE: PICK Dusknoir                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 3   (no attach target offered)
-
-── my turn 11 (engine turn 15) ──
-  hand  Munkidori, Basic {R} Energy, Basic {P} Energy, Dusclops, Duskull, Dreepy, Basic {P} Energy, Dreepy, Bloodmoon Ursaluna ex
-  me    ACT Dusknoir 160/160 e1[{R}] · BENCH Meowth ex 170/170 e0, Latias ex 210/210 e0, Drakloak 90/90 e0, Fezandipiti ex 210/210 e0
-        prizes 5 · deck 13
-  opp   ACT Archaludon ex 290/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 30/160 e1[{M}], Archaludon ex 300/300 e3[{M}{M}{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 2 · hand 8
-  · PLAY Dreepy                                        [policy]
-  · ATTACH Basic {R} Energy → Dusknoir (active)        [policy]
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Hilda                                [policy]
+── my turn 7 (engine turn 7) ──
+  hand  Dragapult ex, Hilda
+  me    ACT Dreepy 70/70 e1[{R}] · BENCH Dreepy 70/70 e1[{D}]
+        prizes 6 · deck 41
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 4 · hand 4
   · PLAY Hilda                                         [policy]
   · TO_HAND: PICK Drakloak                             [policy]
-  · ABILITY Fezandipiti ex                             [policy]
-  · EVOLVE → Dragapult ex                              [policy]
-  · PLAY Pokégear 3.0                                  [policy]
-  · TO_HAND: PICK Hilda                                [policy]
-  · ABILITY Dusknoir                                   [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · TO_ACTIVE: PICK Dragapult ex                       [policy]
-  · PLAY Dreepy                                        [policy]
-  · END TURN                                           [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 3
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · EVOLVE → Drakloak                                  [policy]
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Drakloak                             [policy]
+  · EVOLVE → Drakloak                                  [policy]
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Rare Candy                           [policy]
+  · ATTACH Basic {P} Energy → Drakloak (active)        [policy]
+  · ATTACK Drakloak (attackId 152)                     [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
 
-── RESULT: LOSS at engine turn 15 ──
-  attach/turn 0.45 · lost to retreat 0 · retreats 1 · attacks 5 · damage placements 13
-  net energy on board 5 · evolutions 8 · abilities 12 · plays 22
+── my turn 8 (engine turn 8) ──
+  hand  Dragapult ex, Rare Candy
+  me    ACT — · BENCH Drakloak 90/90 e1[{D}]
+        prizes 6 · deck 37
+  opp   ACT Archaludon ex 330/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 6
+  · TO_ACTIVE: PICK Drakloak                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 9 (engine turn 9) ──
+  hand  Dragapult ex, Rare Candy, Bloodmoon Ursaluna ex
+  me    ACT Drakloak 90/90 e1[{D}] · BENCH —
+        prizes 6 · deck 36
+  opp   ACT Archaludon ex 330/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 6
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Pokégear 3.0                         [policy]
+  · EVOLVE → Dragapult ex                              [policy]
+  · PLAY Bloodmoon Ursaluna ex                         [policy]
+  · PLAY Pokégear 3.0                                  [policy]
+  · ATTACK Dragapult ex (attackId 153)                 [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 10 (engine turn 11) ──
+  hand  Rare Candy, Dreepy
+  me    ACT Dragapult ex 100/320 e1[{D}] · BENCH Bloodmoon Ursaluna ex 260/260 e0
+        prizes 6 · deck 34
+  opp   ACT Archaludon ex 260/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 8
+  · PLAY Dreepy                                        [policy]
+  · ATTACK Dragapult ex (attackId 153)                 [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 11 (engine turn 12) ──
+  hand  Rare Candy
+  me    ACT — · BENCH Bloodmoon Ursaluna ex 260/260 e0, Dreepy 70/70 e0
+        prizes 6 · deck 34
+  opp   ACT Archaludon ex 270/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 1 · hand 10
+  · TO_ACTIVE: PICK Dreepy                             [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 12 (engine turn 13) ──
+  hand  Rare Candy, Basic {P} Energy
+  me    ACT Dreepy 70/70 e0 · BENCH Bloodmoon Ursaluna ex 260/260 e0
+        prizes 6 · deck 33
+  opp   ACT Archaludon ex 270/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 1 · hand 10
+  · ATTACH Basic {P} Energy → Dreepy (active)          [policy]
+  · ATTACK Dreepy (attackId 150)                       [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── RESULT: LOSS at engine turn 13 ──
+  attach/turn 0.42 · lost to retreat 0 · retreats 0 · attacks 5 · damage placements 0
+  net energy on board 5 · evolutions 3 · abilities 3 · plays 9
+  SETUP RACE  Dragapult online: my turn 10  (target 2)  ·  first Phantom Dive: NEVER  (target 3)
+  ENGINE      Dreepy line on turn 1: 1 (target 3) · Phantom Dives 0 · Recon Directive used 3x (0.25 per turn)
   · 1 turn(s) held energy with no legal attach target offered
-  ⚠ 1 turn(s) ended with energy in hand and no attachment made
+  ⚠ never placed a damage counter (no Phantom Dive)
 
 ══ GAME 69 ══  seat 0 · going first
 
@@ -203,326 +169,307 @@ DRAGAPULT BATTLE LOG — paste this whole file
         prizes 0 · hand 0
   · GO FIRST                                           [policy]
   · SETUP ACTIVE Dreepy                                [policy]
-  · DRAW_COUNT: 0                                      [policy]
-  · SETUP BENCH Duskull                                [policy]
+  · SETUP BENCH Dreepy                                 [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
 ── my turn 2 (engine turn 1) ──
-  hand  Energy Search, Hilda, Ultra Ball, Boss’s Orders, Lillie's Determination, Drakloak
-  me    ACT Dreepy 70/70 e0 · BENCH Duskull 60/60 e0
+  hand  Boss’s Orders, Drakloak, Buddy-Buddy Poffin, Basic {D} Energy, Dreepy, Dusclops
+  me    ACT Dreepy 70/70 e0 · BENCH Dreepy 70/70 e0
         prizes 6 · deck 46
   opp   ACT Cinderace 160/160 e0 · BENCH —
-        prizes 6 · hand 6
-  · PLAY Ultra Ball                                    [policy]
-  · DISCARD: PICK Energy Search                        [policy]
-  · DISCARD: PICK Boss’s Orders                        [policy]
-  · TO_HAND: PICK Budew                                [policy]
-  · PLAY Budew                                         [policy]
+        prizes 6 · hand 7
+    avail  play:Buddy-Buddy Poffin | attach:Basic {D} Energy | attach:Basic {D} Energy | *play:Dreepy | end
+  · PLAY Dreepy                                        [policy]
+    avail  *play:Buddy-Buddy Poffin | attach:Basic {D} Energy | attach:Basic {D} Energy | attach:Basic {D} Energy | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Budew                               [policy]
+    avail  *attach:Basic {D} Energy | attach:Basic {D} Energy | attach:Basic {D} Energy | attach:Basic {D} Energy | end
+  · ATTACH Basic {D} Energy → Dreepy (active)          [policy]
+    avail  retreat:Dreepy | *end
   · END TURN                                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
 
 ── my turn 3 (engine turn 3) ──
-  hand  Hilda, Lillie's Determination, Drakloak, Budew
-  me    ACT Dreepy 20/70 e0 · BENCH Duskull 60/60 e0, Budew 30/30 e0
+  hand  Boss’s Orders, Drakloak, Dusclops, Latias ex
+  me    ACT Dreepy 20/70 e1[{D}] · BENCH Dreepy 70/70 e0, Dreepy 70/70 e0, Budew 30/30 e0
         prizes 6 · deck 44
-  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
-        prizes 6 · hand 8
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}]
+        prizes 6 · hand 7
+    avail  play:Boss’s Orders | *evolve:Drakloak | evolve:Drakloak | evolve:Drakloak | play:Latias ex | retreat:Dreepy | end
   · EVOLVE → Drakloak                                  [policy]
+    avail  play:Boss’s Orders | play:Latias ex | *ability:Drakloak | retreat:Drakloak | end
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Ultra Ball                           [policy]
-  · PLAY Lillie's Determination                        [policy]
-  · PLAY Dreepy                                        [policy]
-  · EVOLVE → Dusclops                                  [policy]
-  · PLAY Duskull                                       [policy]
+  · TO_HAND: PICK Crispin                              [policy]
+    avail  play:Boss’s Orders | play:Latias ex | *play:Crispin | retreat:Drakloak | end
+  · PLAY Crispin                                       [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · ATTACH_TO: PICK Basic {R} Energy                   [policy]
+  · ATTACH_FROM: PICK Drakloak                         [policy]
+    avail  play:Latias ex | attach:Basic {P} Energy | *attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | retreat:Drakloak | end
+  · ATTACH Basic {P} Energy → Dreepy (bench 0)         [policy]
+    avail  *play:Latias ex | retreat:Drakloak | end
   · PLAY Latias ex                                     [policy]
-  · ABILITY Dusclops                                   [policy]
-  · DAMAGE → Cinderace (theirs)                        [policy]
-  · PLAY Night Stretcher                               [policy]
-  · TO_HAND: PICK Duskull                              [policy]
-  · PLAY Duskull                                       [policy]
+    avail  retreat:Drakloak | *end
   · END TURN                                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
 
 ── my turn 4 (engine turn 4) ──
-  hand  Hilda, Hilda, Rare Candy
-  me    ACT — · BENCH Budew 30/30 e0, Dreepy 70/70 e0, Duskull 60/60 e0, Latias ex 210/210 e0, Duskull 60/60 e0
-        prizes 6 · deck 38
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 110/160 e1[{M}], Duraludon 130/130 e2[{M}{M}], Duraludon 130/130 e0
-        prizes 4 · hand 8
+  hand  Boss’s Orders, Dusclops
+  me    ACT — · BENCH Dreepy 70/70 e1[{P}], Dreepy 70/70 e0, Budew 30/30 e0, Latias ex 210/210 e0
+        prizes 6 · deck 41
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}]
+        prizes 5 · hand 7
   · TO_ACTIVE: PICK Budew                              [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
 ── my turn 5 (engine turn 5) ──
-  hand  Hilda, Hilda, Rare Candy, Fezandipiti ex
-  me    ACT Budew 30/30 e0 · BENCH Dreepy 70/70 e0, Duskull 60/60 e0, Latias ex 210/210 e0, Duskull 60/60 e0
-        prizes 6 · deck 37
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 110/160 e1[{M}], Duraludon 130/130 e2[{M}{M}], Duraludon 130/130 e0
-        prizes 4 · hand 8
-  · PLAY Hilda                                         [policy]
-  · TO_HAND: PICK Drakloak                             [policy]
-  · TO_HAND: PICK Basic {D} Energy                     [policy]
+  hand  Boss’s Orders, Dusclops, Drakloak
+  me    ACT Budew 30/30 e0 · BENCH Dreepy 70/70 e1[{P}], Dreepy 70/70 e0, Latias ex 210/210 e0
+        prizes 6 · deck 40
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}]
+        prizes 5 · hand 7
+    avail  play:Boss’s Orders | *evolve:Drakloak | evolve:Drakloak | attack:Budew | retreat:Budew | end
   · EVOLVE → Drakloak                                  [policy]
+    avail  play:Boss’s Orders | *ability:Drakloak | attack:Budew | retreat:Budew | end
   · ABILITY Drakloak                                   [policy]
   · TO_HAND: PICK Ultra Ball                           [policy]
+    avail  play:Boss’s Orders | *play:Ultra Ball | attack:Budew | retreat:Budew | end
   · PLAY Ultra Ball                                    [policy]
-  · DISCARD: PICK Basic {D} Energy                     [policy]
-  · DISCARD: PICK Rare Candy                           [policy]
-  · TO_HAND: PICK Dreepy                               [policy]
-  · PLAY Dreepy                                        [policy]
+  · DISCARD: PICK Boss’s Orders                        [policy]
+  · DISCARD: PICK Dusclops                             [policy]
+  · TO_HAND: PICK Dragapult ex                         [policy]
+    avail  *attack:Budew | retreat:Budew | end
   · ATTACK Budew (attackId 323)                        [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
 ── my turn 6 (engine turn 6) ──
-  hand  Hilda, Fezandipiti ex
-  me    ACT — · BENCH Drakloak 90/90 e0, Duskull 60/60 e0, Latias ex 210/210 e0, Duskull 60/60 e0, Dreepy 70/70 e0
-        prizes 6 · deck 33
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 110/160 e1[{M}], Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
-        prizes 3 · hand 8
-  · TO_ACTIVE: PICK Duskull                            [policy]
+  hand  Dragapult ex
+  me    ACT — · BENCH Drakloak 90/90 e1[{P}], Dreepy 70/70 e0, Latias ex 210/210 e0
+        prizes 6 · deck 38
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}]
+        prizes 4 · hand 9
+  · TO_ACTIVE: PICK Drakloak                           [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
 ── my turn 7 (engine turn 7) ──
-  hand  Hilda, Fezandipiti ex, Buddy-Buddy Poffin
-  me    ACT Duskull 60/60 e0 · BENCH Drakloak 90/90 e0, Latias ex 210/210 e0, Duskull 60/60 e0, Dreepy 70/70 e0
-        prizes 6 · deck 32
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 110/160 e1[{M}], Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
-        prizes 3 · hand 8
+  hand  Dragapult ex, Energy Search
+  me    ACT Drakloak 90/90 e1[{P}] · BENCH Dreepy 70/70 e0, Latias ex 210/210 e0
+        prizes 6 · deck 37
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}]
+        prizes 4 · hand 9
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Dusknoir                             [policy]
-  · PLAY Buddy-Buddy Poffin                            [policy]
-  · TO_BENCH: PICK Budew                               [policy]
-  · PLAY Hilda                                         [policy]
-  · TO_HAND: PICK Drakloak                             [policy]
-  · TO_HAND: PICK Basic {P} Energy                     [policy]
-  · EVOLVE → Drakloak                                  [policy]
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Basic {P} Energy                     [policy]
-  · ATTACH Basic {P} Energy → Drakloak (bench 0)       [policy]
-  · RETREAT Duskull                                    [policy]
-  · SWITCH: PICK Budew                                 [policy]
-  · ATTACK Budew (attackId 323)                        [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+  · TO_HAND: PICK Budew                                [policy]
+  · EVOLVE → Dragapult ex                              [policy]
+  · PLAY Budew                                         [policy]
+  · ATTACK Dragapult ex (attackId 153)                 [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
 
 ── my turn 8 (engine turn 8) ──
-  hand  Fezandipiti ex, Dusknoir, Basic {P} Energy
-  me    ACT — · BENCH Drakloak 90/90 e1[{P}], Latias ex 210/210 e0, Duskull 60/60 e0, Drakloak 90/90 e0, Duskull 60/60 e0
-        prizes 6 · deck 27
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 110/160 e1[{M}], Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
-        prizes 2 · hand 10
-  · TO_ACTIVE: PICK Drakloak                           [policy]
+  hand  Energy Search
+  me    ACT — · BENCH Dreepy 70/70 e0, Dragapult ex 320/320 e1[{P}], Budew 30/30 e0
+        prizes 6 · deck 36
+  opp   ACT Archaludon ex 260/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 2 · hand 6
+  · TO_ACTIVE: PICK Budew                              [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
 
 ── my turn 9 (engine turn 9) ──
-  hand  Fezandipiti ex, Dusknoir, Basic {P} Energy, Poké Pad
-  me    ACT Drakloak 90/90 e1[{P}] · BENCH Latias ex 210/210 e0, Duskull 60/60 e0, Drakloak 90/90 e0, Duskull 60/60 e0
-        prizes 6 · deck 26
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 110/160 e1[{M}], Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
-        prizes 2 · hand 10
+  hand  Energy Search, Pokégear 3.0
+  me    ACT Budew 30/30 e0 · BENCH Dreepy 70/70 e0, Dragapult ex 320/320 e1[{P}]
+        prizes 6 · deck 35
+  opp   ACT Archaludon ex 260/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 2 · hand 6
+  · PLAY Pokégear 3.0                                  [policy]
+  · TO_HAND: PICK Hilda                                [policy]
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Drakloak                             [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · ATTACH Basic {P} Energy → Dragapult ex (bench 1)   [policy]
+  · EVOLVE → Drakloak                                  [policy]
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Dusclops                             [policy]
-  · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Pokégear 3.0                         [policy]
-  · EVOLVE → Dusclops                                  [policy]
+  · TO_HAND: PICK Poké Pad                             [policy]
   · PLAY Poké Pad                                      [policy]
   · TO_HAND: PICK Drakloak                             [policy]
-  · ATTACH Basic {P} Energy → Drakloak (bench 2)       [policy]
-  · PLAY Pokégear 3.0                                  [policy]
-  · PLAY Fezandipiti ex                                [policy]
-  · ABILITY Fezandipiti ex                             [policy]
-  · PLAY Rare Candy                                    [policy]
-  · EVOLVE → Dusknoir                                  [policy]
-  · PLAY Pokégear 3.0                                  [policy]
-  · ABILITY Dusclops                                   [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · ABILITY Dusknoir                                   [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · RETREAT Budew                                      [policy]
+  · SWITCH: PICK Dragapult ex                          [policy]
+  · ATTACK Dragapult ex (attackId 153)                 [policy]
   turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
 
-── RESULT: LOSS at engine turn 9 ──
-  attach/turn 0.22 · lost to retreat 0 · retreats 1 · attacks 2 · damage placements 3
-  net energy on board 2 · evolutions 6 · abilities 10 · plays 18
-  · 2 turn(s) held energy with no legal attach target offered
+── my turn 10 (engine turn 11) ──
+  hand  Energy Search, Drakloak, Boss’s Orders
+  me    ACT Dragapult ex 100/320 e2[{P}{P}] · BENCH Drakloak 90/90 e0, Budew 30/30 e0
+        prizes 6 · deck 29
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Relicanth 100/100 e0
+        prizes 2 · hand 4
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Dragapult ex                         [policy]
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Cinderace                             [policy]
+  · EVOLVE → Dragapult ex                              [policy]
+  · ATTACK Dragapult ex (attackId 153)                 [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── RESULT: LOSS at engine turn 11 ──
+  attach/turn 0.30 · lost to retreat 0 · retreats 1 · attacks 4 · damage placements 0
+  net energy on board 3 · evolutions 5 · abilities 5 · plays 10
+  SETUP RACE  Dragapult online: my turn 8  (target 2)  ·  first Phantom Dive: NEVER  (target 3)
+  ENGINE      Dreepy line on turn 1: 2 (target 3) · Phantom Dives 0 · Recon Directive used 5x (0.50 per turn)
+  · 3 turn(s) held energy with no legal attach target offered
+  ⚠ never placed a damage counter (no Phantom Dive)
 
 ══ GAME 70 ══  seat 1 · going first
 
 ── my turn 1 (engine turn 0) ──
-  hand  Rare Candy, Ultra Ball, Budew, Pokégear 3.0, Hilda, Buddy-Buddy Poffin, Munkidori
+  hand  Hilda, Meowth ex, Poké Pad, Crispin, Dusclops, Basic {R} Energy, Bloodmoon Ursaluna ex
   me    ACT — · BENCH —
         prizes 0 · deck 53
   opp   ACT — · BENCH —
         prizes 0 · hand 7
-  · SETUP ACTIVE Budew                                 [policy]
-  · SETUP BENCH Munkidori                              [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+  · SETUP ACTIVE Meowth ex                             [policy]
+  · DRAW_COUNT: 0                                      [policy]
+  · SETUP BENCH Bloodmoon Ursaluna ex                  [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1
 
 ── my turn 2 (engine turn 1) ──
-  hand  Rare Candy, Ultra Ball, Pokégear 3.0, Hilda, Buddy-Buddy Poffin, Poké Pad
-  me    ACT Budew 30/30 e0 · BENCH Munkidori 110/110 e0
+  hand  Hilda, Poké Pad, Crispin, Dusclops, Basic {R} Energy, Crispin
+  me    ACT Meowth ex 170/170 e0 · BENCH Bloodmoon Ursaluna ex 260/260 e0
         prizes 6 · deck 46
-  opp   ACT Duraludon 130/130 e0 · BENCH —
+  opp   ACT Relicanth 100/100 e0 · BENCH —
         prizes 6 · hand 6
-  · PLAY Ultra Ball                                    [policy]
-  · DISCARD: PICK Buddy-Buddy Poffin                   [policy]
-  · DISCARD: PICK Poké Pad                             [policy]
+    avail  *play:Poké Pad | attach:Basic {R} Energy | attach:Basic {R} Energy | end
+  · PLAY Poké Pad                                      [policy]
   · TO_HAND: PICK Dreepy                               [policy]
+    avail  attach:Basic {R} Energy | attach:Basic {R} Energy | *play:Dreepy | end
   · PLAY Dreepy                                        [policy]
-  · PLAY Pokégear 3.0                                  [policy]
-  · RETREAT Budew                                      [policy]
-  · SWITCH: PICK Munkidori                             [policy]
+    avail  attach:Basic {R} Energy | attach:Basic {R} Energy | *attach:Basic {R} Energy | end
+  · ATTACH Basic {R} Energy → Dreepy (bench 1)         [policy]
+    avail  *end
   · END TURN                                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
 
 ── my turn 3 (engine turn 3) ──
-  hand  Rare Candy, Hilda, Dragapult ex
-  me    ACT Munkidori 110/110 e0 · BENCH Budew 30/30 e0, Dreepy 70/70 e0
+  hand  Hilda, Crispin, Dusclops, Crispin, Buddy-Buddy Poffin
+  me    ACT Meowth ex 170/170 e0 · BENCH Bloodmoon Ursaluna ex 260/260 e0, Dreepy 70/70 e1[{R}]
         prizes 6 · deck 44
-  opp   ACT Duraludon 130/130 e0 · BENCH Duraludon 130/130 e0
-        prizes 6 · hand 5
-  · PLAY Rare Candy                                    [policy]
-  · EVOLVE → Dragapult ex                              [policy]
-  · PLAY Hilda                                         [policy]
-  · TO_HAND: PICK Drakloak                             [policy]
-  · TO_HAND: PICK Basic {R} Energy                     [policy]
-  · ATTACH Basic {R} Energy → Dragapult ex (bench 1)   [policy]
+  opp   ACT Relicanth 100/100 e1[{M}] · BENCH Duraludon 130/130 e0
+        prizes 6 · hand 3
+    avail  play:Hilda | play:Crispin | play:Crispin | *play:Buddy-Buddy Poffin | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Budew                               [policy]
+    avail  play:Hilda | *play:Crispin | play:Crispin | end
+  · PLAY Crispin                                       [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · ATTACH_TO: PICK Basic {R} Energy                   [policy]
+  · ATTACH_FROM: PICK Meowth ex                        [policy]
+    avail  attach:Basic {P} Energy | attach:Basic {P} Energy | *attach:Basic {P} Energy | attach:Basic {P} Energy | retreat:Meowth ex | end
+  · ATTACH Basic {P} Energy → Dreepy (bench 1)         [policy]
+    avail  retreat:Meowth ex | *end
   · END TURN                                           [policy]
   turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
 
 ── my turn 4 (engine turn 5) ──
-  hand  Drakloak, Night Stretcher
-  me    ACT Munkidori 110/110 e0 · BENCH Budew 30/30 e0, Dragapult ex 320/320 e1[{R}]
-        prizes 6 · deck 41
-  opp   ACT Archaludon ex 300/300 e2[{M}{M}] · BENCH Duraludon 130/130 e0
-        prizes 6 · hand 5
+  hand  Hilda, Dusclops, Crispin, Poké Pad
+  me    ACT Meowth ex 170/170 e1[{R}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Dreepy 70/70 e2[{R}{P}], Budew 30/30 e0
+        prizes 6 · deck 40
+  opp   ACT Relicanth 100/100 e1[{M}] · BENCH Duraludon 130/130 e0
+        prizes 6 · hand 4
+    avail  play:Hilda | play:Crispin | *play:Poké Pad | retreat:Meowth ex | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dreepy                               [policy]
+    avail  play:Hilda | play:Crispin | *play:Dreepy | retreat:Meowth ex | end
+  · PLAY Dreepy                                        [policy]
+    avail  play:Hilda | *play:Crispin | retreat:Meowth ex | end
+  · PLAY Crispin                                       [policy]
+  · TO_HAND: PICK Basic {R} Energy                     [policy]
+  · ATTACH_TO: PICK Basic {D} Energy                   [policy]
+  · ATTACH_FROM: PICK Meowth ex                        [policy]
+    avail  attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | attach:Basic {R} Energy | *attach:Basic {R} Energy | retreat:Meowth ex | end
+  · ATTACH Basic {R} Energy → Dreepy (bench 3)         [policy]
+    avail  retreat:Meowth ex | *end
   · END TURN                                           [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
 
 ── my turn 5 (engine turn 7) ──
-  hand  Drakloak, Night Stretcher, Buddy-Buddy Poffin
-  me    ACT Munkidori 110/110 e0 · BENCH Budew 30/30 e0, Dragapult ex 320/320 e1[{R}]
-        prizes 6 · deck 40
-  opp   ACT Archaludon ex 300/300 e2[{M}{M}] · BENCH Duraludon 130/130 e0
-        prizes 6 · hand 6
-  · PLAY Buddy-Buddy Poffin                            [policy]
-  · TO_BENCH: PICK Dreepy                              [policy]
+  hand  Hilda, Dusclops, Lillie's Determination
+  me    ACT Meowth ex 170/170 e2[{R}{D}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Dreepy 70/70 e2[{R}{P}], Budew 30/30 e0, Dreepy 70/70 e1[{R}]
+        prizes 6 · deck 36
+  opp   ACT Relicanth 100/100 e1[{M}] · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 6 · hand 4
+  · PLAY Lillie's Determination                        [policy]
+  · PLAY Dreepy                                        [policy]
+  · EVOLVE → Drakloak                                  [policy]
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Rare Candy                           [policy]
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Dragapult ex                              [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dreepy                               [policy]
+  · PLAY Ultra Ball                                    [policy]
+  · DISCARD: PICK Buddy-Buddy Poffin                   [policy]
+  · DISCARD: PICK Duskull                              [policy]
+  · TO_HAND: PICK Drakloak                             [policy]
+  · PLAY Ultra Ball                                    [policy]
+  · DISCARD: PICK Dreepy                               [policy]
+  · DISCARD: PICK Drakloak                             [policy]
+  · TO_HAND: PICK Drakloak                             [policy]
   · END TURN                                           [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
 ── my turn 6 (engine turn 9) ──
-  hand  Drakloak, Night Stretcher, Budew
-  me    ACT Munkidori 110/110 e0 · BENCH Budew 30/30 e0, Dragapult ex 320/320 e1[{R}], Dreepy 70/70 e0
-        prizes 6 · deck 38
-  opp   ACT Archaludon ex 300/300 e2[{M}{M}] · BENCH Duraludon 130/130 e0
-        prizes 6 · hand 7
-  · EVOLVE → Drakloak                                  [policy]
+  hand  Drakloak, Buddy-Buddy Poffin
+  me    ACT Meowth ex 170/170 e2[{R}{D}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Drakloak 90/90 e2[{R}{P}], Budew 30/30 e0, Dragapult ex 320/320 e1[{R}], Dreepy 70/70 e0
+        prizes 6 · deck 25
+  opp   ACT Relicanth 100/100 e1[{M}] · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 6 · hand 5
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Dusclops                             [policy]
-  · PLAY Budew                                         [policy]
+  · TO_HAND: PICK Lillie's Determination               [policy]
+  · PLAY Lillie's Determination                        [policy]
+  · PLAY Pokégear 3.0                                  [policy]
+  · TO_HAND: PICK Boss’s Orders                        [policy]
+  · PLAY Energy Search                                 [policy]
   · END TURN                                           [policy]
   turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
 
-── my turn 7 (engine turn 10) ──
-  hand  Night Stretcher, Dusclops
-  me    ACT — · BENCH Budew 30/30 e0, Dragapult ex 320/320 e1[{R}], Drakloak 90/90 e0, Budew 30/30 e0
-        prizes 6 · deck 37
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 5 · hand 5
-  · TO_ACTIVE: PICK Budew                              [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
-
-── my turn 8 (engine turn 11) ──
-  hand  Night Stretcher, Dusclops, Energy Search
-  me    ACT Budew 30/30 e0 · BENCH Dragapult ex 320/320 e1[{R}], Drakloak 90/90 e0, Budew 30/30 e0
-        prizes 6 · deck 36
-  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0
-        prizes 5 · hand 5
+── my turn 7 (engine turn 11) ──
+  hand  Buddy-Buddy Poffin, Boss’s Orders, Latias ex, Dusknoir, Hilda, Duskull, Boss’s Orders, Buddy-Buddy Poffin
+  me    ACT Meowth ex 170/170 e2[{R}{D}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Drakloak 90/90 e2[{R}{P}], Budew 30/30 e0, Dragapult ex 320/320 e1[{R}], Dreepy 70/70 e0
+        prizes 6 · deck 16
+  opp   ACT Relicanth 100/100 e1[{M}] · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 6 · hand 5
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Dragapult ex                         [policy]
-  · PLAY Night Stretcher                               [policy]
-  · TO_HAND: PICK Munkidori                            [policy]
-  · EVOLVE → Dragapult ex                              [policy]
-  · PLAY Munkidori                                     [policy]
-  · PLAY Energy Search                                 [policy]
-  · TO_HAND: PICK Basic {P} Energy                     [policy]
-  · ATTACH Basic {P} Energy → Dragapult ex (bench 0)   [policy]
-  · RETREAT Budew                                      [policy]
-  · SWITCH: PICK Dragapult ex                          [policy]
-  · ATTACK Dragapult ex (attackId 154)                 [policy]
-  · DAMAGE → Duraludon (theirs)                        [policy]
-  · DAMAGE → Duraludon (theirs)                        [policy]
-  · DAMAGE → Duraludon (theirs)                        [policy]
-  · DAMAGE → Duraludon (theirs)                        [policy]
-  · DAMAGE → Duraludon (theirs)                        [policy]
-  · DAMAGE → Duraludon (theirs)                        [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
-
-── my turn 9 (engine turn 13) ──
-  hand  Dusclops, Poké Pad
-  me    ACT Dragapult ex 70/320 e2[{R}{P}] · BENCH Budew 30/30 e0, Dragapult ex 320/320 e0, Budew 30/30 e0, Munkidori 110/110 e0
-        prizes 6 · deck 33
-  opp   ACT Archaludon ex 230/400 e3[{M}{M}{M}] +1tool · BENCH Archaludon ex 240/300 e3[{M}{M}{M}], Duraludon 130/130 e0, Relicanth 100/100 e0
-        prizes 5 · hand 2
-  · PLAY Poké Pad                                      [policy]
-  · TO_HAND: PICK Dreepy                               [policy]
-  · PLAY Dreepy                                        [policy]
-  · ATTACK Dragapult ex (attackId 154)                 [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
-
-── my turn 10 (engine turn 14) ──
-  hand  Dusclops
-  me    ACT — · BENCH Budew 30/30 e0, Dragapult ex 320/320 e0, Budew 30/30 e0, Munkidori 110/110 e0, Dreepy 70/70 e0
-        prizes 6 · deck 32
-  opp   ACT Archaludon ex 60/400 e3[{M}{M}{M}] +1tool · BENCH Archaludon ex 180/300 e3[{M}{M}{M}], Duraludon 130/130 e0, Relicanth 100/100 e0
-        prizes 3 · hand 5
-  · TO_ACTIVE: PICK Budew                              [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
-
-── my turn 11 (engine turn 15) ──
-  hand  Dusclops, Hilda
-  me    ACT Budew 30/30 e0 · BENCH Dragapult ex 320/320 e0, Budew 30/30 e0, Munkidori 110/110 e0, Dreepy 70/70 e0
-        prizes 6 · deck 31
-  opp   ACT Archaludon ex 60/400 e3[{M}{M}{M}] +1tool · BENCH Archaludon ex 180/300 e3[{M}{M}{M}], Duraludon 130/130 e0, Relicanth 100/100 e0
-        prizes 3 · hand 5
+  · TO_HAND: PICK Rare Candy                           [policy]
   · PLAY Hilda                                         [policy]
   · TO_HAND: PICK Drakloak                             [policy]
   · TO_HAND: PICK Neo Upper Energy                     [policy]
+  · ATTACH Neo Upper Energy → Dragapult ex (bench 3)   [policy]
+  · RETREAT Meowth                                     [policy]
+  · DISCARD ENERGY Meowth ex  (retreat/attack cost)    [policy]  ⚠ ENERGY PAID
+  · SWITCH: PICK Dragapult ex                          [policy]
   · EVOLVE → Drakloak                                  [policy]
   · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Dusclops                             [policy]
+  · ATTACK Dragapult ex (attackId 154)                 [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 1 · net 0 · energy in hand at start 0
+
+── my turn 8 (engine turn 13) ──
+  hand  Buddy-Buddy Poffin, Boss’s Orders, Latias ex, Dusknoir, Duskull, Boss’s Orders, Buddy-Buddy Poffin, Rare Candy, Dusclops, Basic {P} Energy, Drakloak
+  me    ACT Dragapult ex 320/320 e3[{R}{RAINBOW}{RAINBOW}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Drakloak 90/90 e2[{R}{P}], Budew 30/30 e0, Meowth ex 170/170 e1[{D}], Drakloak 90/90 e0
+        prizes 5 · deck 11
+  opp   ACT Archaludon ex 340/400 e2[{M}{M}] +1tool · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 6 · hand 4
+  · ABILITY Drakloak                                   [policy]
   · TO_HAND: PICK Ultra Ball                           [policy]
-  · ATTACH Neo Upper Energy → Dragapult ex (bench 0)   [policy]
-  · RETREAT Budew                                      [policy]
-  · SWITCH: PICK Dragapult ex                          [policy]
-  · ATTACK Dragapult ex (attackId 154)                 [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · DAMAGE → Archaludon ex (theirs)                    [policy]
-  · TO_HAND: PICK ?                                    [policy]
-  · TO_HAND: PICK ?                                    [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
-
-── my turn 12 (engine turn 17) ──
-  hand  Dusclops, Ultra Ball, Duskull, Boss’s Orders, Fezandipiti ex
-  me    ACT Dragapult ex 60/320 e2[{RAINBOW}{RAINBOW}] · BENCH Budew 30/30 e0, Budew 30/30 e0, Munkidori 110/110 e0, Drakloak 90/90 e0
-        prizes 4 · deck 27
-  opp   ACT Archaludon ex 120/300 e3[{M}{M}{M}] · BENCH Archaludon ex 300/300 e2[{M}{M}], Relicanth 100/100 e0, Duraludon 130/130 e0
-        prizes 3 · hand 4
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Boss’s Orders                        [policy]
+  · TO_HAND: PICK Munkidori                            [policy]
   · PLAY Boss’s Orders                                 [policy]
-  · SWITCH: PICK Archaludon ex                         [policy]
-  · PLAY Ultra Ball                                    [policy]
-  · DISCARD: PICK Duskull                              [policy]
-  · DISCARD: PICK Boss’s Orders                        [policy]
-  · TO_HAND: PICK Dreepy                               [policy]
-  · PLAY Dreepy                                        [policy]
+  · SWITCH: PICK Duraludon                             [policy]
   · ATTACK Dragapult ex (attackId 154)                 [policy]
   · DAMAGE → Archaludon ex (theirs)                    [policy]
   · DAMAGE → Archaludon ex (theirs)                    [policy]
@@ -530,42 +477,129 @@ DRAGAPULT BATTLE LOG — paste this whole file
   · DAMAGE → Archaludon ex (theirs)                    [policy]
   · DAMAGE → Archaludon ex (theirs)                    [policy]
   · DAMAGE → Archaludon ex (theirs)                    [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
 
-── my turn 13 (engine turn 18) ──
-  hand  Dusclops, Fezandipiti ex
-  me    ACT — · BENCH Budew 30/30 e0, Budew 30/30 e0, Munkidori 110/110 e0, Drakloak 90/90 e0, Dreepy 70/70 e0
-        prizes 4 · deck 25
-  opp   ACT Archaludon ex 140/300 e3[{M}{M}{M}] · BENCH Archaludon ex 130/300 e0, Relicanth 100/100 e0, Duraludon 130/130 e0
-        prizes 1 · hand 6
-  · TO_ACTIVE: PICK Budew                              [policy]
-  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
-
-── my turn 14 (engine turn 19) ──
-  hand  Dusclops, Fezandipiti ex, Rare Candy
-  me    ACT Budew 30/30 e0 · BENCH Budew 30/30 e0, Munkidori 110/110 e0, Drakloak 90/90 e0, Dreepy 70/70 e0
-        prizes 4 · deck 24
-  opp   ACT Archaludon ex 140/300 e3[{M}{M}{M}] · BENCH Archaludon ex 130/300 e0, Relicanth 100/100 e0, Duraludon 130/130 e0
-        prizes 1 · hand 6
+── my turn 9 (engine turn 15) ──
+  hand  Buddy-Buddy Poffin, Latias ex, Dusknoir, Duskull, Boss’s Orders, Buddy-Buddy Poffin, Rare Candy, Dusclops, Basic {P} Energy, Drakloak, Ultra Ball, Munkidori, Dragapult ex, Rare Candy
+  me    ACT Dragapult ex 320/320 e3[{R}{RAINBOW}{RAINBOW}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Drakloak 90/90 e2[{R}{P}], Budew 30/30 e0, Meowth ex 170/170 e1[{D}], Drakloak 90/90 e0
+        prizes 4 · deck 8
+  opp   ACT Archaludon ex 280/400 e2[{M}{M}] +1tool · BENCH Duraludon 130/130 e0
+        prizes 6 · hand 5
   · ABILITY Drakloak                                   [policy]
-  · TO_HAND: PICK Basic {R} Energy                     [policy]
-  · ATTACH Basic {R} Energy → Drakloak (bench 2)       [policy]
-  · ATTACK Budew (attackId 323)                        [policy]
-  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+  · TO_HAND: PICK Night Stretcher                      [policy]
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Lillie's Determination               [policy]
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Dreepy                               [policy]
+  · PLAY Lillie's Determination                        [policy]
+  · ATTACK Dragapult ex (attackId 154)                 [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
 
-── RESULT: LOSS at engine turn 19 ──
-  attach/turn 0.29 · lost to retreat 0 · retreats 3 · attacks 5 · damage placements 24
-  net energy on board 4 · evolutions 4 · abilities 5 · plays 16
+── my turn 10 (engine turn 16) ──
+  hand  Rare Candy, Duskull, Budew, Basic {P} Energy, Drakloak, Munkidori
+  me    ACT — · BENCH Bloodmoon Ursaluna ex 260/260 e0, Drakloak 90/90 e2[{R}{P}], Budew 30/30 e0, Dragapult ex 320/320 e3[{R}{RAINBOW}{RAINBOW}], Drakloak 90/90 e0
+        prizes 4 · deck 15
+  opp   ACT Archaludon ex 160/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 70/130 e0
+        prizes 4 · hand 5
+  · TO_ACTIVE: PICK Dragapult ex                       [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 11 (engine turn 17) ──
+  hand  Rare Candy, Duskull, Budew, Basic {P} Energy, Drakloak, Munkidori, Lillie's Determination
+  me    ACT Dragapult ex 320/320 e3[{R}{RAINBOW}{RAINBOW}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Drakloak 90/90 e2[{R}{P}], Budew 30/30 e0, Drakloak 90/90 e0
+        prizes 4 · deck 14
+  opp   ACT Archaludon ex 160/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 70/130 e0
+        prizes 4 · hand 5
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Ultra Ball                           [policy]
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Pokégear 3.0                         [policy]
+  · PLAY Lillie's Determination                        [policy]
+  · PLAY Dreepy                                        [policy]
+  · EVOLVE → Dragapult ex                              [policy]
+  · ATTACK Dragapult ex (attackId 154)                 [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
+
+── my turn 12 (engine turn 19) ──
+  hand  Latias ex, Munkidori, Boss’s Orders, Pokégear 3.0, Hilda, Dusclops, Dragapult ex
+  me    ACT Dragapult ex 320/320 e3[{R}{RAINBOW}{RAINBOW}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Dragapult ex 320/320 e2[{R}{P}], Budew 30/30 e0, Drakloak 90/90 e0, Dreepy 70/70 e0
+        prizes 2 · deck 13
+  opp   ACT Archaludon ex 180/300 e2[{M}{M}] · BENCH Duraludon 130/130 e0
+        prizes 4 · hand 4
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Rare Candy                           [policy]
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Dragapult ex                              [policy]
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Duraludon                             [policy]
+  · ATTACK Dragapult ex (attackId 154)                 [policy]
+  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · DAMAGE → Archaludon ex (theirs)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 13 (engine turn 21) ──
+  hand  Latias ex, Munkidori, Pokégear 3.0, Hilda, Dusclops, Basic {P} Energy, Buddy-Buddy Poffin
+  me    ACT Dragapult ex 100/320 e3[{R}{RAINBOW}{RAINBOW}] · BENCH Bloodmoon Ursaluna ex 260/260 e0, Dragapult ex 320/320 e2[{R}{P}], Budew 30/30 e0, Drakloak 90/90 e0, Dragapult ex 320/320 e0
+        prizes 1 · deck 11
+  opp   ACT Archaludon ex 120/300 e3[{M}{M}{M}] · BENCH Duraludon 130/130 e0
+        prizes 4 · hand 1
+  · ABILITY Drakloak                                   [policy]
+  · TO_HAND: PICK Buddy-Buddy Poffin                   [policy]
+  · ATTACH Basic {P} Energy → Dragapult ex (bench 4)   [policy]
+  · ATTACK Dragapult ex (attackId 154)                 [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · DAMAGE → Duraludon (theirs)                        [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── RESULT: WIN at engine turn 21 ──
+  attach/turn 0.38 · lost to retreat 1 · retreats 1 · attacks 6 · damage placements 36
+  net energy on board 4 · evolutions 5 · abilities 12 · plays 24
+  SETUP RACE  Dragapult online: my turn 6  (target 2)  ·  first Phantom Dive: my turn 7  (target 3)
+  ENGINE      Dreepy line on turn 1: 0 (target 3) · Phantom Dives 6 · Recon Directive used 12x (0.92 per turn)
+  ⚠ 1 turn(s) with a Phantom-Dive-ready Dragapult stuck on the BENCH
+  · 1 turn(s) held energy with no legal attach target offered
+  ⚠ 3 turn(s) ended with energy in hand and no attachment made
 
 ══════════════════════════════════════════════════════════════
 AGGREGATE over 70 completed game(s)
 ══════════════════════════════════════════════════════════════
-  win rate            5.7%
-  attach / own turn   0.32   (target 1.00)
-  energy attached     3.33 per game
-  energy discarded    0.13 per game   (4% of attached)
-  net energy          3.20 per game
+  win rate            17.1%
+  attach / own turn   0.40   (target 1.00)
+  energy attached     3.91 per game
+  energy discarded    0.06 per game   (1% of attached)
+  net energy          3.86 per game
   retreats            1.01 per game
-  attacks             3.51 per game
-  damage placements   4.16 per game
-  missed attachments  49 turn(s) total
+  attacks             3.61 per game
+  damage placements   6.09 per game
+  missed attachments  38 turn(s) total
+
+  Dragapult online    6.5 (avg my-turn, target 2) in 46/70 games
+  first Phantom Dive  6.3 (avg my-turn, target 3) in 30/70 games
+  Recon Directive     0.37 per turn
+  Dreepy line turn 1  0.66 (target 3.00)
+  attacker stranded   4 turn(s) total (ready Dragapult left on the bench)

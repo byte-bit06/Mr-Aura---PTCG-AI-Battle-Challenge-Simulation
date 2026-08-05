@@ -66,6 +66,11 @@ TYPE_NAME = {
     T_ATTACK: "ATTACK", T_END: "END",
 }
 
+PHANTOM_DIVE_ATTACK_ID = 154   # seen in the transcripts: 6 counters placed
+DRAGAPULT_ID = 121
+DRAKLOAK_ID = 120
+DREEPY_ID = 119
+
 ENERGY_NAME = {1: "{G}", 2: "{R}", 3: "{W}", 4: "{L}", 5: "{P}", 6: "{F}",
                7: "{D}", 8: "{M}", 9: "{N}", 10: "{RAINBOW}", 0: "{C}"}
 
@@ -107,7 +112,11 @@ class BattleLogger:
         self._engine_turn = None
         self._my_turn_no = 0
         self._started = False
-        atexit.register(self.flush)
+        self._next_source = ("policy", "")
+        # Log full option lists on MAIN prompts up to this engine turn, so we
+        # can tell "rejected the play" apart from "the play was never legal".
+        self._opt_log_until = int(os.environ.get("DRAGAPULT_LOG_OPTIONS_UNTIL", "6"))
+        atexit.register(self._at_exit)
 
     def _at_exit(self):
         """Close whatever game was still in progress, then write."""
@@ -241,6 +250,34 @@ class BattleLogger:
         self._cur["turns"] += 1
         self._turn = Counter()
 
+        # Engine / setup-race tracking. The plan is Dragapult by my turn 2 and
+        # Phantom Dive from turn 3, paid for by Recon Directive on the bench.
+        board_ids = [_f(p, "id") for p in ([view.my_active] + view.my_bench)
+                     if p is not None]
+        if DRAGAPULT_ID in board_ids and not self._cur.get("pult_turn"):
+            self._cur["pult_turn"] = self._my_turn_no
+        self._cur["drakloak_now"] = board_ids.count(DRAKLOAK_ID)
+
+        # A ready attacker sitting on the bench is dead weight. Count the
+        # turns it happens - it is invisible in every other statistic.
+        act_id = _f(view.my_active, "id") if view.my_active is not None else None
+        if act_id != DRAGAPULT_ID:
+            for p in view.my_bench:
+                if p is None or _f(p, "id") != DRAGAPULT_ID:
+                    continue
+                e = list(_f(p, "energies", []) or [])
+                if e.count(10) >= 2 or all(c in e or 10 in e for c in (2, 5)):
+                    self._cur["stranded_turns"] += 1
+                    break
+        self._cur["line_now"] = sum(1 for c in board_ids
+                                    if c in (DREEPY_ID, DRAKLOAK_ID, DRAGAPULT_ID))
+        # Sample the board at the START of my SECOND prompt: on the setup
+        # prompt (engine turn 0) nothing is on the field yet, so measuring
+        # there reported 0.00 every single game regardless of what happened.
+        if self._engine_turn and not self._cur.get("line_measured"):
+            self._cur["line_t1"] = self._cur["line_now"]
+            self._cur["line_measured"] = 1
+
         me, opp = view.me, view.opp
         hand = list(view.hand_ids)
         self._turn["energy_in_hand"] = sum(1 for c in hand if self._is_energy(c))
@@ -286,6 +323,32 @@ class BattleLogger:
 
     # -- decisions ------------------------------------------------------
 
+    def _log_options(self, view, select_obj, options, chosen, ctx):
+        """
+        Dump the FULL option list on early MAIN prompts.
+
+        Without this we can only see what was chosen, which cannot tell the
+        difference between "the agent rejected Rare Candy" and "Rare Candy
+        was never a legal option". Those need opposite fixes, and guessing
+        wrong costs a whole test run.
+        """
+        if ctx != 0 or not self._engine_turn:
+            return
+        if self._engine_turn > self._opt_log_until:
+            return
+        picked = set(chosen or [])
+        parts = []
+        for i, o in enumerate(options):
+            t = _val(_f(o, "type", None))
+            cid = self._resolve_cid(view, select_obj, o, t)
+            nm = self.name(cid) if cid is not None else ""
+            tag = {T_PLAY: "play", T_ATTACH: "attach", T_EVOLVE: "evolve",
+                   T_ABILITY: "ability", T_ATTACK: "attack",
+                   T_RETREAT: "retreat", T_END: "end"}.get(t, str(t))
+            label = f"{tag}:{nm}" if nm else tag
+            parts.append(("*" if i in picked else "") + label)
+        self._turn_lines.append("    avail  " + " | ".join(parts))
+
     def decision(self, view, select_obj, options, chosen, source="policy",
                  detail=""):
         """Record one selection. `chosen` is the list of option indices."""
@@ -296,6 +359,7 @@ class BattleLogger:
 
         ctx = _val(_f(select_obj, "context", None))
         ctx_name = CTX.get(ctx, f"ctx{ctx}")
+        self._log_options(view, select_obj, options, chosen, ctx)
 
         # Was an attachment even available this turn? Without this, ending a
         # turn holding energy with no legal attach target reads as a mistake.
@@ -371,8 +435,16 @@ class BattleLogger:
             c["retreat"] += 1; t["retreat"] += 1
         elif otype == T_ATTACK:
             c["attack"] += 1; t["attack"] += 1
+            # Only a real Phantom Dive counts. Cursed Blast also places
+            # counters, so keying off damage placement over-reported this.
+            if _f(o, "attackId") == PHANTOM_DIVE_ATTACK_ID:
+                if not c.get("first_dive_turn"):
+                    c["first_dive_turn"] = self._my_turn_no
+                c["dives"] += 1
         elif otype == T_ABILITY:
             c["ability"] += 1
+            if cid == DRAKLOAK_ID:
+                c["recon"] += 1          # the deck's actual draw engine
         elif otype == T_EVOLVE:
             c["evolve"] += 1
         elif otype == T_PLAY:
@@ -442,6 +514,25 @@ class BattleLogger:
         self._lines.append(
             f"  net energy on board {net} \u00b7 evolutions {c.get('evolve',0)} \u00b7 "
             f"abilities {c.get('ability',0)} \u00b7 plays {c.get('play',0)}")
+
+        # --- the setup race: this is what decides the game ---
+        pult = c.get("pult_turn")
+        dive = c.get("first_dive_turn")
+        self._lines.append(
+            "  SETUP RACE  Dragapult online: "
+            + (f"my turn {pult}" if pult else "NEVER")
+            + "  (target 2)  \u00b7  first Phantom Dive: "
+            + (f"my turn {dive}" if dive else "NEVER")
+            + "  (target 3)")
+        self._lines.append(
+            f"  ENGINE      Dreepy line on turn 1: {c.get('line_t1',0)} (target 3) \u00b7 "
+            f"Phantom Dives {c.get('dives',0)} \u00b7 "
+            f"Recon Directive used {c.get('recon',0)}x "
+            f"({c.get('recon',0)/turns:.2f} per turn)")
+        if c.get("stranded_turns"):
+            self._lines.append(
+                f"  \u26a0 {c['stranded_turns']} turn(s) with a Phantom-Dive-ready "
+                f"Dragapult stuck on the BENCH")
         if c.get("no_attach_target"):
             self._lines.append(
                 f"  \u00b7 {c['no_attach_target']} turn(s) held energy with no legal "
@@ -458,7 +549,13 @@ class BattleLogger:
         if c.get("attack", 0) == 0:
             self._lines.append("  \u26a0 never attacked")
 
+        if c.get("pult_turn"):
+            self.totals["pult_games"] += 1
+        if c.get("first_dive_turn"):
+            self.totals["dive_games"] += 1
         for k, v in c.items():
+            if k in ("drakloak_now", "line_now"):
+                continue
             self.totals[k] += v
         self.totals["games"] += 1
         if outcome == "WIN":
@@ -555,6 +652,15 @@ class BattleLogger:
             f"  attacks             {t.get('attack',0)/g:.2f} per game",
             f"  damage placements   {t.get('damage_placed',0)/g:.2f} per game",
             f"  missed attachments  {t.get('missed_attach',0)} turn(s) total",
+            "",
+            f"  Dragapult online    {t.get('pult_turn',0)/max(1,t.get('pult_games',1)):.1f}"
+            f" (avg my-turn, target 2) in {t.get('pult_games',0)}/{t.get('games',0)} games",
+            f"  first Phantom Dive  {t.get('first_dive_turn',0)/max(1,t.get('dive_games',1)):.1f}"
+            f" (avg my-turn, target 3) in {t.get('dive_games',0)}/{t.get('games',0)} games",
+            f"  Recon Directive     {t.get('recon',0)/turns:.2f} per turn",
+            f"  Dreepy line turn 1  {t.get('line_t1',0)/g:.2f} (target 3.00)",
+            f"  attacker stranded   {t.get('stranded_turns',0)} turn(s) total"
+            f" (ready Dragapult left on the bench)",
         ]
         return out
 

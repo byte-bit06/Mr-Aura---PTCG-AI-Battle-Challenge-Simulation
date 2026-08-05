@@ -343,6 +343,7 @@ def _build_card_index():
 
 CARD_INDEX = _build_card_index()
 HEURISTICS = Heuristics(CARD_INDEX) if _STRATEGY_OK else None
+# >>> dragapult_patch:logger_construction >>>
 
 # --- battle transcript logging (diagnostics only, no effect on play) -------
 try:
@@ -359,6 +360,8 @@ except Exception as _e:
         def flush(self): pass
     BATTLE_LOG = _NullLog()
     log_rule_execution(f"  [BATTLE LOG] disabled: {_e}")
+# <<< dragapult_patch:logger_construction <<<
+
 
 
 # ---------------------------------------------------------------------------
@@ -522,11 +525,14 @@ def _resolve_cid(view, select_obj, o, otype):
 
 
 
+# >>> dragapult_patch:priority_override_helper >>>
+
 # --- transcript-driven priority fixes -------------------------------------
 try:
     from dragapult_priorities import (
         build_attack_table, attack_score, retreat_veto, attach_veto,
-        end_turn_score)
+        end_turn_score, discard_veto, evolve_score, search_score,
+        activate_score, play_score, attach_energy_fit)
     try:
         from cg.api import all_attack as _all_attack
         build_attack_table(_all_attack)
@@ -544,17 +550,36 @@ def _priority_override(view, select_obj, options, o, otype):
     if not _PRIORITIES_OK:
         return None
     try:
+        _ctx = _opt(select_obj, "context", None)
+        _ctx = getattr(_ctx, "value", _ctx)
+        if _ctx in (8, 10):          # DISCARD, TO_DECK_BOTTOM
+            return discard_veto(view, _resolve_cid(view, select_obj, o, otype))
+        if _ctx == 43:               # ACTIVATE — our own ability prompt
+            if otype in (OptionType.YES, OptionType.NO):
+                return activate_score(otype == OptionType.YES)
+        if _ctx in (7, 1):           # TO_HAND / DECK search target
+            return search_score(view, _resolve_cid(view, select_obj, o, otype))
+        if otype == OptionType.EVOLVE:
+            return evolve_score(view, _resolve_cid(view, select_obj, o, otype),
+                                o, _opt)
+        if otype == OptionType.PLAY:
+            return play_score(view, _resolve_cid(view, select_obj, o, otype))
         if otype == OptionType.ATTACK:
             return attack_score(view, o, _opt)
         if otype == OptionType.RETREAT:
             return retreat_veto(view)
         if otype == OptionType.ATTACH:
-            return attach_veto(view, o, _opt)
+            veto = attach_veto(view, o, _opt)
+            if veto is not None:
+                return veto
+            return attach_energy_fit(view, o, _opt)
         if otype == OptionType.END:
             return end_turn_score(options, _opt, OptionType.END, OptionType.NO)
     except Exception:
         return None
     return None
+# <<< dragapult_patch:priority_override_helper <<<
+
 def policy_rank(view, select_obj, options):
     """
     Rule-based ordering of option indices, sourced from the decision module.
@@ -644,15 +669,19 @@ def policy_rank(view, select_obj, options):
             _log_once(f"policy_exc_{ctx_val}_{otype}", f"  [POLICY OPTION EXCEPTION] ctx={ctx_val} otype={otype} cid={cid}: {type(_e).__name__}: {_e}")
             s = W["policy_exception_fallback"]
 
+        # >>> dragapult_patch:priority_overrides__attack___retreat___attach___end >>>
         ov = _priority_override(view, select_obj, options, o, otype)
         if ov is not None:
             s = ov
+        # <<< dragapult_patch:priority_overrides__attack___retreat___attach___end <<<
         scored.append((s, i))
 
     scored.sort(key=lambda t: (-t[0], t[1]))
+    # >>> dragapult_patch:drop_vetoed_options_from_the_ranking >>>
     _legal_ranked = [i for _s, i in scored if _s > -0.5]
     if _legal_ranked:
         return _legal_ranked
+    # <<< dragapult_patch:drop_vetoed_options_from_the_ranking <<<
     return [i for _, i in scored]
 
 
@@ -882,6 +911,8 @@ def sanitize_action(chosen_indices, select_data, obs_dict=None):
 
 
 
+# >>> dragapult_patch:sanitize_action_wrapper >>>
+
 # --- record every returned selection --------------------------------------
 _sanitize_action_impl = sanitize_action
 
@@ -893,6 +924,7 @@ def sanitize_action(chosen_indices, select_data, obs_dict=None):
     except Exception:
         pass
     return result
+# <<< dragapult_patch:sanitize_action_wrapper <<<
 def agent(obs_dict: dict) -> list[int]:
     select_data = obs_dict.get("select") if isinstance(obs_dict, dict) else None
 
@@ -973,10 +1005,12 @@ def agent(obs_dict: dict) -> list[int]:
                               if len(ranked_moves) > 1 else float("inf"))
                 usable = bool(res.best_move) and all(0 <= i < len(options) for i in res.best_move)
                 trusted = usable and res.nodes > 0 and separation >= SEARCH_TIE_EPSILON
+                # >>> dragapult_patch:search_must_clear_its_own_noise_floor >>>
                 _noise_floor = max(m.spread for m in ranked_moves[:2]) if ranked_moves else 0.0
                 trusted = trusted and separation >= _noise_floor
                 if os.environ.get('DRAGAPULT_DISABLE_SEARCH'):
                     trusted = False
+                # <<< dragapult_patch:search_must_clear_its_own_noise_floor <<<
 
                 log_rule_execution(
                     f"  [SEARCH] {res.nodes} nodes / {res.worlds} worlds / {res.elapsed:.2f}s "
@@ -998,7 +1032,9 @@ def agent(obs_dict: dict) -> list[int]:
                     PLAN.store(res.best_line[1:], res.best_line_sigs[1:])
                     PLAN.turn = turn
                     PLAN.stats["searches"] += 1
+                    # >>> dragapult_patch:search_source_tag >>>
                     BATTLE_LOG.source("search", f"sep={separation:.3f}")
+                    # <<< dragapult_patch:search_source_tag <<<
                     return sanitize_action(res.best_move, select_data, obs_dict)
 
                 log_rule_execution(
@@ -1010,7 +1046,9 @@ def agent(obs_dict: dict) -> list[int]:
 
         # --- 4. policy fallback -----------------------------------------
         PLAN.stats["policy"] += 1
+        # >>> dragapult_patch:policy_source_tag >>>
         BATTLE_LOG.source("policy")
+        # <<< dragapult_patch:policy_source_tag <<<
         chosen = _fill_multi(ranked, select_data)
         log_rule_execution(f"  [POLICY] chose {chosen} from {len(options)} options :: {_describe(chosen)}")
         return sanitize_action(chosen, select_data, obs_dict)
