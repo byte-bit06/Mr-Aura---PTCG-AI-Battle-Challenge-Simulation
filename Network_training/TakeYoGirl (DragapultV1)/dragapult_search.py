@@ -317,9 +317,14 @@ class TurnSearch:
             if cur is None:
                 return None
 
+            # Initial board evaluation at start of our turn
+            initial_ev = self.heuristics.evaluate(view.state, seat=seat)
+            initial_prizes = len(getattr(my_state, "prize", []) or [])
+
             start_turn = getattr(view.state, "turn", 0)
             final_state = getattr(getattr(cur, "observation", cur), "current", None)
 
+            # Advance step-by-step strictly within OUR CURRENT TURN
             for _ in range(self.cfg.max_depth):
                 observation = getattr(cur, "observation", cur)
                 sel = getattr(observation, "select", None)
@@ -333,7 +338,7 @@ class TurnSearch:
                 opts = list(getattr(sel, "option", None) or [])
                 if not opts:
                     break
-                ended = any(getattr(o, "type", None) == OptionType.END for o in opts)
+                ended = any(getattr(o, "type", None) in (OptionType.END, OptionType.ATTACK) for o in opts)
                 step_view = self.heuristics.view(st, seat=seat)
                 pick = self._rank(step_view, sel, opts)[:1]
                 cur = self._advance(cur, pick)
@@ -349,8 +354,15 @@ class TurnSearch:
             if final_state is None:
                 return None
 
-            ev = self.heuristics.evaluate(final_state, seat=seat)
-            return ev.score
+            # Turn-end board evaluation & delta calculation
+            final_ev = self.heuristics.evaluate(final_state, seat=seat)
+            final_my_player = final_state.players[seat] if hasattr(final_state, "players") and len(final_state.players) > seat else None
+            final_prizes = len(getattr(final_my_player, "prize", []) or []) if final_my_player else initial_prizes
+            prizes_taken = max(0, initial_prizes - final_prizes)
+
+            # Board Delta: Net improvement in heuristics + bonus for prize cards taken this turn
+            turn_delta = (final_ev.score - initial_ev.score) + (prizes_taken * 0.25) + (final_ev.score * 0.5)
+            return turn_delta
         except Exception:
             return None
         finally:

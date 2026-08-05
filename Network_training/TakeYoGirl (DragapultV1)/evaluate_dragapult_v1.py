@@ -91,6 +91,15 @@ except ImportError as e:
     sys.exit(1)
 
 from kaggle_environments import make
+import cg.game as local_game
+import cg.sim as local_sim
+import kaggle_environments.envs.cabt.cabt as cabt_mod
+
+cabt_mod.battle_start = local_game.battle_start
+cabt_mod.battle_select = local_game.battle_select
+cabt_mod.battle_finish = local_game.battle_finish
+cabt_mod.visualize_data = local_game.visualize_data
+cabt_mod.Battle = local_sim.Battle
 
 _spec = importlib.util.spec_from_file_location('takeyogirl_dragapult_v1', _PRIMARY_PATH)
 _primary_module = importlib.util.module_from_spec(_spec)

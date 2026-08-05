@@ -190,18 +190,20 @@ _WEIGHT_DEFAULTS = {
     "retreat_ursaluna_free": 0.95,
     "retreat_ursaluna_paid": 0.6,
     "retreat_budew_attacker_waiting": 0.85,
-    "retreat_budew_holding": 0.15,
+    "retreat_budew_holding": 0.0,
     "retreat_dragapult_ready": 0.05,
     "retreat_attacker_waiting": 0.75,
     "retreat_default": 0.2,
 
     # search_target_score (rule D).
+    "search_hit_dragapult_ex": 0.98,
     "search_hit_dreepy": 0.95,
+    "search_hit_drakloak": 0.92,
+    "search_hit_energy": 0.90,
     "search_hit_budew": 0.85,
-    "search_hit_drakloak": 0.7,
-    "search_hit_duskull_early": 0.55,
-    "search_hit_liability": 0.2,
-    "search_hit_default": 0.4,
+    "search_hit_duskull_early": 0.75,
+    "search_hit_liability": 0.20,
+    "search_hit_default": 0.40,
 
     # -----------------------------------------------------------------
     # main.py policy_rank and its _score_* helpers.
@@ -210,7 +212,7 @@ _WEIGHT_DEFAULTS = {
     "policy_is_first_no": 0.05,
     "policy_mulligan_match": 0.9,
     "policy_mulligan_mismatch": 0.1,
-    "policy_setup_budew": 0.90,
+    "policy_setup_budew": 0.99,
     "policy_setup_dreepy": 0.85,
     "policy_setup_duskull": 0.60,
     "policy_setup_liability": 0.15,
@@ -218,6 +220,7 @@ _WEIGHT_DEFAULTS = {
     "policy_evolve": 0.88,
     "policy_attack_ready": 0.80,
     "policy_attack_not_ready": 0.55,
+    "policy_attack_budew_lock": 0.98,
     "policy_end": 0.05,
     "policy_yes": 0.55,
     "policy_no": 0.45,
@@ -578,21 +581,100 @@ class Heuristics:
 
     def evaluate(self, state, seat=0):
         v = self.view(state, seat)
-        feats = self._features(v)
-        score = sum(feats.values()) / max(1, len(feats))
+        if v.my_prizes_left == 0:
+            return EvalResult(1.00, detect_phase(v), {}, Schedule(1.0, []), [])
+        if v.opp_prizes_left == 0:
+            return EvalResult(0.00, detect_phase(v), {}, Schedule(0.0, []), [])
+
+        # 1. Prize Delta Score (S_PRIZE) - W_PRIZE = 0.35
+        my_taken = 6 - v.my_prizes_left
+        opp_taken = 6 - v.opp_prizes_left
+        prize_diff = my_taken - opp_taken
+        s_prize = max(0.0, min(1.0, 0.50 + (prize_diff * 0.08)))
+
+        # 2. Active Health Score (S_ACTIVE) - W_ACTIVE = 0.15
+        my_active = v.my_active
+        if my_active:
+            hp = getattr(my_active, "hp", 0) or 0
+            max_hp = getattr(my_active, "maxHp", 100) or 100
+            hp_ratio = hp / float(max_hp) if max_hp > 0 else 0.0
+        else:
+            hp_ratio = 0.0
+        combat_ratio = 0.20
+        s_active = max(0.0, min(1.0, (hp_ratio * 0.50) + combat_ratio))
+
+        # 3. Attacker Power & Energy Score (S_OUR_POWER) - W_OUR_POWER = 0.15
+        powered_count = sum(1 for p in v.my_board if p and v.energy_count(p) >= 2)
+        s_our_power = 0.20 + (powered_count * 0.25)
+        if my_active and v.energy_count(my_active) > 0:
+            hp = getattr(my_active, "hp", 100) or 100
+            max_hp = getattr(my_active, "maxHp", 100) or 100
+            if hp <= 40 or (hp / float(max_hp) <= 0.35):
+                s_our_power -= 0.30
+        s_our_power = max(0.0, min(1.0, s_our_power))
+
+        # 4. Resource Health Score (S_OUR_RES) - W_OUR_RES = 0.10
+        hand_cnt = len(v.hand_ids)
+        s_our_res = 0.80 if hand_cnt >= 4 else (0.50 if hand_cnt == 3 else 0.20)
+        backup_cnt = sum(1 for p in v.my_bench if p and p.id in (ID.DREEPY, ID.DRAKLOAK, ID.DRAGAPULT_EX, ID.DUSKNOIR))
+        if backup_cnt >= 2:
+            s_our_res = min(1.0, s_our_res + 0.20)
+
+        # 5. Opponent Hand Pressure (S_OPP_HAND) - W_OPP_HAND = 0.05
+        opp_hand_cnt = len(getattr(v.opp, "hand", []) or [])
+        s_opp_hand = 1.00 if opp_hand_cnt <= 2 else (0.50 if opp_hand_cnt <= 5 else 0.20)
+
+        # 6. Opponent Bench Vulnerability (S_OPP_BENCH) - W_OPP_BENCH = 0.10
+        opp_bench_cnt = len(v.opp_bench)
+        if opp_bench_cnt == 0:
+            s_opp_bench = 1.00
+        else:
+            s_opp_bench = 0.50
+            has_snipe = any(getattr(p, "hp", 100) <= 60 for p in v.opp_bench if p)
+            if has_snipe:
+                s_opp_bench += 0.25
+            opp_powered = sum(1 for p in v.opp_bench if p and v.energy_count(p) >= 2)
+            s_opp_bench -= opp_powered * 0.20
+            s_opp_bench = max(0.0, min(1.0, s_opp_bench))
+
+        # 7. Opponent Active Vulnerability (S_OPP_ACTIVE) - W_OPP_ACTIVE = 0.10
+        opp_active = v.opp_active
+        if opp_active:
+            opp_hp = getattr(opp_active, "hp", 100) or 100
+            our_dmg = 200 if phantom_dive_available(v) else (10 if (my_active and my_active.id == ID.BUDEW) else 0)
+            if our_dmg >= opp_hp:
+                s_opp_active = 1.00
+            elif v.energy_count(opp_active) == 0:
+                s_opp_active = 0.70
+            else:
+                s_opp_active = 0.30
+        else:
+            s_opp_active = 1.00
+
+        # Composite Normalized Score V(S) in [0.0, 1.0]
+        final_score = (
+            0.35 * s_prize +
+            0.15 * s_active +
+            0.15 * s_our_power +
+            0.10 * s_our_res +
+            0.05 * s_opp_hand +
+            0.10 * s_opp_bench +
+            0.10 * s_opp_active
+        )
+        final_score = max(0.0, min(1.0, final_score))
 
         violations = []
-        if v.my_active is not None and v.my_active.id in LIABILITY_2_PRIZE:
+        if my_active and my_active.id in LIABILITY_2_PRIZE:
             violations.append(Violation("liability_active", "2-prize basic is active"))
         if len(v.my_bench) >= (v.me.benchMax or 5):
             violations.append(Violation("overbench", "bench is full"))
 
-        # Fold violations into the actual score search optimizes for — a
-        # feature average alone lets one catastrophic risk get diluted away
-        # by several unrelated fine features.
-        score = max(0.0, score - W["violation_penalty"] * len(violations))
+        final_score = max(0.0, final_score - W["violation_penalty"] * len(violations))
 
-        missed = [k for k, val in feats.items() if val < 0.34]
-        schedule = Schedule(adherence=feats.get("main_line_count", 0.0), missed=missed)
-
-        return EvalResult(score, detect_phase(v), feats, schedule, violations)
+        feats = {
+            "s_prize": s_prize, "s_active": s_active, "s_our_power": s_our_power,
+            "s_our_res": s_our_res, "s_opp_hand": s_opp_hand, "s_opp_bench": s_opp_bench,
+            "s_opp_active": s_opp_active,
+        }
+        schedule = Schedule(adherence=s_our_power, missed=[])
+        return EvalResult(final_score, detect_phase(v), feats, schedule, violations)

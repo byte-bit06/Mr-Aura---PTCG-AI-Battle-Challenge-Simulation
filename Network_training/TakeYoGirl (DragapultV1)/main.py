@@ -88,8 +88,9 @@ try:
     from dragapult_decisions import (
         advise_turn, should_cursed_blast, should_bench, energy_attach_target,
         lillie_or_search, recon_directive_timing, rank_targets, best_placement,
-        should_mulligan_keep, choose_first_or_second,
-        discard_priority, switch_target_score, retreat_score, search_target_score,
+        should_mulligan_keep, choose_first_or_second, get_pokemon_max_energy_cost,
+        is_valid_energy_for_pokemon, _attacker_charged_on_bench, discard_priority,
+        switch_target_score, retreat_score, search_target_score,
     )
     from dragapult_search import (
         SearchConfig, TurnSearch, enumerate_moves, move_signature,
@@ -506,15 +507,17 @@ def _resolve_card(view, select_obj, area, index, player_index):
 
 def _resolve_cid(view, select_obj, o, otype):
     """cardId if the engine actually populated it; otherwise resolve it from
-    the option's area/index (PLAY implies our own hand, since that field
-    isn't even sent for PLAY options)."""
+    the option's area/index (PLAY & _CTX_SETUP imply our own hand, since area
+    isn't sent for PLAY/SETUP options)."""
     cid = _opt(o, "cardId", None)
     if cid is not None:
         return cid
     area = _opt(o, "area", None)
     index = _opt(o, "index", None)
     pidx = _opt(o, "playerIndex", None)
-    if otype == OptionType.PLAY:
+    ctx = _opt(select_obj, "context", None)
+    ctx_val = getattr(ctx, "value", ctx)
+    if otype == OptionType.PLAY or ctx_val in _CTX_SETUP or area is None:
         area = 2
         pidx = view.my_index
     card = _resolve_card(view, select_obj, area, index, pidx)
@@ -628,7 +631,12 @@ def policy_rank(view, select_obj, options):
             elif otype == OptionType.PLAY:
                 s = _score_play(view, cid, advice)
             elif otype == OptionType.ATTACK:
-                s = W["policy_attack_ready"] if phantom_dive_available(view) else W["policy_attack_not_ready"]
+                if view.my_active and getattr(view.my_active, "id", None) == ID.BUDEW and not _attacker_charged_on_bench(view):
+                    s = W["policy_attack_budew_lock"]
+                elif phantom_dive_available(view):
+                    s = W["policy_attack_ready"]
+                else:
+                    s = W["policy_attack_not_ready"]
             elif otype == OptionType.RETREAT:
                 try:
                     s = retreat_score(view)
@@ -676,11 +684,11 @@ def _score_ability(view, cid, advice):
 
 
 def _score_attach(view, o):
-    """Rank attachment targets: Dragapult line first, then the single Darkness."""
-    try:
-        ranked = energy_attach_target(view)
-    except Exception:
-        return W["attach_no_target"]
+    """Rank attachment targets: Dragapult line first, enforcing hard caps & color matching."""
+    energy_idx = _opt(o, "index", None)
+    hand = getattr(view.me, "hand", []) or []
+    energy_cid = hand[energy_idx].id if (energy_idx is not None and 0 <= energy_idx < len(hand) and hasattr(hand[energy_idx], "id")) else None
+
     in_area = _opt(o, "inPlayArea", None)
     in_idx = _opt(o, "inPlayIndex", None)
     board = []
@@ -691,8 +699,28 @@ def _score_attach(view, o):
     target = board[in_idx] if (in_idx is not None and 0 <= in_idx < len(board)) else None
     if target is None:
         return W["attach_no_target"]
+
+    # Hard Limit 1: Stop giving energy once target reaches required energy for its most costing attack
+    energy_n = view.energy_count(target)
+    max_needed = get_pokemon_max_energy_cost(view, target)
+    if energy_n >= max_needed:
+        log_rule_execution(f"  [HARD LIMIT VETO] {getattr(target, 'id', None)} has max required energy ({energy_n}/{max_needed}).")
+        return 0.0
+
+    # Hard Limit 2: Check that energy being given matches the color/type needed for the attack
+    if energy_cid is not None and not is_valid_energy_for_pokemon(view, energy_cid, target):
+        log_rule_execution(f"  [COLOR MATCH VETO] Energy {energy_cid} invalid for Pokemon {getattr(target, 'id', None)}.")
+        return 0.0
+
+    try:
+        ranked = energy_attach_target(view)
+    except Exception:
+        return W["attach_no_target"]
+
     for p, score, why in ranked:
         if p is target:
+            if score <= 0.0:
+                return 0.0
             return W["attach_blend_base"] + W["attach_blend_mult"] * score
     return W["attach_no_match"]
 
@@ -718,6 +746,17 @@ def _score_play(view, cid, advice):
     if cid is None:
         return W["play_none"]
 
+    if cid == ID.LILLIES_DETERMINATION:
+        d = advice.lillie if advice else lillie_or_search(view)
+        log_rule_execution(f"  [RULE 7] {d}")
+        return W["play_lillie_go"] if d.recommended else W["play_lillie_hold"]
+
+    if cid in (ID.BUDDY_BUDDY_POFFIN, ID.POKEGEAR_3, ID.ENERGY_SEARCH, ID.ULTRA_BALL, ID.NIGHT_STRETCHER):
+        return 0.92     # Non-discard search items: dig early before Lillie
+
+    if cid in (ID.DREEPY, ID.DRAKLOAK, ID.DRAGAPULT_EX):
+        return 0.90     # Dragapult line deployment priority
+
     # Rule 9: never take the last bench slot with a non-line body.
     if cid in (ID.DREEPY, ID.DUSKULL, ID.BUDEW, ID.MUNKIDORI, ID.MEOWTH_EX,
                ID.FEZANDIPITI_EX, ID.LATIAS_EX, ID.BLOODMOON_URSALUNA_EX):
@@ -726,30 +765,17 @@ def _score_play(view, cid, advice):
         except Exception:
             gate = None
         if gate is not None:
-            if not gate.recommended:
+            if not gate.recommended or getattr(gate, "score", 1.0) <= 0.0:
                 log_rule_execution(f"  [RULE 4/8/9] {gate}")
-                return W["play_gate_deny"]
+                return 0.0
             return W["play_gate_blend_base"] + W["play_gate_blend_mult"] * gate.score
 
-    if cid == ID.LILLIES_DETERMINATION:
-        d = advice.lillie if advice else lillie_or_search(view)
-        log_rule_execution(f"  [RULE 7] {d}")
-        return W["play_lillie_go"] if d.recommended else W["play_lillie_hold"]
-
-    if cid in SEARCH_ITEMS:
-        return W["play_search_items"]     # Poffin / Pad / Ultra Ball: dig early
     if cid == ID.RARE_CANDY:
         return W["play_rare_candy_ready"] if view.count_in_play([ID.DUSKULL, ID.DREEPY]) else W["play_rare_candy_not_ready"]
     if cid == ID.BOSSES_ORDERS:
         return _score_boss(view)
     if cid == ID.HILDA:
         return W["play_hilda"]
-    if cid == ID.NIGHT_STRETCHER:
-        return W["play_night_stretcher"]
-    if cid == ID.POKEGEAR_3:
-        return W["play_pokegear_open"] if not view.count_in_hand([ID.LILLIES_DETERMINATION]) else W["play_pokegear_redundant"]
-    if cid == ID.ENERGY_SEARCH:
-        return W["play_energy_search"]
     if cid == ID.CRUSHING_HAMMER:
         return W["play_crushing_hammer"]
     return W["play_default"]
@@ -898,10 +924,8 @@ def agent(obs_dict: dict) -> list[int]:
 
     # Initial deck submission.
     if select_data is None:
-        if isinstance(obs_dict, dict) and obs_dict.get("step", 0) == 0:
-            log_rule_execution("  [SETUP] submitting 60-card deck list")
-            return my_deck
-        return []
+        log_rule_execution("  [SETUP] submitting 60-card deck list")
+        return list(DECK_ID_LIST)
 
     options = select_data.get("option") if isinstance(select_data, dict) else None
     if not options:

@@ -181,14 +181,66 @@ def should_bench(view, cid):
     if cid == ID.BUDEW:
         if view.count_in_play([ID.BUDEW]) >= 1:
             return Decision(False, W["bench_budew_dup_deny"], "already have a Budew doing the item-lock job")
+        if view.turn > 2 or _attacker_charged_on_bench(view) or view.count_in_play([ID.DRAGAPULT_EX, ID.DRAKLOAK]) >= 1:
+            return Decision(False, 0.0, "late game Budew bench ban — Budew is useless on bench after early setup")
         return Decision(True, W["bench_budew"], "Budew for the free item lock (rule B)")
 
     return Decision(True, W["bench_default"], "no specific gate")
 
 
 # ---------------------------------------------------------------------------
-# Energy attachment ranking.
+# Energy attachment hard limits & color matching.
 # ---------------------------------------------------------------------------
+
+def get_pokemon_max_energy_cost(view, pokemon):
+    cid = getattr(pokemon, "id", None)
+    if cid == ID.BUDEW:
+        return 0
+    if cid == ID.DREEPY:
+        return 1
+    if cid in (ID.DRAKLOAK, ID.DRAGAPULT_EX, ID.DUSKULL, ID.DUSCLOPS, ID.DUSKNOIR):
+        return 2
+    if cid == ID.MUNKIDORI:
+        return 1
+    if cid == ID.BLOODMOON_URSALUNA_EX:
+        opp_prizes = len(getattr(view.opp, "prize", []) or []) if hasattr(view, "opp") else 6
+        prizes_taken = max(0, 6 - opp_prizes)
+        return max(0, 5 - prizes_taken)
+    return 2
+
+
+def is_valid_energy_for_pokemon(view, energy_cid, pokemon):
+    cid = getattr(pokemon, "id", None)
+    if cid == ID.BUDEW:
+        return False
+
+    # Special Darkness Energy (#7) is reserved exclusively for Munkidori (#112)
+    if energy_cid == ID.SPECIAL_DARKNESS_ENERGY and cid != ID.MUNKIDORI:
+        return False
+
+    if cid == ID.MUNKIDORI:
+        return energy_cid in (ID.SPECIAL_DARKNESS_ENERGY, ID.BASIC_PSYCHIC_ENERGY)
+
+    attached = getattr(pokemon, "energyCards", []) or []
+    attached_ids = [c.id for c in attached if hasattr(c, "id")]
+
+    # Dragapult ex / Drakloak / Dreepy need 1 Fire + 1 Psychic (or 1 Neo Upper)
+    if cid in (ID.DRAGAPULT_EX, ID.DRAKLOAK, ID.DREEPY):
+        if energy_cid == ID.NEO_UPPER_ENERGY:
+            return len(attached_ids) == 0
+        has_fire = any(c in (ID.BASIC_FIRE_ENERGY, ID.NEO_UPPER_ENERGY) for c in attached_ids)
+        has_psychic = any(c in (ID.BASIC_PSYCHIC_ENERGY, ID.NEO_UPPER_ENERGY) for c in attached_ids)
+        if energy_cid == ID.BASIC_FIRE_ENERGY:
+            return not has_fire
+        if energy_cid == ID.BASIC_PSYCHIC_ENERGY:
+            return not has_psychic
+        return False
+
+    if cid in (ID.DUSKULL, ID.DUSCLOPS, ID.DUSKNOIR):
+        return energy_cid in (ID.BASIC_PSYCHIC_ENERGY, ID.NEO_UPPER_ENERGY)
+
+    return True
+
 
 def energy_attach_target(view):
     active = view.my_active
@@ -198,22 +250,24 @@ def energy_attach_target(view):
             continue
         is_active = (p is active)
         energy_n = view.energy_count(p)
+        max_needed = get_pokemon_max_energy_cost(view, p)
 
-        if p.id == ID.BUDEW:
-            score, why = W["attach_budew"], "never invest energy in Budew — Itchy Pollen is free (rule B)"
+        # Hard Cap: if pokemon already has needed energies for its most costing attack, stop giving energy!
+        if energy_n >= max_needed:
+            score, why = 0.0, f"hard limit: already has max required energy ({energy_n}/{max_needed})"
+        elif p.id == ID.BUDEW:
+            score, why = 0.0, "hard limit: Budew attacks for free (0 energy)"
         elif p.id in (ID.MEOWTH_EX, ID.FEZANDIPITI_EX, ID.LATIAS_EX, ID.BLOODMOON_URSALUNA_EX):
             score, why = (W["attach_utility_active_empty"], "stuck active utility body") if (is_active and energy_n == 0) else (W["attach_utility_bench"], "utility body, not the attacker")
         elif p.id == ID.DRAGAPULT_EX:
-            if energy_n >= 2:
-                score, why = W["attach_dragapult_loaded"], "already loaded for Phantom Dive"
-            elif energy_n == 1:
+            if energy_n == 1:
                 score, why = W["attach_dragapult_one_energy"], "second energy completes Phantom Dive"
             else:
                 score, why = (W["attach_dragapult_active_empty"] if is_active else W["attach_dragapult_bench_empty"]), "priming the attacker"
-        elif p.id == ID.DUSKNOIR:
-            score, why = W["attach_dusknoir"], "Shadow Bind backup attacker"
         elif p.id in (ID.DREEPY, ID.DRAKLOAK):
             score, why = (W["attach_pre_evo_empty"], "light early investment") if energy_n == 0 else (W["attach_pre_evo_has_energy"], "pre-evolution — don't overinvest")
+        elif p.id == ID.DUSKNOIR:
+            score, why = W["attach_dusknoir"], "Shadow Bind backup attacker"
         elif p.id == ID.MUNKIDORI:
             score, why = (W["attach_munkidori_empty"], "needs its one Darkness for Adrena-Brain") if energy_n == 0 else (W["attach_munkidori_has_energy"], "already has what it needs")
         else:
@@ -230,14 +284,21 @@ def energy_attach_target(view):
 # ---------------------------------------------------------------------------
 
 def lillie_or_search(view):
-    if view.my_prizes_left == 6:
-        return Decision(True, W["lillie_six_prizes"], "6 prizes left — Lillie draws 8, not 6")
-    hand_n = len(view.hand_ids)
-    if hand_n <= 3:
-        return Decision(True, W["lillie_thin_hand"], "hand is thin — refill with Lillie")
-    if view.count_in_play([ID.DREEPY, ID.DRAKLOAK, ID.DRAGAPULT_EX]) < 2:
-        return Decision(True, W["lillie_building"], "still building the main line — draw into it")
-    return Decision(True, W["lillie_default"], "card advantage is always good")
+    hand_ids = list(view.hand_ids)
+    has_nondiscard_search = any(cid in (ID.BUDDY_BUDDY_POFFIN, ID.POKEGEAR_3, ID.ENERGY_SEARCH, ID.ULTRA_BALL, ID.NIGHT_STRETCHER) for cid in hand_ids)
+    has_benchable = any(cid in (ID.DREEPY, ID.DRAKLOAK, ID.DRAGAPULT_EX, ID.DUSKULL) for cid in hand_ids) and len(view.my_bench) < 5
+    has_playable_energy = any(cid in (ID.BASIC_FIRE_ENERGY, ID.BASIC_PSYCHIC_ENERGY, ID.NEO_UPPER_ENERGY) for cid in hand_ids) and not getattr(view.me, "energyAttached", False)
+
+    # Hold Lillie while unplayed non-discard search items, Dragapults, or energy remain in hand
+    if has_nondiscard_search or has_benchable or has_playable_energy:
+        return Decision(False, W["play_lillie_hold"], "hold Lillie until non-discard search, benching, and energy placement are complete")
+
+    hand_n = len(hand_ids)
+    # Reshuffle with Lillie if hand size < 6 after playing search/pokemon/energy
+    if hand_n < 6:
+        return Decision(True, W["play_lillie_go"], f"hand size ({hand_n}) < 6 after setup — reshuffle with Lillie")
+
+    return Decision(False, W["play_lillie_hold"], "hand size >= 6 — no need to reshuffle yet")
 
 
 def recon_directive_timing(view):
@@ -250,15 +311,13 @@ def choose_first_or_second(view):
 
 def should_mulligan_keep(view, hand_ids):
     ids = list(hand_ids)
-    basics_for_plan = sum(1 for cid in ids if cid in (ID.DREEPY, ID.BUDEW, ID.DUSKULL))
-    liabilities = sum(1 for cid in ids if cid in LIABILITY_2_PRIZE)
+    if ID.BUDEW in ids:
+        return Decision(True, W["mulligan_keep_basic"], "has Budew in opening hand to open and item-lock from turn 1")
     search = sum(1 for cid in ids if cid in SEARCH_ITEMS or cid == ID.POKEGEAR_3)
-
-    if basics_for_plan >= 1:
-        return Decision(True, W["mulligan_keep_basic"], "has a Dreepy/Budew/Duskull to open on")
-    if search >= 1 and liabilities < 2:
-        return Decision(True, W["mulligan_keep_searcher"], "no ideal opener, but a searcher can find one")
-    return Decision(False, W["mulligan_redraw"], "no path to Dreepy/Budew/Duskull — redraw")
+    basics = sum(1 for cid in ids if cid in (ID.DREEPY, ID.DUSKULL))
+    if search >= 1 and basics >= 1:
+        return Decision(True, W["mulligan_keep_searcher"], "no Budew directly, but has basic + searcher to dig for Budew")
+    return Decision(False, W["mulligan_redraw"], "no Budew in opening hand — redraw deck to get Budew")
 
 
 # ---------------------------------------------------------------------------
@@ -368,12 +427,18 @@ def retreat_score(view):
 # ---------------------------------------------------------------------------
 
 def search_target_score(view, cid):
+    if cid == ID.DRAGAPULT_EX:
+        return W["search_hit_dragapult_ex"]
     if cid == ID.DREEPY:
         return W["search_hit_dreepy"]
-    if cid == ID.BUDEW and view.count_in_play([ID.BUDEW]) == 0:
-        return W["search_hit_budew"]
     if cid == ID.DRAKLOAK:
         return W["search_hit_drakloak"]
+    if cid in (ID.BASIC_FIRE_ENERGY, ID.BASIC_PSYCHIC_ENERGY, ID.NEO_UPPER_ENERGY):
+        return W["search_hit_energy"]
+    if cid == ID.BUDEW:
+        if view.turn <= 2 and view.count_in_play([ID.BUDEW]) == 0 and not _attacker_charged_on_bench(view) and view.count_in_play([ID.DRAGAPULT_EX, ID.DRAKLOAK]) == 0:
+            return W["search_hit_budew"]
+        return 0.0
     if cid == ID.DUSKULL and view.turn <= 4:
         return W["search_hit_duskull_early"]
     if cid in LIABILITY_2_PRIZE:
