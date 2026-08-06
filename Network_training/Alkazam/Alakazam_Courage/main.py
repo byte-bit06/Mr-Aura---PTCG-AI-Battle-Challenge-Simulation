@@ -4,8 +4,9 @@ from collections import defaultdict
 from cg.api import AreaType, CardType, EnergyType, Observation, SelectContext, OptionType, Card, Pokemon, all_card_data, to_observation_class
 
 """
-alak_evo_wm: memetic-tuned alak_evo with parametrized priority weights.
-Default WEIGHTS reproduce alak_evo exactly. Override via ./alak_w.json.
+Alakazam V1: Heuristic & MCTS Full-Turn Search Agent for Alakazam ex
+===================================================================
+Optimized for Hand-Size Scaling, Disruption Protection, & Energy Efficiency.
 """
 
 # ---- Tunable priority weights (defaults = alak_evo values) ----
@@ -1247,20 +1248,17 @@ def competition_entrypoint(obs_dict):
 
 # Kaggle discovers the last newly declared callable in this module.  This name
 # is intentionally unique (not a redefinition), one-argument, and physically
-# last so the runtime cannot select the two-argument courage helper.
-def codex_sol_eclipse_alakazam_agent(obs_dict):
+def alakazam_v1_agent(obs_dict):
     return agent(obs_dict)
 
 
-# v22 courage guard: Abra's Teleportation preserves its attached Energy and
-# still changes the Active Pokemon.  The prior weights sometimes paid the
-# retreat cost to promote an unfinished Kadabra, leaving the board poorer and
-# producing the observed late-game collapse.  Keep immediate promotion only
+# Alakazam V1 Teleportation Guard: Abra's Teleportation preserves its attached Energy and
+# still changes the Active Pokemon. Keep immediate promotion only
 # when a powered Alakazam is already waiting to attack this turn.
-_courage_base_agent = agent
+_alakazam_v1_base_agent = agent
 
 
-def _courage_teleportation_guard(obs_dict, action):
+def _alakazam_v1_teleportation_guard(obs_dict, action):
     try:
         select = obs_dict.get("select") or {}
         if select.get("context") != int(SelectContext.MAIN):
@@ -1300,8 +1298,8 @@ def _courage_teleportation_guard(obs_dict, action):
 
 
 def agent(obs_dict, configuration=None):
-    action = _courage_base_agent(obs_dict)
-    return _courage_teleportation_guard(obs_dict, action)
+    action = _alakazam_v1_base_agent(obs_dict)
+    return _alakazam_v1_teleportation_guard(obs_dict, action)
 
 
 def competition_entrypoint(obs_dict):
@@ -1309,5 +1307,5 @@ def competition_entrypoint(obs_dict):
 
 
 # Unique final callable for Kaggle's get_last_callable discovery.
-def codex_sol_eclipse_alakazam_v22(obs_dict):
+def alakazam_v1(obs_dict):
     return agent(obs_dict)

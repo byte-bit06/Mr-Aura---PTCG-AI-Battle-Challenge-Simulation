@@ -12,7 +12,7 @@ _GRANDPARENT = os.path.dirname(_PARENT)
 
 AGENT_DIRNAME = "Alakazam_Courage"
 BUILDER = "codex_sol_eclipse_alakazam.py"
-PRIMARY_NAME = "Alakazam_Courage_v22"
+PRIMARY_NAME = "Alakazam_V1"
 
 
 def _first_existing(paths, what, fatal=True):
