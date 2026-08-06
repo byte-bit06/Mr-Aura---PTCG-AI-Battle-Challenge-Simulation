@@ -405,7 +405,7 @@ def heuristic_scores(obs):
                 if card.id == Abra: score = 100 - abra_line_on_field * 5
                 elif card.id in DUNSPARCE_IDS: score = 80 - dunsparce_line_on_field * 5
                 elif card.id == Psyduck: score = 60 if op_has_duskull else -1
-                elif card.id == Shaymin: score = 55 if (op_has_water_threat or op_has_grimmsnarl or op_has_dragapult_line) else -1
+                elif card.id == Shaymin: score = 55 if (op_has_water_threat or op_has_grimmsnarl) else -1
 
             elif context == SelectContext.TO_DECK:
                 if card.id in ABRA_LINE: score = 100
@@ -437,7 +437,7 @@ def heuristic_scores(obs):
                 elif card.id == Psyduck:
                     score = W["play_psyduck"] if op_has_duskull else -1
                 elif card.id == Shaymin:
-                    score = W["play_shaymin"] if (op_has_water_threat or op_has_grimmsnarl or op_has_dragapult_line) else -1
+                    score = W["play_shaymin"] if (op_has_water_threat or op_has_grimmsnarl) else -1
                 elif card.id == Fan_Rotom:
                     score = W["play_fanrotom"] if state.turn <= 2 else -1
                 else:
@@ -507,9 +507,9 @@ def heuristic_scores(obs):
                     else: score = -1
                 elif cid == Battle_Cage:
                     if stadium_id == Battle_Cage: score = -1
+                    elif our_stadium_up: score = -1
                     elif stadium_id != 0 and not our_stadium_up: score = W["cage_counter"]
-                    elif op_has_dragapult_line or op_has_grimmsnarl: score = W["cage_snipe"]
-                    else: score = -1
+                    else: score = W["cage_snipe"]  # Play immediately to shield bench and setup stadium!
                 elif cid == Nighttime_Mine:
                     if stadium_id == Nighttime_Mine: score = -1
                     elif stadium_id != 0 and not our_stadium_up: score = W["mine_counter"]
