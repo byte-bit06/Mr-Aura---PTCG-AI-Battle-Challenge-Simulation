@@ -1,0 +1,1184 @@
+DRAGAPULT BATTLE LOG — paste this whole file
+
+══ GAME 65 ══  seat 0 · going second
+
+── my turn 1 (engine turn 0) ──
+  hand  (hidden or empty)
+  me    ACT — · BENCH —
+        prizes 0 · deck 60
+  opp   ACT — · BENCH —
+        prizes 0 · hand 0
+  · GO SECOND                                          [policy]
+  · SETUP ACTIVE Abra                                  [policy]
+  · DRAW_COUNT: 3                                      [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 2 (engine turn 2) ──
+  hand  Rare Candy, Telepath Psychic Energy, Buddy-Buddy Poffin, Hilda, Boss’s Orders, Telepath Psychic Energy, Enhanced Hammer, Rare Candy, Hilda, Boss’s Orders
+  me    ACT Abra 50/50 e0 · BENCH —
+        prizes 6 · deck 43
+  opp   ACT Cinderace 160/160 e0 · BENCH Duraludon 130/130 e0
+        prizes 6 · hand 6
+    avail  attach:Telepath Psychic Energy | *play:Buddy-Buddy Poffin | play:Hilda | play:Boss’s Orders | attach:Telepath Psychic Energy | play:Hilda | play:Boss’s Orders | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+    avail  *attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | play:Hilda | play:Boss’s Orders | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | play:Hilda | play:Boss’s Orders | end
+  · ATTACH Telepath Psychic Energy → Abra (active)     [policy]
+    avail  *play:Hilda | play:Boss’s Orders | play:Hilda | play:Boss’s Orders | attack:Abra | retreat:Abra | end
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+    avail  *attack:Abra | retreat:Abra | end
+  · ATTACK Abra (attackId 1070)                        [policy]
+  · SWITCH: PICK Abra                                  [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 3 (engine turn 4) ──
+  hand  Rare Candy, Boss’s Orders, Telepath Psychic Energy, Enhanced Hammer, Rare Candy, Hilda, Boss’s Orders, Kadabra, Basic {P} Energy, Alakazam
+  me    ACT Abra 50/50 e0 · BENCH Abra 50/50 e1[{P}], Abra 50/50 e0
+        prizes 6 · deck 38
+  opp   ACT Cinderace 150/160 e0 · BENCH Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 6 · hand 7
+    avail  *play:Rare Candy | play:Boss’s Orders | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | play:Rare Candy | play:Hilda | play:Boss’s Orders | evolve:Kadabra | evolve:Kadabra | evolve:Kadabra | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Boss’s Orders | *attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | play:Hilda | play:Boss’s Orders | evolve:Kadabra | evolve:Kadabra | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Hilda | end
+  · ATTACH Telepath Psychic Energy → Alakazam (active) [policy]
+    avail  play:Boss’s Orders | play:Hilda | play:Boss’s Orders | evolve:Kadabra | *evolve:Kadabra | play:Hilda | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Boss’s Orders | play:Hilda | play:Boss’s Orders | play:Hilda | play:Dawn | *play:Dunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dunsparce                                     [policy]
+    avail  play:Boss’s Orders | play:Hilda | play:Boss’s Orders | play:Hilda | *play:Dawn | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  play:Rare Candy | *play:Dunsparce | evolve:Kadabra | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dunsparce                                     [policy]
+    avail  *play:Rare Candy | evolve:Kadabra | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  *play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 4 (engine turn 5) ──
+  hand  Boss’s Orders, Enhanced Hammer, Hilda, Boss’s Orders, Basic {P} Energy, Dudunsparce, Dudunsparce, Hilda, Kadabra, Night Stretcher, Basic {P} Energy, Alakazam, Dawn
+  me    ACT — · BENCH Alakazam 140/140 e1[{P}], Kadabra 80/80 e0, Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 5 · deck 26
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e0
+        prizes 5 · hand 5
+  · TO_ACTIVE: PICK Alakazam                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 2   (no attach target offered)
+
+── my turn 5 (engine turn 6) ──
+  hand  Boss’s Orders, Enhanced Hammer, Hilda, Boss’s Orders, Basic {P} Energy, Dudunsparce, Dudunsparce, Hilda, Kadabra, Night Stretcher, Basic {P} Energy, Alakazam, Dawn, Boss’s Orders
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Kadabra 80/80 e0, Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 5 · deck 25
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e0
+        prizes 5 · hand 5
+    avail  play:Boss’s Orders | play:Hilda | play:Boss’s Orders | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Dudunsparce | *evolve:Dudunsparce | play:Hilda | play:Night Stretcher | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | evolve:Alakazam | play:Dawn | play:Boss’s Orders | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Dudunsparce                               [policy]
+    avail  play:Boss’s Orders | play:Hilda | play:Boss’s Orders | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | *evolve:Dudunsparce | play:Hilda | play:Night Stretcher | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | evolve:Alakazam | play:Dawn | play:Boss’s Orders | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Dudunsparce                               [policy]
+    avail  play:Boss’s Orders | play:Hilda | play:Boss’s Orders | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Hilda | play:Night Stretcher | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | *evolve:Alakazam | play:Dawn | play:Boss’s Orders | ability:Dudunsparce | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  *play:Boss’s Orders | play:Hilda | play:Boss’s Orders | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Hilda | play:Night Stretcher | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Dawn | play:Boss’s Orders | play:Lillie's Determination | play:Neutralization Zone | ability:Dudunsparce | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Duraludon                             [policy]
+    avail  attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Night Stretcher | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | *play:Neutralization Zone | ability:Dudunsparce | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Neutralization Zone                           [policy]
+    avail  attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | *play:Night Stretcher | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | ability:Dudunsparce | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+    avail  attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | *play:Abra | ability:Dudunsparce | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Abra                                          [policy]
+    avail  attach:Basic {P} Energy | *attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | ability:Dudunsparce | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · ATTACH Basic {P} Energy → Alakazam (bench 0)       [policy]
+    avail  ability:Dudunsparce | ability:Dudunsparce | *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 6 (engine turn 8) ──
+  hand  Enhanced Hammer, Hilda, Boss’s Orders, Hilda, Kadabra, Basic {P} Energy, Dawn, Boss’s Orders, Dudunsparce, Lillie's Determination, Night Stretcher, Rare Candy
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Alakazam 140/140 e1[{P}], Dudunsparce 140/140 e0, Dudunsparce 140/140 e0, Abra 50/50 e0
+        prizes 4 · deck 21
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e1[{M}]
+        prizes 5 · hand 5
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Duraludon                             [policy]
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · ATTACH Basic {P} Energy → Alakazam (bench 3)       [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── my turn 7 (engine turn 9) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Kadabra, Dawn, Boss’s Orders, Dudunsparce, Lillie's Determination, Dudunsparce, Kadabra, Abra
+  me    ACT — · BENCH Alakazam 140/140 e1[{P}], Dudunsparce 140/140 e0, Dudunsparce 140/140 e0, Alakazam 140/140 e1[{P}], Dunsparce 60/60 e0
+        prizes 3 · deck 17
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH —
+        prizes 4 · hand 6
+  · TO_ACTIVE: PICK Alakazam                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 8 (engine turn 10) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Kadabra, Dawn, Boss’s Orders, Dudunsparce, Lillie's Determination, Dudunsparce, Kadabra, Abra, Telepath Psychic Energy
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Dudunsparce 140/140 e0, Dudunsparce 140/140 e0, Alakazam 140/140 e1[{P}], Dunsparce 60/60 e0
+        prizes 3 · deck 16
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH —
+        prizes 4 · hand 6
+  · ABILITY Dudunsparce                                [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · PLAY Abra                                          [policy]
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+  · PLAY Dunsparce                                     [policy]
+  · ATTACH Telepath Psychic Energy → Abra (bench 1)    [policy]
+  · PLAY Xerosic’s Machinations                        [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── my turn 9 (engine turn 11) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Kadabra, Dawn, Boss’s Orders, Dudunsparce, Lillie's Determination, Kadabra, Enhanced Hammer, Dawn, Telepath Psychic Energy, Dudunsparce, Dudunsparce, Hilda, Alakazam
+  me    ACT — · BENCH Alakazam 140/140 e1[{P}], Abra 50/50 e1[{P}], Dunsparce 70/70 e0
+        prizes 3 · deck 12
+  opp   ACT Archaludon ex 80/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 5
+  · TO_ACTIVE: PICK Alakazam                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 10 (engine turn 12) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Kadabra, Dawn, Boss’s Orders, Dudunsparce, Lillie's Determination, Kadabra, Enhanced Hammer, Dawn, Telepath Psychic Energy, Dudunsparce, Dudunsparce, Hilda, Alakazam, Dunsparce
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Abra 50/50 e1[{P}], Dunsparce 70/70 e0
+        prizes 3 · deck 11
+  opp   ACT Archaludon ex 80/400 e3[{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 5
+  · PLAY Dunsparce                                     [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · PLAY Dunsparce                                     [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
+
+── my turn 11 (engine turn 13) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Boss’s Orders, Lillie's Determination, Kadabra, Enhanced Hammer, Dawn, Telepath Psychic Energy, Dudunsparce, Dudunsparce, Hilda, Alakazam, Xerosic’s Machinations, Dawn, Dudunsparce, Alakazam, Poké Pad, Buddy-Buddy Poffin
+  me    ACT — · BENCH Kadabra 80/80 e1[{P}], Dudunsparce 140/140 e0, Dunsparce 60/60 e0, Dunsparce 60/60 e0
+        prizes 1 · deck 6
+  opp   ACT Archaludon ex 300/300 e4[{M}{M}{M}{M}] · BENCH —
+        prizes 2 · hand 3
+  · TO_ACTIVE: PICK Kadabra                            [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 12 (engine turn 14) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Boss’s Orders, Lillie's Determination, Kadabra, Enhanced Hammer, Dawn, Telepath Psychic Energy, Dudunsparce, Dudunsparce, Hilda, Alakazam, Xerosic’s Machinations, Dawn, Dudunsparce, Alakazam, Poké Pad, Buddy-Buddy Poffin, Enhanced Hammer
+  me    ACT Kadabra 80/80 e1[{P}] · BENCH Dudunsparce 140/140 e0, Dunsparce 60/60 e0, Dunsparce 60/60 e0
+        prizes 1 · deck 5
+  opp   ACT Archaludon ex 300/300 e4[{M}{M}{M}{M}] · BENCH —
+        prizes 2 · hand 3
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · PLAY Poké Pad                                      [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Poké Pad                                      [policy]
+  · PLAY Sacred Ash                                    [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+  · TO_DECK: PICK Alakazam                             [policy]
+  · TO_DECK: PICK Kadabra                              [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+  · TO_DECK: PICK Alakazam                             [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · PLAY Lana’s Aid                                    [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · PLAY Abra                                          [policy]
+  · ATTACH Telepath Psychic Energy → Abra (bench 3)    [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── RESULT: WIN at engine turn 14 ──
+  attach/turn 0.50 · lost to retreat 0 · retreats 0 · attacks 7 · damage placements 0
+  net energy on board 6 · evolutions 13 · abilities 3 · plays 30
+  SETUP RACE  Alakazam online: my turn 4  (target 2)  ·  first Powerful Hand: my turn 3  (target 3)
+  ENGINE      Abra line on turn 1: 1 (target 3) · attacks with it 6 · Dudunsparce draw used 3x (0.25 per turn)
+  · 3 turn(s) held energy with no legal attach target offered
+  ⚠ 1 turn(s) ended with energy in hand and no attachment made
+  ⚠ never placed a damage counter
+
+══ GAME 66 ══  seat 1 · going first
+
+── my turn 1 (engine turn 0) ──
+  hand  Hilda, Dawn, Abra, Abra, Neutralization Zone, Poké Pad, Xerosic’s Machinations
+  me    ACT — · BENCH —
+        prizes 0 · deck 53
+  opp   ACT — · BENCH —
+        prizes 6 · hand 6
+  · SETUP ACTIVE Abra                                  [policy]
+  · SETUP BENCH Abra                                   [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 2 (engine turn 1) ──
+  hand  Hilda, Dawn, Neutralization Zone, Poké Pad, Xerosic’s Machinations, Kadabra
+  me    ACT Abra 50/50 e0 · BENCH Abra 50/50 e0
+        prizes 6 · deck 46
+  opp   ACT Cinderace 160/160 e0 · BENCH —
+        prizes 6 · hand 7
+    avail  play:Neutralization Zone | *play:Poké Pad | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  play:Neutralization Zone | *end
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 3 (engine turn 2) ──
+  hand  Hilda, Dawn, Neutralization Zone, Xerosic’s Machinations, Kadabra, Alakazam
+  me    ACT — · BENCH Abra 50/50 e0
+        prizes 6 · deck 45
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}]
+        prizes 5 · hand 8
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 4 (engine turn 3) ──
+  hand  Hilda, Dawn, Neutralization Zone, Xerosic’s Machinations, Kadabra, Alakazam, Alakazam
+  me    ACT Abra 50/50 e0 · BENCH —
+        prizes 6 · deck 44
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}]
+        prizes 5 · hand 8
+    avail  play:Hilda | play:Dawn | play:Neutralization Zone | *play:Xerosic’s Machinations | evolve:Kadabra | end
+  · PLAY Xerosic’s Machinations                        [policy]
+    avail  play:Neutralization Zone | *evolve:Kadabra | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Neutralization Zone | *end
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── RESULT: LOSS at engine turn 3 ──
+  attach/turn 0.00 · lost to retreat 0 · retreats 0 · attacks 0 · damage placements 0
+  net energy on board 0 · evolutions 1 · abilities 0 · plays 2
+  SETUP RACE  Alakazam online: NEVER  (target 2)  ·  first Powerful Hand: NEVER  (target 3)
+  ENGINE      Abra line on turn 1: 2 (target 3) · attacks with it 0 · Dudunsparce draw used 0x (0.00 per turn)
+  ⚠ never placed a damage counter
+  ⚠ never attacked
+
+══ GAME 67 ══  seat 0 · going second
+
+── my turn 1 (engine turn 0) ──
+  hand  (hidden or empty)
+  me    ACT — · BENCH —
+        prizes 0 · deck 60
+  opp   ACT — · BENCH —
+        prizes 0 · hand 0
+  · GO SECOND                                          [policy]
+  · SETUP ACTIVE Dunsparce                             [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 2 (engine turn 2) ──
+  hand  Night Stretcher, Neutralization Zone, Boss’s Orders, Dawn, Rare Candy, Boss’s Orders, Abra
+  me    ACT Dunsparce 60/60 e0 · BENCH —
+        prizes 6 · deck 46
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e0
+        prizes 6 · hand 5
+    avail  play:Neutralization Zone | play:Boss’s Orders | play:Dawn | play:Boss’s Orders | *play:Abra | end
+  · PLAY Abra                                          [policy]
+    avail  play:Neutralization Zone | play:Boss’s Orders | *play:Dawn | play:Boss’s Orders | retreat:Dunsparce | end
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  play:Neutralization Zone | *play:Abra | retreat:Dunsparce | end
+  · PLAY Abra                                          [policy]
+    avail  play:Neutralization Zone | retreat:Dunsparce | *end
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 3 (engine turn 3) ──
+  hand  Night Stretcher, Neutralization Zone, Boss’s Orders, Rare Candy, Boss’s Orders, Dudunsparce, Alakazam
+  me    ACT — · BENCH Abra 50/50 e0, Abra 50/50 e0
+        prizes 6 · deck 43
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}]
+        prizes 5 · hand 6
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 4 (engine turn 4) ──
+  hand  Night Stretcher, Neutralization Zone, Boss’s Orders, Rare Candy, Boss’s Orders, Dudunsparce, Alakazam, Lana’s Aid
+  me    ACT Abra 50/50 e0 · BENCH Abra 50/50 e0
+        prizes 6 · deck 42
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}]
+        prizes 5 · hand 6
+    avail  play:Night Stretcher | *play:Neutralization Zone | play:Boss’s Orders | play:Rare Candy | play:Boss’s Orders | play:Lana’s Aid | end
+  · PLAY Neutralization Zone                           [policy]
+    avail  play:Night Stretcher | play:Boss’s Orders | *play:Rare Candy | play:Boss’s Orders | play:Lana’s Aid | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Night Stretcher | play:Boss’s Orders | play:Boss’s Orders | play:Lana’s Aid | play:Xerosic’s Machinations | play:Hilda | *play:Dunsparce | end
+  · PLAY Dunsparce                                     [policy]
+    avail  play:Night Stretcher | play:Boss’s Orders | play:Boss’s Orders | play:Lana’s Aid | *play:Xerosic’s Machinations | play:Hilda | end
+  · PLAY Xerosic’s Machinations                        [policy]
+    avail  play:Night Stretcher | *end
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 5 (engine turn 5) ──
+  hand  Night Stretcher, Boss’s Orders, Boss’s Orders, Dudunsparce, Lana’s Aid, Hilda
+  me    ACT — · BENCH Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 6 · deck 39
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 4 · hand 5
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 6 (engine turn 6) ──
+  hand  Night Stretcher, Boss’s Orders, Boss’s Orders, Dudunsparce, Lana’s Aid, Hilda, Rare Candy
+  me    ACT Abra 50/50 e0 · BENCH Dunsparce 60/60 e0
+        prizes 6 · deck 38
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 4 · hand 5
+    avail  play:Night Stretcher | *play:Boss’s Orders | play:Boss’s Orders | evolve:Dudunsparce | play:Lana’s Aid | play:Hilda | end
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Duraludon                             [policy]
+    avail  *play:Night Stretcher | evolve:Dudunsparce | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  evolve:Dudunsparce | *play:Rare Candy | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  evolve:Dudunsparce | play:Buddy-Buddy Poffin | evolve:Dudunsparce | *attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | end
+  · ATTACH Telepath Psychic Energy → Alakazam (active) [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+    avail  evolve:Dudunsparce | *play:Buddy-Buddy Poffin | evolve:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+    avail  *evolve:Dudunsparce | evolve:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Dudunsparce                               [policy]
+    avail  *ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · ABILITY Dudunsparce                                [policy]
+    avail  *play:Sacred Ash | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Sacred Ash                                    [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+  · TO_DECK: PICK Dunsparce                            [policy]
+    avail  *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── my turn 7 (engine turn 8) ──
+  hand  Boss’s Orders, Lana’s Aid, Hilda, Dudunsparce, Enhanced Hammer, Xerosic’s Machinations, Abra
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Abra 50/50 e0, Abra 50/50 e0, Dunsparce 70/70 e0
+        prizes 6 · deck 32
+  opp   ACT Archaludon ex 180/300 e1[{M}] · BENCH Cinderace 160/160 e1[{M}], Archaludon ex 400/400 e3[{M}{M}{M}] +1tool, Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 4 · hand 5
+  · EVOLVE → Dudunsparce                               [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · PLAY Abra                                          [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Dunsparce                                     [policy]
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · ATTACH Basic {P} Energy → Kadabra (bench 0)        [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── my turn 8 (engine turn 9) ──
+  hand  Boss’s Orders, Lana’s Aid, Enhanced Hammer, Xerosic’s Machinations, Dudunsparce, Alakazam, Dudunsparce, Xerosic’s Machinations, Kadabra, Night Stretcher, Telepath Psychic Energy
+  me    ACT — · BENCH Kadabra 80/80 e1[{P}], Kadabra 80/80 e0, Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 4 · deck 23
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 3 · hand 7
+  · TO_ACTIVE: PICK Kadabra                            [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 9 (engine turn 10) ──
+  hand  Boss’s Orders, Lana’s Aid, Enhanced Hammer, Xerosic’s Machinations, Dudunsparce, Alakazam, Dudunsparce, Xerosic’s Machinations, Kadabra, Night Stretcher, Telepath Psychic Energy, Dawn
+  me    ACT Kadabra 80/80 e1[{P}] · BENCH Kadabra 80/80 e0, Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 4 · deck 22
+  opp   ACT Archaludon ex 400/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0
+        prizes 3 · hand 7
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · ATTACH Telepath Psychic Energy → Kadabra (bench 0) [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · PLAY Xerosic’s Machinations                        [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── my turn 10 (engine turn 11) ──
+  hand  Boss’s Orders, Lana’s Aid, Enhanced Hammer, Dudunsparce, Xerosic’s Machinations, Dawn, Telepath Psychic Energy, Hilda, Boss’s Orders, Dudunsparce, Dawn, Hilda, Telepath Psychic Energy, Lillie's Determination, Buddy-Buddy Poffin
+  me    ACT — · BENCH Alakazam 140/140 e1[{P}], Kadabra 80/80 e0, Dunsparce 60/60 e0, Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 4 · deck 10
+  opp   ACT Archaludon ex 100/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Relicanth 100/100 e0
+        prizes 2 · hand 3
+  · TO_ACTIVE: PICK Alakazam                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 2   (no attach target offered)
+
+── my turn 11 (engine turn 12) ──
+  hand  Boss’s Orders, Lana’s Aid, Enhanced Hammer, Dudunsparce, Xerosic’s Machinations, Dawn, Telepath Psychic Energy, Hilda, Boss’s Orders, Dudunsparce, Dawn, Hilda, Telepath Psychic Energy, Lillie's Determination, Buddy-Buddy Poffin, Alakazam
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Kadabra 80/80 e0, Dunsparce 60/60 e0, Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 4 · deck 9
+  opp   ACT Archaludon ex 100/400 e3[{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e0, Duraludon 130/130 e0, Relicanth 100/100 e0
+        prizes 2 · hand 3
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · ATTACH Telepath Psychic Energy → Kadabra (bench 0) [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · PLAY Lana’s Aid                                    [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · PLAY Abra                                          [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 12 (engine turn 13) ──
+  hand  Boss’s Orders, Enhanced Hammer, Xerosic’s Machinations, Dawn, Hilda, Boss’s Orders, Dawn, Hilda, Telepath Psychic Energy, Lillie's Determination, Dudunsparce, Dudunsparce, Alakazam, Abra, Basic {P} Energy, Hilda, Enhanced Hammer
+  me    ACT — · BENCH Alakazam 140/140 e1[{P}], Dudunsparce 140/140 e0, Dudunsparce 140/140 e0, Dunsparce 60/60 e0, Abra 50/50 e0
+        prizes 2 · deck 5
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Archaludon ex 300/300 e1[{M}], Relicanth 100/100 e0
+        prizes 1 · hand 3
+  · TO_ACTIVE: PICK Alakazam                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 2   (no attach target offered)
+
+── my turn 13 (engine turn 14) ──
+  hand  Boss’s Orders, Enhanced Hammer, Xerosic’s Machinations, Dawn, Hilda, Boss’s Orders, Dawn, Hilda, Telepath Psychic Energy, Lillie's Determination, Dudunsparce, Dudunsparce, Alakazam, Abra, Basic {P} Energy, Hilda, Enhanced Hammer, Dawn
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Dudunsparce 140/140 e0, Dudunsparce 140/140 e0, Dunsparce 60/60 e0, Abra 50/50 e0
+        prizes 2 · deck 4
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Archaludon ex 300/300 e1[{M}], Relicanth 100/100 e0
+        prizes 1 · hand 3
+  · PLAY Abra                                          [policy]
+  · ATTACH Telepath Psychic Energy → Abra (bench 3)    [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · PLAY Dawn                                          [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── RESULT: WIN at engine turn 14 ──
+  attach/turn 0.38 · lost to retreat 0 · retreats 0 · attacks 5 · damage placements 0
+  net energy on board 5 · evolutions 15 · abilities 4 · plays 29
+  SETUP RACE  Alakazam online: my turn 7  (target 2)  ·  first Powerful Hand: my turn 6  (target 3)
+  ENGINE      Abra line on turn 1: 0 (target 3) · attacks with it 5 · Dudunsparce draw used 4x (0.31 per turn)
+  · 3 turn(s) held energy with no legal attach target offered
+  ⚠ never placed a damage counter
+
+══ GAME 68 ══  seat 1 · going first
+
+── my turn 1 (engine turn 0) ──
+  hand  Dudunsparce, Hilda, Poké Pad, Night Stretcher, Hilda, Neutralization Zone, Abra
+  me    ACT — · BENCH —
+        prizes 0 · deck 53
+  opp   ACT — · BENCH —
+        prizes 0 · hand 7
+  · SETUP ACTIVE Abra                                  [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 2 (engine turn 1) ──
+  hand  Dudunsparce, Hilda, Poké Pad, Night Stretcher, Hilda, Neutralization Zone, Night Stretcher
+  me    ACT Abra 50/50 e0 · BENCH —
+        prizes 6 · deck 46
+  opp   ACT Cinderace 160/160 e0 · BENCH —
+        prizes 6 · hand 6
+    avail  *play:Poké Pad | play:Neutralization Zone | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+    avail  play:Neutralization Zone | *play:Abra | end
+  · PLAY Abra                                          [policy]
+    avail  play:Neutralization Zone | *end
+  · END TURN                                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 3 (engine turn 2) ──
+  hand  Dudunsparce, Hilda, Night Stretcher, Hilda, Neutralization Zone, Night Stretcher
+  me    ACT — · BENCH Abra 50/50 e0
+        prizes 6 · deck 45
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
+        prizes 5 · hand 3
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 4 (engine turn 3) ──
+  hand  Dudunsparce, Hilda, Night Stretcher, Hilda, Neutralization Zone, Night Stretcher, Alakazam
+  me    ACT Abra 50/50 e0 · BENCH —
+        prizes 6 · deck 44
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}], Duraludon 130/130 e0
+        prizes 5 · hand 3
+    avail  play:Hilda | *play:Night Stretcher | play:Hilda | play:Neutralization Zone | play:Night Stretcher | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+    avail  play:Hilda | play:Hilda | play:Neutralization Zone | *play:Abra | end
+  · PLAY Abra                                          [policy]
+    avail  *play:Hilda | play:Hilda | play:Neutralization Zone | end
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+    avail  play:Neutralization Zone | evolve:Kadabra | attach:Basic {P} Energy | *attach:Basic {P} Energy | end
+  · ATTACH Basic {P} Energy → Abra (bench 0)           [policy]
+    avail  play:Neutralization Zone | *evolve:Kadabra | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Neutralization Zone | *end
+  · END TURN                                           [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── my turn 5 (engine turn 4) ──
+  hand  Dudunsparce, Hilda, Neutralization Zone, Night Stretcher, Alakazam, Alakazam, Rare Candy
+  me    ACT — · BENCH Abra 50/50 e1[{P}]
+        prizes 6 · deck 40
+  opp   ACT Duraludon 130/130 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}], Relicanth 100/100 e0, Duraludon 130/130 e0
+        prizes 4 · hand 6
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 6 (engine turn 5) ──
+  hand  Dudunsparce, Hilda, Neutralization Zone, Night Stretcher, Alakazam, Alakazam, Rare Candy, Kadabra
+  me    ACT Abra 50/50 e1[{P}] · BENCH —
+        prizes 6 · deck 39
+  opp   ACT Duraludon 130/130 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Duraludon 130/130 e1[{M}], Relicanth 100/100 e0, Duraludon 130/130 e0
+        prizes 4 · hand 6
+    avail  play:Hilda | play:Neutralization Zone | play:Night Stretcher | *play:Rare Candy | evolve:Kadabra | attack:Abra | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Hilda | play:Neutralization Zone | *play:Night Stretcher | attack:Alakazam | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+    avail  play:Hilda | play:Neutralization Zone | *play:Abra | attack:Alakazam | end
+  · PLAY Abra                                          [policy]
+    avail  *play:Hilda | play:Neutralization Zone | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · TO_HAND: PICK Telepath Psychic Energy              [policy]
+    avail  play:Neutralization Zone | attach:Telepath Psychic Energy | *attach:Telepath Psychic Energy | attack:Alakazam | retreat:Alakazam | end
+  · ATTACH Telepath Psychic Energy → Abra (bench 0)    [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+    avail  play:Neutralization Zone | *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── my turn 7 (engine turn 6) ──
+  hand  Dudunsparce, Neutralization Zone, Alakazam, Kadabra, Enhanced Hammer, Enhanced Hammer, Kadabra, Alakazam, Alakazam
+  me    ACT — · BENCH Abra 50/50 e1[{P}], Abra 50/50 e0, Abra 50/50 e0
+        prizes 5 · deck 32
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Relicanth 100/100 e0, Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 7
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 8 (engine turn 7) ──
+  hand  Dudunsparce, Neutralization Zone, Alakazam, Kadabra, Enhanced Hammer, Enhanced Hammer, Kadabra, Alakazam, Alakazam, Buddy-Buddy Poffin
+  me    ACT Abra 50/50 e1[{P}] · BENCH Abra 50/50 e0, Abra 50/50 e0
+        prizes 5 · deck 31
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Relicanth 100/100 e0, Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 7
+  · PLAY Neutralization Zone                           [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Sacred Ash                                    [policy]
+  · TO_DECK: PICK Kadabra                              [policy]
+  · TO_DECK: PICK Alakazam                             [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+  · ATTACK Kadabra (attackId 1071)                     [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 9 (engine turn 9) ──
+  hand  Dudunsparce, Alakazam, Enhanced Hammer, Enhanced Hammer, Alakazam, Alakazam, Dudunsparce, Dunsparce, Xerosic’s Machinations, Dawn
+  me    ACT Kadabra 80/80 e1[{P}] · BENCH Kadabra 80/80 e0, Kadabra 80/80 e0, Dunsparce 60/60 e0, Dunsparce 60/60 e0
+        prizes 5 · deck 23
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Cinderace 160/160 e1[{M}], Relicanth 100/100 e0, Archaludon ex 300/300 e3[{M}{M}{M}]
+        prizes 3 · hand 4
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · ATTACH Basic {P} Energy → Kadabra (bench 0)        [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · PLAY Dunsparce                                     [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── my turn 10 (engine turn 11) ──
+  hand  Enhanced Hammer, Enhanced Hammer, Xerosic’s Machinations, Dawn, Dudunsparce, Buddy-Buddy Poffin, Xerosic’s Machinations, Telepath Psychic Energy, Dudunsparce, Kadabra, Rare Candy, Lana’s Aid, Dawn, Boss’s Orders, Dawn, Alakazam, Dudunsparce, Boss’s Orders, Telepath Psychic Energy, Night Stretcher
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Alakazam 140/140 e1[{P}], Alakazam 140/140 e0, Dunsparce 70/70 e0, Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 3 · deck 6
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Relicanth 100/100 e0, Cinderace 160/160 e1[{M}], Duraludon 130/130 e0
+        prizes 3 · hand 4
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · ATTACH Telepath Psychic Energy → Alakazam (bench 1) [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 11 (engine turn 13) ──
+  hand  Enhanced Hammer, Enhanced Hammer, Xerosic’s Machinations, Dawn, Dudunsparce, Buddy-Buddy Poffin, Xerosic’s Machinations, Dudunsparce, Rare Candy, Lana’s Aid, Dawn, Boss’s Orders, Dawn, Alakazam, Dudunsparce, Boss’s Orders, Telepath Psychic Energy, Basic {P} Energy, Lillie's Determination, Boss’s Orders, Enhanced Hammer, Telepath Psychic Energy, Rare Candy
+  me    ACT Alakazam 90/140 e1[{P}] · BENCH Alakazam 140/140 e1[{P}], Alakazam 140/140 e1[{P}], Dunsparce 70/70 e0, Kadabra 80/80 e0, Dunsparce 60/60 e0
+        prizes 1 · deck 3
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Relicanth 100/100 e0, Duraludon 130/130 e2[{M}{M}], Duraludon 130/130 e0
+        prizes 3 · hand 4
+  · ATTACH Telepath Psychic Energy → Kadabra (bench 3) [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 3
+
+── RESULT: WIN at engine turn 13 ──
+  attach/turn 0.45 · lost to retreat 0 · retreats 0 · attacks 5 · damage placements 0
+  net energy on board 5 · evolutions 14 · abilities 2 · plays 21
+  SETUP RACE  Alakazam online: my turn 10  (target 2)  ·  first Powerful Hand: my turn 6  (target 3)
+  ENGINE      Abra line on turn 1: 1 (target 3) · attacks with it 4 · Dudunsparce draw used 2x (0.18 per turn)
+  ⚠ never placed a damage counter
+
+══ GAME 69 ══  seat 0 · going second
+
+── my turn 1 (engine turn 0) ──
+  hand  (hidden or empty)
+  me    ACT — · BENCH —
+        prizes 0 · deck 60
+  opp   ACT — · BENCH —
+        prizes 0 · hand 0
+  · GO SECOND                                          [policy]
+  · SETUP ACTIVE Abra                                  [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 2 (engine turn 2) ──
+  hand  Buddy-Buddy Poffin, Hilda, Rare Candy, Sacred Ash, Poké Pad, Night Stretcher, Kadabra
+  me    ACT Abra 50/50 e0 · BENCH —
+        prizes 6 · deck 46
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e0
+        prizes 6 · hand 3
+    avail  *play:Buddy-Buddy Poffin | play:Hilda | play:Poké Pad | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+    avail  play:Hilda | *play:Poké Pad | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  *play:Hilda | end
+  · PLAY Hilda                                         [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+    avail  *attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | end
+  · ATTACH Basic {P} Energy → Abra (active)            [policy]
+    avail  *attack:Abra | retreat:Abra | end
+  · ATTACK Abra (attackId 1070)                        [policy]
+  · SWITCH: PICK Abra                                  [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 0
+
+── my turn 3 (engine turn 3) ──
+  hand  Rare Candy, Sacred Ash, Night Stretcher, Kadabra, Alakazam, Kadabra
+  me    ACT — · BENCH Abra 50/50 e1[{P}], Abra 50/50 e0
+        prizes 6 · deck 41
+  opp   ACT Cinderace 150/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}], Relicanth 100/100 e1[{M}]
+        prizes 5 · hand 4
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 4 (engine turn 4) ──
+  hand  Rare Candy, Sacred Ash, Night Stretcher, Kadabra, Alakazam, Kadabra, Poké Pad
+  me    ACT Abra 50/50 e1[{P}] · BENCH Abra 50/50 e0
+        prizes 6 · deck 40
+  opp   ACT Cinderace 150/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}], Relicanth 100/100 e1[{M}]
+        prizes 5 · hand 4
+    avail  *play:Rare Candy | play:Sacred Ash | play:Night Stretcher | evolve:Kadabra | evolve:Kadabra | evolve:Kadabra | evolve:Kadabra | play:Poké Pad | attack:Abra | retreat:Abra | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Sacred Ash | play:Night Stretcher | evolve:Kadabra | evolve:Kadabra | play:Poké Pad | *play:Buddy-Buddy Poffin | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+    avail  play:Sacred Ash | *play:Night Stretcher | evolve:Kadabra | evolve:Kadabra | play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+    avail  evolve:Kadabra | evolve:Kadabra | play:Poké Pad | *play:Abra | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Abra                                          [policy]
+    avail  evolve:Kadabra | evolve:Kadabra | *play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+    avail  evolve:Kadabra | evolve:Kadabra | *play:Dunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dunsparce                                     [policy]
+    avail  *evolve:Kadabra | evolve:Kadabra | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  *play:Dawn | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 5 (engine turn 5) ──
+  hand  Sacred Ash, Kadabra, Alakazam, Dudunsparce, Buddy-Buddy Poffin, Dunsparce, Dudunsparce, Alakazam, Kadabra
+  me    ACT — · BENCH Kadabra 80/80 e0, Abra 50/50 e0, Dunsparce 60/60 e0, Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 5 · deck 29
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Relicanth 100/100 e1[{M}], Duraludon 130/130 e2[{M}{M}]
+        prizes 4 · hand 4
+  · TO_ACTIVE: PICK Kadabra                            [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 0
+
+── my turn 6 (engine turn 6) ──
+  hand  Sacred Ash, Kadabra, Alakazam, Dudunsparce, Buddy-Buddy Poffin, Dunsparce, Dudunsparce, Alakazam, Kadabra, Telepath Psychic Energy
+  me    ACT Kadabra 80/80 e0 · BENCH Abra 50/50 e0, Dunsparce 60/60 e0, Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 5 · deck 28
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Relicanth 100/100 e1[{M}], Duraludon 130/130 e2[{M}{M}]
+        prizes 4 · hand 4
+    avail  *play:Sacred Ash | evolve:Kadabra | evolve:Kadabra | evolve:Alakazam | evolve:Dudunsparce | evolve:Dudunsparce | play:Buddy-Buddy Poffin | play:Dunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Alakazam | evolve:Kadabra | evolve:Kadabra | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | end
+  · PLAY Sacred Ash                                    [policy]
+  · TO_DECK: PICK Alakazam                             [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+    avail  evolve:Kadabra | evolve:Kadabra | *evolve:Alakazam | evolve:Dudunsparce | evolve:Dudunsparce | play:Buddy-Buddy Poffin | play:Dunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Alakazam | evolve:Kadabra | evolve:Kadabra | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | end
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  evolve:Kadabra | evolve:Kadabra | evolve:Dudunsparce | evolve:Dudunsparce | play:Buddy-Buddy Poffin | play:Dunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Kadabra | evolve:Kadabra | *attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | attach:Telepath Psychic Energy | play:Poké Pad | play:Xerosic’s Machinations | end
+  · ATTACH Telepath Psychic Energy → Alakazam (active) [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+    avail  evolve:Kadabra | evolve:Kadabra | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Kadabra | evolve:Kadabra | *play:Poké Pad | play:Xerosic’s Machinations | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  *evolve:Kadabra | evolve:Kadabra | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Kadabra | evolve:Kadabra | play:Xerosic’s Machinations | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  evolve:Dudunsparce | *evolve:Dudunsparce | evolve:Dudunsparce | evolve:Dudunsparce | evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | evolve:Dudunsparce | evolve:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Dudunsparce                               [policy]
+    avail  evolve:Dudunsparce | evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | evolve:Dudunsparce | *ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · ABILITY Dudunsparce                                [policy]
+    avail  play:Buddy-Buddy Poffin | play:Dunsparce | evolve:Dudunsparce | evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | *evolve:Dudunsparce | play:Xerosic’s Machinations | play:Buddy-Buddy Poffin | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Dudunsparce                               [policy]
+    avail  play:Buddy-Buddy Poffin | play:Dunsparce | evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | play:Xerosic’s Machinations | *play:Buddy-Buddy Poffin | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+    avail  evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | play:Xerosic’s Machinations | *ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · ABILITY Dudunsparce                                [policy]
+    avail  play:Buddy-Buddy Poffin | play:Dunsparce | evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | play:Xerosic’s Machinations | evolve:Kadabra | *play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+    avail  play:Buddy-Buddy Poffin | *play:Dunsparce | evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | play:Xerosic’s Machinations | evolve:Kadabra | play:Dunsparce | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dunsparce                                     [policy]
+    avail  *evolve:Kadabra | play:Xerosic’s Machinations | play:Lana’s Aid | play:Xerosic’s Machinations | evolve:Kadabra | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Xerosic’s Machinations | play:Lana’s Aid | play:Xerosic’s Machinations | play:Dawn | *play:Night Stretcher | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+    avail  play:Xerosic’s Machinations | play:Xerosic’s Machinations | *play:Dawn | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── my turn 7 (engine turn 7) ──
+  hand  Buddy-Buddy Poffin, Dudunsparce, Alakazam, Enhanced Hammer, Xerosic’s Machinations, Alakazam, Lana’s Aid, Xerosic’s Machinations, Telepath Psychic Energy, Kadabra, Telepath Psychic Energy, Dunsparce, Basic {P} Energy, Dudunsparce, Alakazam, Enhanced Hammer, Hilda
+  me    ACT — · BENCH Kadabra 80/80 e0, Kadabra 80/80 e0, Abra 50/50 e0, Dunsparce 60/60 e0, Dunsparce 70/70 e0
+        prizes 3 · deck 15
+  opp   ACT Archaludon ex 300/300 e4[{M}{M}{M}{M}] · BENCH Relicanth 100/100 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 4
+  · TO_ACTIVE: PICK Kadabra                            [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 3   (no attach target offered)
+
+── my turn 8 (engine turn 8) ──
+  hand  Buddy-Buddy Poffin, Dudunsparce, Alakazam, Enhanced Hammer, Xerosic’s Machinations, Alakazam, Lana’s Aid, Xerosic’s Machinations, Telepath Psychic Energy, Kadabra, Telepath Psychic Energy, Dunsparce, Basic {P} Energy, Dudunsparce, Alakazam, Enhanced Hammer, Hilda, Enhanced Hammer
+  me    ACT Kadabra 80/80 e0 · BENCH Kadabra 80/80 e0, Abra 50/50 e0, Dunsparce 60/60 e0, Dunsparce 70/70 e0
+        prizes 3 · deck 14
+  opp   ACT Archaludon ex 300/300 e4[{M}{M}{M}{M}] · BENCH Relicanth 100/100 e1[{M}], Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 4
+  · ATTACH Telepath Psychic Energy → Kadabra (active)  [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Neutralization Zone                           [policy]
+  · PLAY Lana’s Aid                                    [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 3
+
+── my turn 9 (engine turn 10) ──
+  hand  Buddy-Buddy Poffin, Enhanced Hammer, Xerosic’s Machinations, Xerosic’s Machinations, Kadabra, Telepath Psychic Energy, Dunsparce, Basic {P} Energy, Enhanced Hammer, Hilda, Enhanced Hammer, Dudunsparce, Boss’s Orders, Dawn, Boss’s Orders, Hilda, Basic {P} Energy, Telepath Psychic Energy, Alakazam, Abra, Kadabra, Lillie's Determination, Hilda, Rare Candy
+  me    ACT Alakazam 110/140 e1[{P}] · BENCH Alakazam 140/140 e0, Alakazam 140/140 e0, Dudunsparce 140/140 e0, Dudunsparce 140/140 e0
+        prizes 1 · deck 4
+  opp   ACT Duraludon 130/130 e2[{M}{M}] · BENCH Relicanth 100/100 e1[{M}], Duraludon 130/130 e0
+        prizes 3 · hand 4
+  · ATTACH Telepath Psychic Energy → Alakazam (bench 0) [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 4
+
+── RESULT: WIN at engine turn 10 ──
+  attach/turn 0.44 · lost to retreat 0 · retreats 0 · attacks 5 · damage placements 0
+  net energy on board 4 · evolutions 12 · abilities 2 · plays 22
+  SETUP RACE  Alakazam online: my turn 9  (target 2)  ·  first Powerful Hand: my turn 4  (target 3)
+  ENGINE      Abra line on turn 1: 1 (target 3) · attacks with it 4 · Dudunsparce draw used 2x (0.22 per turn)
+  · 1 turn(s) held energy with no legal attach target offered
+  ⚠ never placed a damage counter
+
+══ GAME 70 ══  seat 1 · going first
+
+── my turn 1 (engine turn 0) ──
+  hand  Night Stretcher, Enhanced Hammer, Poké Pad, Night Stretcher, Basic {P} Energy, Abra, Basic {P} Energy
+  me    ACT — · BENCH —
+        prizes 0 · deck 53
+  opp   ACT — · BENCH —
+        prizes 6 · hand 6
+  · SETUP ACTIVE Abra                                  [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 2
+
+── my turn 2 (engine turn 1) ──
+  hand  Night Stretcher, Enhanced Hammer, Poké Pad, Night Stretcher, Basic {P} Energy, Basic {P} Energy, Buddy-Buddy Poffin
+  me    ACT Abra 50/50 e0 · BENCH —
+        prizes 6 · deck 46
+  opp   ACT Cinderace 160/160 e0 · BENCH —
+        prizes 6 · hand 7
+    avail  play:Poké Pad | attach:Basic {P} Energy | attach:Basic {P} Energy | *play:Buddy-Buddy Poffin | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+    avail  *play:Poké Pad | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+    avail  *attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | end
+  · ATTACH Basic {P} Energy → Abra (active)            [policy]
+    avail  retreat:Abra | *end
+  · END TURN                                           [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 3 (engine turn 2) ──
+  hand  Night Stretcher, Enhanced Hammer, Night Stretcher, Basic {P} Energy, Kadabra
+  me    ACT — · BENCH Abra 50/50 e0, Abra 50/50 e0
+        prizes 6 · deck 43
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}]
+        prizes 5 · hand 8
+  · TO_ACTIVE: PICK Abra                               [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 4 (engine turn 3) ──
+  hand  Night Stretcher, Enhanced Hammer, Night Stretcher, Basic {P} Energy, Kadabra, Dawn
+  me    ACT Abra 50/50 e0 · BENCH Abra 50/50 e0
+        prizes 6 · deck 42
+  opp   ACT Cinderace 160/160 e1[{M}] · BENCH Duraludon 130/130 e3[{M}{M}{M}]
+        prizes 5 · hand 8
+    avail  play:Night Stretcher | play:Night Stretcher | attach:Basic {P} Energy | *attach:Basic {P} Energy | evolve:Kadabra | evolve:Kadabra | play:Dawn | end
+  · ATTACH Basic {P} Energy → Abra (bench 0)           [policy]
+    avail  *play:Night Stretcher | play:Night Stretcher | evolve:Kadabra | evolve:Kadabra | play:Dawn | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+    avail  play:Night Stretcher | evolve:Kadabra | evolve:Kadabra | play:Dawn | *play:Abra | end
+  · PLAY Abra                                          [policy]
+    avail  *play:Night Stretcher | evolve:Kadabra | evolve:Kadabra | play:Dawn | end
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+    avail  *evolve:Kadabra | evolve:Kadabra | play:Dawn | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  *play:Dawn | play:Hilda | end
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+    avail  play:Rare Candy | *play:Dunsparce | evolve:Kadabra | end
+  · PLAY Dunsparce                                     [policy]
+    avail  *play:Rare Candy | evolve:Kadabra | end
+  · PLAY Rare Candy                                    [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  *play:Poké Pad | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+    avail  *end
+  · END TURN                                           [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── my turn 5 (engine turn 4) ──
+  hand  Enhanced Hammer, Basic {P} Energy, Hilda, Kadabra, Hilda, Alakazam, Dudunsparce
+  me    ACT — · BENCH Alakazam 140/140 e1[{P}], Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 6 · deck 33
+  opp   ACT Archaludon ex 400/400 e4[{M}{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}]
+        prizes 4 · hand 8
+  · TO_ACTIVE: PICK Alakazam                           [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 6 (engine turn 5) ──
+  hand  Enhanced Hammer, Basic {P} Energy, Hilda, Kadabra, Hilda, Alakazam, Dudunsparce, Buddy-Buddy Poffin
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Abra 50/50 e0, Dunsparce 60/60 e0
+        prizes 6 · deck 32
+  opp   ACT Archaludon ex 400/400 e4[{M}{M}{M}{M}] +1tool · BENCH Cinderace 160/160 e1[{M}]
+        prizes 4 · hand 8
+    avail  attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Hilda | evolve:Kadabra | play:Hilda | evolve:Dudunsparce | *play:Buddy-Buddy Poffin | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+    avail  attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Hilda | evolve:Kadabra | play:Hilda | *evolve:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Dudunsparce                               [policy]
+    avail  attach:Basic {P} Energy | *attach:Basic {P} Energy | attach:Basic {P} Energy | attach:Basic {P} Energy | play:Hilda | evolve:Kadabra | play:Hilda | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · ATTACH Basic {P} Energy → Abra (bench 0)           [policy]
+    avail  play:Hilda | *evolve:Kadabra | play:Hilda | ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+    avail  play:Hilda | play:Hilda | play:Boss’s Orders | *ability:Dudunsparce | attack:Alakazam | retreat:Alakazam | end
+  · ABILITY Dudunsparce                                [policy]
+    avail  play:Hilda | play:Hilda | *play:Boss’s Orders | play:Buddy-Buddy Poffin | play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Cinderace                             [policy]
+    avail  *play:Buddy-Buddy Poffin | play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · TO_BENCH: PICK Dunsparce                           [policy]
+    avail  *play:Poké Pad | attack:Alakazam | retreat:Alakazam | end
+  · PLAY Poké Pad                                      [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+    avail  *attack:Alakazam | retreat:Alakazam | end
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 1
+
+── my turn 7 (engine turn 6) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Alakazam, Telepath Psychic Energy, Dudunsparce, Dudunsparce
+  me    ACT — · BENCH Kadabra 80/80 e1[{P}], Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 6 · deck 26
+  opp   ACT Archaludon ex 400/400 e4[{M}{M}{M}{M}] +1tool · BENCH Cinderace 20/160 e1[{M}]
+        prizes 3 · hand 11
+  · TO_ACTIVE: PICK Kadabra                            [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   (no attach target offered)
+
+── my turn 8 (engine turn 7) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Alakazam, Telepath Psychic Energy, Dudunsparce, Dudunsparce, Boss’s Orders
+  me    ACT Kadabra 80/80 e1[{P}] · BENCH Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 6 · deck 25
+  opp   ACT Archaludon ex 400/400 e4[{M}{M}{M}{M}] +1tool · BENCH Cinderace 20/160 e1[{M}]
+        prizes 3 · hand 11
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Neutralization Zone                           [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · PLAY Boss’s Orders                                 [policy]
+  · SWITCH: PICK Cinderace                             [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 1   ⚠ MISSED ATTACHMENT
+
+── my turn 9 (engine turn 9) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Telepath Psychic Energy, Dawn, Dawn, Lana’s Aid, Hilda, Kadabra, Sacred Ash, Telepath Psychic Energy
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Dudunsparce 140/140 e0
+        prizes 5 · deck 20
+  opp   ACT Archaludon ex 400/400 e4[{M}{M}{M}{M}] +1tool · BENCH Duraludon 130/130 e1[{M}], Duraludon 130/130 e0
+        prizes 3 · hand 10
+  · PLAY Sacred Ash                                    [policy]
+  · TO_DECK: PICK Kadabra                              [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+  · TO_DECK: PICK Alakazam                             [policy]
+  · TO_DECK: PICK Abra                                 [policy]
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Abra                                 [policy]
+  · TO_HAND: PICK Dudunsparce                          [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · PLAY Abra                                          [policy]
+  · ATTACH Telepath Psychic Energy → Abra (bench 1)    [policy]
+  · TO_BENCH: PICK Abra                                [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 10 (engine turn 11) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Dawn, Lana’s Aid, Hilda, Kadabra, Telepath Psychic Energy, Dudunsparce, Alakazam, Telepath Psychic Energy
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Dudunsparce 140/140 e0, Abra 50/50 e1[{P}], Abra 50/50 e0
+        prizes 5 · deck 19
+  opp   ACT Archaludon ex 280/400 e4[{M}{M}{M}{M}] +1tool · BENCH Archaludon ex 300/300 e3[{M}{M}{M}], Duraludon 130/130 e1[{M}]
+        prizes 3 · hand 8
+  · PLAY Dawn                                          [policy]
+  · TO_HAND: PICK Dunsparce                            [policy]
+  · TO_HAND: PICK Kadabra                              [policy]
+  · TO_HAND: PICK Alakazam                             [policy]
+  · ABILITY Dudunsparce                                [policy]
+  · PLAY Dunsparce                                     [policy]
+  · PLAY Night Stretcher                               [policy]
+  · TO_HAND: PICK Basic {P} Energy                     [policy]
+  · ATTACH Telepath Psychic Energy → Abra (bench 1)    [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Dunsparce                                     [policy]
+  · EVOLVE → Kadabra                                   [policy]
+  · ACTIVATE: yes                                      [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 1 · discarded 0 · net 1 · energy in hand at start 2
+
+── my turn 11 (engine turn 13) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Lana’s Aid, Hilda, Dudunsparce, Alakazam, Telepath Psychic Energy, Alakazam, Alakazam, Lillie's Determination, Basic {P} Energy, Xerosic’s Machinations, Boss’s Orders, Rare Candy, Dunsparce, Buddy-Buddy Poffin, Enhanced Hammer
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Kadabra 80/80 e1[{P}], Kadabra 80/80 e1[{P}], Dunsparce 70/70 e0, Dunsparce 60/60 e0
+        prizes 3 · deck 10
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Archaludon ex 300/300 e3[{M}{M}{M}]
+        prizes 3 · hand 6
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · EVOLVE → Dudunsparce                               [policy]
+  · EVOLVE → Alakazam                                  [policy]
+  · ACTIVATE: yes                                      [policy]
+  · PLAY Xerosic’s Machinations                        [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 2   ⚠ MISSED ATTACHMENT
+
+── my turn 12 (engine turn 15) ──
+  hand  Enhanced Hammer, Hilda, Hilda, Lana’s Aid, Hilda, Telepath Psychic Energy, Alakazam, Lillie's Determination, Basic {P} Energy, Boss’s Orders, Rare Candy, Dunsparce, Buddy-Buddy Poffin, Enhanced Hammer, Dudunsparce, Xerosic’s Machinations, Dudunsparce, Poké Pad, Telepath Psychic Energy, Abra, Rare Candy, Kadabra
+  me    ACT Alakazam 140/140 e1[{P}] · BENCH Alakazam 140/140 e1[{P}], Alakazam 140/140 e1[{P}], Dudunsparce 140/140 e0, Dudunsparce 140/140 e0
+        prizes 1 · deck 3
+  opp   ACT Archaludon ex 300/300 e3[{M}{M}{M}] · BENCH Duraludon 130/130 e1[{M}], Relicanth 100/100 e0, Duraludon 130/130 e0
+        prizes 3 · hand 3
+  · PLAY Poké Pad                                      [policy]
+  · PLAY Buddy-Buddy Poffin                            [policy]
+  · PLAY Hilda                                         [policy]
+  · ATTACK Alakazam (attackId 1072)                    [policy]
+  · TO_HAND: PICK ?                                    [policy]
+  turn: attached 0 · discarded 0 · net 0 · energy in hand at start 3   ⚠ MISSED ATTACHMENT
+
+── RESULT: WIN at engine turn 15 ──
+  attach/turn 0.42 · lost to retreat 0 · retreats 0 · attacks 6 · damage placements 0
+  net energy on board 5 · evolutions 13 · abilities 3 · plays 26
+  SETUP RACE  Alakazam online: my turn 5  (target 2)  ·  first Powerful Hand: my turn 6  (target 3)
+  ENGINE      Abra line on turn 1: 1 (target 3) · attacks with it 6 · Dudunsparce draw used 3x (0.25 per turn)
+  · 3 turn(s) held energy with no legal attach target offered
+  ⚠ 3 turn(s) ended with energy in hand and no attachment made
+  ⚠ never placed a damage counter
+
+══════════════════════════════════════════════════════════════
+AGGREGATE over 70 completed game(s)
+══════════════════════════════════════════════════════════════
+  win rate            80.0%
+  attach / own turn   0.45   (target 1.00)
+  energy attached     4.14 per game
+  energy discarded    0.00 per game   (0% of attached)
+  net energy          4.14 per game
+  retreats            0.01 per game
+  attacks             4.54 per game
+  damage placements   0.00 per game
+  missed attachments  35 turn(s) total
+
+  Alakazam online     6.1 (avg my-turn, target 2) in 56/70 games
+  first Powerful Hand 5.0 (avg my-turn, target 3) in 64/70 games
+  Dudunsparce draw    0.30 per turn
+  Abra line on turn 1 0.86 (target 3.00)
+  attacker stranded   0 turn(s) total (a loaded attacker left on the bench)
