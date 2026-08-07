@@ -1,0 +1,16 @@
+{
+  "public_name": "Adaptive Grimmsnarl Human-AI Control",
+  "version": "v6",
+  "deck_locked": true,
+  "deck_cards": 60,
+  "policy_inputs": [
+    "visible Active and Bench cards",
+    "visible discard piles",
+    "visible Energy, Tools and Stadium",
+    "legal actions supplied by the simulator",
+    "turn, prize and public board state"
+  ],
+  "identity_inputs_used": false,
+  "official_runtime_included": false,
+  "notes": "The notebook injects the official competition runtime before packaging."
+}

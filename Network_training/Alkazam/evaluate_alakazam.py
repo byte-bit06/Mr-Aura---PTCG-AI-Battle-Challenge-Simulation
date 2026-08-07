@@ -152,6 +152,26 @@ import mcts_lucario_agent
 import archaludon_cinderace_agent
 import alakazam_agent
 
+# Load Grimmsnarl ex agent from grimmsnarl_pkg
+_grimm_pkg = os.path.join(_OPPONENTS_DIR, "grimmsnarl_pkg")
+if _grimm_pkg not in sys.path:
+    sys.path.insert(0, _grimm_pkg)
+
+_old_cwd = os.getcwd()
+try:
+    os.chdir(_grimm_pkg)
+    import main as _grimm_module
+    _grimm_agent = _grimm_module.agent
+finally:
+    os.chdir(_old_cwd)
+
+# Load Wall_V10 V3 agent
+_wall_v10_path = os.path.abspath(os.path.join(_HERE, "..", "Wall_V10", "V3", "main.py"))
+_wall_spec = importlib.util.spec_from_file_location("wall_v10_v3", _wall_v10_path)
+_wall_module = importlib.util.module_from_spec(_wall_spec)
+_wall_spec.loader.exec_module(_wall_module)
+_wall_v10_agent = _wall_module.agent
+
 opponents = {
     "Alakazam ex V21": alakazam_agent.agent,
     "Lucario ex": lucario_agent.agent,
@@ -160,6 +180,8 @@ opponents = {
     "Abomasnow ex": abomasnow_agent.agent,
     "MCTS Lucario": mcts_lucario_agent.agent,
     "Archaludon Cinderace": archaludon_cinderace_agent.agent,
+    "Grimmsnarl ex": _grimm_agent,
+    "Wall_V10 V3": _wall_v10_agent,
 }
 
 REPLAY_DIR = os.path.join(_HERE, "replays_alakazam")
