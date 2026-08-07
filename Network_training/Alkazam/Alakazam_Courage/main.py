@@ -323,13 +323,9 @@ def heuristic_scores(obs):
     # Board is fully set up if we have an active or benched Alakazam ex ready to attack and bench infrastructure built
     board_fully_setup = ((active_id == Alakazam and active_has_psychic) or bench_ready_alak) and (bench_count >= 2)
     
-    # Anti-deckout draw control: once board is fully setup or deck count is low, stop unnecessary draws
-    if board_fully_setup:
-        # Only cap draws if current hand size can comfortably KO opponent's target (+40 damage safety buffer)
-        if target_pokemon is not None and (hand_size * 20) >= (target_pokemon.hp + 40):
-            overdraw = True
-        elif deck_count <= 6:
-            overdraw = True
+    # Anti-deckout draw control: prevent actual deck out (when remaining deck <= 3)
+    if deck_count <= 3:
+        overdraw = True
 
     safe_draws = deck_count - my_prize_count - 1 if not can_win_this_turn else 999
     if overdraw:
