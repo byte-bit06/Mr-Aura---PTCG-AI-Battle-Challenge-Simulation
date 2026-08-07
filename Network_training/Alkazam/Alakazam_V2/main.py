@@ -291,10 +291,16 @@ def heuristic_scores(obs):
                 killable = [c for c in candidates if c[3]]
                 if killable:
                     if op_has_grimmsnarl:
-                        # Prioritize 1-shotting Froslass, Dudunsparce, or Munkidori to take prizes while crippling their engine!
                         engine_killable = [c for c in killable if c[1].id in (Froslass, Dunsparce65, Dunsparce305, Dudunsparce, Munkidori)]
                         if engine_killable:
                             best = max(engine_killable, key=lambda x: (10 if x[1].id in (Froslass, Dudunsparce) else 5, x[2], -x[1].hp))
+                        else:
+                            best = max(killable, key=lambda x: (x[2], x[1].hp))
+                    elif op_has_dragapult_line:
+                        # Dragapult Phase 2 Target Weak Links: Pull up low-HP support units (Xatu, Rotom V, Lumineon V, Poffin targets) requiring only ~7 hand size (140 dmg)
+                        support_killable = [c for c in killable if c[0] != 0 and c[1].hp <= 170]
+                        if support_killable:
+                            best = max(support_killable, key=lambda x: (x[2], -x[1].hp))
                         else:
                             best = max(killable, key=lambda x: (x[2], x[1].hp))
                     else:
@@ -530,15 +536,18 @@ def heuristic_scores(obs):
                     score = W["eri"] if op_state.handCount >= 4 else -1
                 elif cid == Neutralization_Zone:
                     if our_stadium_up and stadium_id == Neutralization_Zone: score = -1
-                    elif op_has_bench_spread and hand_counts.get(Battle_Cage, 0) > 0:
+                    elif op_has_dragapult_line and state.turn <= 2 and hand_counts.get(Battle_Cage, 0) > 0:
+                        # Phase 1: Hold Neutralization Zone for Phase 2 when Dragapult ex enters active spot!
                         score = -1
-                    elif op_has_ex: score = W["nz_ex"]
+                    elif op_has_ex: score = W["nz_ex"] + (5000 if op_has_dragapult_line else 0)
                     elif stadium_id != 0 and not our_stadium_up: score = W["nz_counter"]
                     else: score = -1
                 elif cid == Battle_Cage:
                     if stadium_id == Battle_Cage: score = -1
+                    elif op_has_dragapult_line and state.turn <= 3:
+                        # Phase 1: Drop Battle Cage before Turn 2/3 Phantom Dive bench snipes!
+                        score = W["cage_snipe"] + 15000
                     elif op_has_bench_spread or op_has_grimmsnarl:
-                        # Top priority vs Grimmsnarl / Froslass / Munkidori spread!
                         score = W["cage_snipe"] + 10000
                     elif stadium_id != 0 and not our_stadium_up: score = W["cage_counter"]
                     else: score = -1
@@ -626,7 +635,11 @@ def heuristic_scores(obs):
                     if len(pokemon.energies) == 0: score += 50
                     elif hand_counts[Rare_Candy] > 0 and hand_counts[Alakazam] > 0: score -= 120
             elif card.id == Dudunsparce:
-                score = -1 if safe_draws < 2 else score + 80
+                # Phase 3 Checkmate: Hold Dudunsparce evolution until hand gets disrupted or we need cards to swing for KO!
+                if op_has_dragapult_line and hand_size >= 12 and not target_can_kill:
+                    score = 10  # Hold evolution in hand to protect against Iono/Roxanne
+                else:
+                    score = -1 if safe_draws < 2 else score + 80
             else:
                 score += 30
 
@@ -634,8 +647,10 @@ def heuristic_scores(obs):
             card = get_card(obs, o.area, o.index, my_index)
             if card is None: scores.append(0); continue
             if card.id == Dudunsparce:
+                # Phase 3 Checkmate: Evolve & use Run Away Draw after hand disruption to re-explode hand size!
                 if len(my_field) <= 1: score = -1
                 elif safe_draws < 3 or overdraw: score = -1
+                elif op_has_dragapult_line and hand_size < 8: score = W["ability_dudun"] + 2000
                 elif need_dudunsparce_draw: score = W["ability_dudun"]
                 elif hand_size < (9 if op_has_ex else 6): score = W["ability_dudun"]
                 elif active_id not in ABRA_LINE and o.area == AreaType.ACTIVE: score = W["ability_dudun"]
