@@ -319,10 +319,21 @@ def heuristic_scores(obs):
 
     can_win_this_turn = target_can_kill and my_prize_count <= target_prize_gain
     deck_count = my_state.deckCount
-    safe_draws = deck_count - my_prize_count - 1 if not can_win_this_turn else 999
+    
+    # Board is fully set up if we have an active or benched Alakazam ex ready to attack and bench infrastructure built
+    board_fully_setup = ((active_id == Alakazam and active_has_psychic) or bench_ready_alak) and (bench_count >= 2)
+    
+    # Anti-deckout draw control: once board is fully setup or deck count is low, stop unnecessary draws
+    if board_fully_setup:
+        # Only draw if current hand size cannot KO the opponent's target active unit
+        if target_pokemon is not None and (hand_size * 20) >= target_pokemon.hp:
+            overdraw = True
+        elif deck_count <= 8:
+            overdraw = True
 
-    max_op_hp = max((p.hp for p in op_all_pokemon), default=0)
-    overdraw = False
+    safe_draws = deck_count - my_prize_count - 1 if not can_win_this_turn else 999
+    if overdraw:
+        safe_draws = min(safe_draws, 0)
     has_attack_option = any(o.type == OptionType.ATTACK for o in select.option)
     attack_locked = (context == SelectContext.MAIN and active_id == Alakazam
                      and active_has_psychic and not has_attack_option)
