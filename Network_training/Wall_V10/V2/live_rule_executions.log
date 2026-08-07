@@ -1,0 +1,19 @@
+=== WALL_V10 V2 IF-STATEMENT & STRATEGIC RULE EXECUTION LOG ===
+
+  [FORMATTED BOARD STATE] Opponent Active: Crustle (ID #345) [HP: 150/150 | Energy: 1 (Mist Energy) | Tools: None] | Opponent Bench (1): [Dwebble (ID #344) [HP: 70/70 | Energy: 0 | Tools: None]]
+  [FORMATTED BOARD STATE] Opponent Active: Crustle (ID #345) [HP: 150/150 | Energy: 1 (Mist Energy) | Tools: None] | Opponent Bench (1): [Dwebble (ID #344) [HP: 70/70 | Energy: 0 | Tools: None]]
+
+[Turn 3 DECISION STEP] Active: Kadabra (HP: 80/80, E: 0) | Bench: 2 | Dwebble in Play: 0 | Context: 0 (Raw: 0)
+  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score 507.25
+  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score 300.6
+  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score 606.25
+  [IF EXECUTED] Branch 8: Draw Supporter / Item Play Matched -> Score 606.25
+  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score 507.25
+  [IF EXECUTED] Branch 9: Active Energy Attachment Matched -> Score 507.25
+  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score 300.6
+  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score 300.6
+  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score 300.6
+  [IF EXECUTED] Branch 11: Stadium / Healing Item Matched -> Score 300.6
+  [IF EXECUTED] Branch 13: End Turn Matched -> Score -50.0
+  => FINAL EXECUTION SELECTION: Option 4 (Hilda) with Highest Score: 606.25
+

@@ -1,0 +1,2 @@
+Match: Wall_V10_V2 vs Lucario_ex (verbose_log_demo)
+  -> Winner: Lucario_ex | Wall_V10_V2 Prizes: 1/6 | Lucario_ex Prizes: 6/6 (Steps: 141)

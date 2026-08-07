@@ -22,7 +22,12 @@ import json
 import csv
 from math import inf
 
-RULE_LOG_FILE = os.path.join(os.path.dirname(__file__), "live_rule_executions.log")
+try:
+    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+except (NameError, TypeError):
+    _BASE_DIR = "/kaggle_simulations/agent"
+
+RULE_LOG_FILE = os.path.join(_BASE_DIR, "live_rule_executions.log")
 
 def log_rule_execution(msg):
     sys.stderr.write(f"{msg}\n")
@@ -273,10 +278,10 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
         if p is None: continue
         energies = getattr(p, "energies", [])
         e_count = len(energies) if isinstance(energies, list) else (int(energies) if isinstance(energies, (int, float)) else 0)
-        if e_count >= 3:
+        if e_count == 3:
             powered_attackers_count += 1
 
-    score += powered_attackers_count * 12.0  # Impactful +12.0 per fully powered attacker
+    score += powered_attackers_count * 20.0  # Impactful +12.0 per fully powered attacker
 
     # ── 3.5 LOW HP ENERGY ATTACHMENT DISCOURAGEMENT HEURISTIC ──
     # Discourages attaching energies to low HP Pokemon (HP <= 40 or <= 35%) that have < 2 energies
@@ -294,13 +299,13 @@ def evaluate_simulated_state(initial_obs, final_obs) -> float:
         p_id = getattr(p, "id", None)
         p_dmg = get_card_attack_damage(p_id)
         
-        is_low_hp = (p_hp <= 40 or p_hp_pct <= 0.35)
+        is_low_hp = (p_hp <= 50 or p_hp_pct <= 0.35)
         has_low_energy = (e_count < 2)
         cannot_one_shot_opp = (p_dmg < opp_active_hp_final)
         
         if is_low_hp and has_low_energy and cannot_one_shot_opp:
             if e_count > 0:
-                score -= 20.0  # Discourage wasting energy attachments on vulnerable, low-energy Pokemon!
+                score -= 80.0  # Discourage wasting energy attachments on vulnerable, low-energy Pokemon!
 
     # ── 4. WALL IMMUNITY & DEFENSIVE THREAT STABILITY ──
     opp_is_ex = is_card_ex(getattr(op_active_final, "id", None)) if op_active_final else False
