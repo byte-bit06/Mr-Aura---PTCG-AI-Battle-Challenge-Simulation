@@ -325,10 +325,10 @@ def heuristic_scores(obs):
     
     # Anti-deckout draw control: once board is fully setup or deck count is low, stop unnecessary draws
     if board_fully_setup:
-        # Only draw if current hand size cannot KO the opponent's target active unit
-        if target_pokemon is not None and (hand_size * 20) >= target_pokemon.hp:
+        # Only cap draws if current hand size can comfortably KO opponent's target (+40 damage safety buffer)
+        if target_pokemon is not None and (hand_size * 20) >= (target_pokemon.hp + 40):
             overdraw = True
-        elif deck_count <= 8:
+        elif deck_count <= 6:
             overdraw = True
 
     safe_draws = deck_count - my_prize_count - 1 if not can_win_this_turn else 999
