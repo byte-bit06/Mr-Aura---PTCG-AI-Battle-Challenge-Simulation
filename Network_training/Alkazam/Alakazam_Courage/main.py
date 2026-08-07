@@ -505,23 +505,20 @@ def heuristic_scores(obs):
                     score = W["eri"] if op_state.handCount >= 4 else -1
                 elif cid == Neutralization_Zone:
                     if our_stadium_up and stadium_id == Neutralization_Zone: score = -1
-                    elif (op_has_dragapult_line or op_has_grimmsnarl or op_has_bench_spread) and hand_counts.get(Battle_Cage, 0) > 0:
-                        # Deprioritize Neutralization Zone if we face spread damage and hold Battle Cage!
+                    elif op_has_bench_spread and hand_counts.get(Battle_Cage, 0) > 0:
                         score = -1
                     elif op_has_ex: score = W["nz_ex"]
                     elif stadium_id != 0 and not our_stadium_up: score = W["nz_counter"]
                     else: score = -1
                 elif cid == Battle_Cage:
                     if stadium_id == Battle_Cage: score = -1
-                    elif our_stadium_up and stadium_id == Neutralization_Zone and (op_has_dragapult_line or op_has_grimmsnarl or op_has_bench_spread):
-                        # Replace Neutralization Zone with Battle Cage when facing bench spread damage!
+                    elif our_stadium_up and stadium_id == Neutralization_Zone and op_has_bench_spread:
                         score = W["cage_snipe"] + 2000
                     elif our_stadium_up: score = -1
-                    elif op_has_dragapult_line or op_has_grimmsnarl or op_has_bench_spread:
-                        # Top priority when facing bench damage / spread threats
+                    elif op_has_bench_spread:
                         score = W["cage_snipe"] + 2000
                     elif stadium_id != 0 and not our_stadium_up: score = W["cage_counter"]
-                    else: score = W["cage_snipe"]
+                    else: score = -1
                 elif cid == Nighttime_Mine:
                     if stadium_id == Nighttime_Mine: score = -1
                     elif stadium_id != 0 and not our_stadium_up: score = W["mine_counter"]
