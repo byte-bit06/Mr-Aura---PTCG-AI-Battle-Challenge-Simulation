@@ -123,6 +123,8 @@ Froslass = 104
 Munkidori = 112
 Duskull = 131
 Secret_Box = 1092
+Dwebble_IDs = {344, 532}
+Crustle_IDs = {345, 533}
 GRIMMSNARL_ENGINE_SPECIES = {Dunsparce65, Dunsparce305, Dudunsparce, Froslass, Munkidori, Impidimp_G, Morgrem_G}
 Slowpoke_IDs = (162, 327)
 Froakie_IDs = (33, 945)
@@ -206,6 +208,7 @@ def heuristic_scores(obs):
     op_all_pokemon = [p for p in (op_state.active + op_state.bench) if p is not None]
     op_has_dragapult_line = any(p.id in (Dreepy, Drakloak, Dragapult_ex) for p in op_all_pokemon)
     op_has_grimmsnarl = any(p.id in (Impidimp_G, Morgrem_G, Grimmsnarl_ex, Munkidori, Froslass) for p in op_all_pokemon)
+    op_has_crustle = any(p.id in Crustle_IDs or p.id in Dwebble_IDs for p in op_all_pokemon)
     op_has_bench_spread = op_has_dragapult_line or op_has_grimmsnarl or any(
         p.id in (Duskull, Wellspring_Mask_Ogerpon_ex) or p.id in Froakie_IDs
         for p in op_all_pokemon)
@@ -524,7 +527,10 @@ def heuristic_scores(obs):
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
                     score = W["sacred_ash_hi"] if dis_abra >= 2 else (W["sacred_ash_lo"] if dis_abra >= 1 else -1)
                 elif cid == Enhanced_Hammer:
-                    if target_hammer_needed > 0: score = W["hammer_target"]
+                    if target_hammer_needed > 0: score = W["hammer_target"] + 15000
+                    elif op_has_crustle and any(count_special_defense_energies(p) > 0 for p in op_all_pokemon):
+                        # Top priority vs Crustle: Strip Mist Energy / Rocky Fighting Energy to enable Powerful Hand 1-shots!
+                        score = W["hammer_target"] + 20000
                     elif any(count_special_defense_energies(p) > 0 for p in op_all_pokemon): score = W["hammer_any"]
                     else: score = -1
                 elif cid == Wondrous_Patch:
