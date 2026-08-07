@@ -319,9 +319,7 @@ def heuristic_scores(obs):
 
     can_win_this_turn = target_can_kill and my_prize_count <= target_prize_gain
     deck_count = my_state.deckCount
-    
-    # Board is fully set up if we have an active or benched Alakazam ex ready to attack and bench infrastructure built
-    board_fully_setup = ((active_id == Alakazam and active_has_psychic) or bench_ready_alak) and (bench_count >= 2)
+    overdraw = False
     
     # Anti-deckout draw control: prevent actual deck out (when remaining deck <= 3)
     if deck_count <= 3:
@@ -592,7 +590,11 @@ def heuristic_scores(obs):
                 else: score += 50
                 score += len(pokemon.energies) * 10
             elif card.id == Kadabra:
-                if safe_draws < 2: score = -1
+                kadabra_count_on_field = field_counts[Kadabra]
+                if kadabra_count_on_field >= 2:
+                    # Maintain exactly 2 Kadabras on field for maximum setup efficiency!
+                    score = -1
+                elif safe_draws < 2: score = -1
                 else:
                     score += 100
                     if len(pokemon.energies) == 0: score += 50
