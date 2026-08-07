@@ -283,7 +283,15 @@ def heuristic_scores(obs):
                 ck = pkmn.hp <= eff_max_dmg and eff_max_dmg > 0
                 candidates.append((oi, pkmn, pz, ck, hm_need))
             win_cands = [c for c in candidates if c[3] and my_prize_count <= c[2]]
-            if win_cands:
+            # Dragapult Counter: Ignore active Dragapult ex and aggressively Boss benched developing engine targets (Drakloak, Latios ex, Dudunsparce, Rotom)!
+            drag_benched_targets = [c for c in candidates if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)] if op_has_dragapult_line else []
+            
+            if op_has_dragapult_line and hand_counts[Boss_Orders] > 0 and drag_benched_targets and len(my_field) > 1:
+                # Force Boss's Orders on developing bench units to starve Dragapult's engine!
+                best = max(drag_benched_targets, key=lambda x: (10 if x[1].id == Drakloak else (8 if x[1].id == 755 else 5), prize_count(x[1]), -x[1].hp))
+                target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                target_use_boss = True
+            elif win_cands:
                 best = min(win_cands, key=lambda x: (0 if x[0] == 0 else 1, -x[1].hp))
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
@@ -297,12 +305,10 @@ def heuristic_scores(obs):
                         else:
                             best = max(killable, key=lambda x: (x[2], x[1].hp))
                     elif op_has_dragapult_line:
-                        # Prioritize high-value developing engine targets (Drakloak, Latios, Dudunsparce, Rotom) over useless basics!
                         high_value_killable = [c for c in killable if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)]
                         if high_value_killable:
                             best = max(high_value_killable, key=lambda x: (10 if x[1].id == Drakloak else (8 if x[1].id == 755 else 5), x[2], -x[1].hp))
                         else:
-                            # Filter out low-value useless basics (e.g. Budew) when Bossing
                             valid_bench_kills = [c for c in killable if c[0] != 0 and c[1].hp > 50]
                             if valid_bench_kills:
                                 best = max(valid_bench_kills, key=lambda x: (x[2], x[1].hp))
