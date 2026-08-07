@@ -54,9 +54,9 @@ _spec.loader.exec_module(_primary_module)
 primary_agent = _primary_module.agent
 primary_name = PRIMARY_NAME
 
-# --- Load Wall_V10 V3 agent from opponents directory ---------------------
-_wall_path = os.path.join(_OPPONENTS_DIR, "wall_v10_agent_v3.py")
-_wall_spec = importlib.util.spec_from_file_location("wall_v10_v3", _wall_path)
+# --- Load Wall_V10 V3 agent ------------------------------------------------
+_wall_v10_path = os.path.abspath(os.path.join(_HERE, "..", "Wall_V10", "V3", "main.py"))
+_wall_spec = importlib.util.spec_from_file_location("wall_v10_v3", _wall_v10_path)
 _wall_module = importlib.util.module_from_spec(_wall_spec)
 _wall_spec.loader.exec_module(_wall_module)
 
