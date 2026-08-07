@@ -69,6 +69,7 @@ card_table = {c.cardId: c for c in all_card}
 Abra = 741
 Kadabra = 742
 Alakazam = 743
+Alakazam_TWM = 245
 Dunsparce65 = 65
 Dunsparce305 = 305
 Dudunsparce = 66
@@ -111,7 +112,7 @@ Rock_Fighting_Energy = 20
 OUR_STADIUMS = {Neutralization_Zone, Battle_Cage, Nighttime_Mine, Jamming_Tower}
 DUNSPARCE_IDS = {Dunsparce65, Dunsparce305}
 DUNSPARCE_LINE = DUNSPARCE_IDS | {Dudunsparce}
-ABRA_LINE = {Abra, Kadabra, Alakazam}
+ABRA_LINE = {Abra, Kadabra, Alakazam, Alakazam_TWM}
 PSYCHIC_ENERGY_IDS = {Basic_Psychic_Energy, Telepath_Psychic_Energy}
 TECH_BASICS = {Fezandipiti_ex, Genesect, Shaymin, Psyduck, Fan_Rotom}
 
@@ -601,11 +602,19 @@ def heuristic_scores(obs):
             card = get_card(obs, AreaType.HAND, o.index, my_index)
             pokemon = get_card(obs, o.inPlayArea, o.inPlayIndex, my_index)
             score = W["evolve_base"]
-            if card.id == Alakazam:
-                if safe_draws < 3: score = -1
-                elif o.inPlayArea == AreaType.ACTIVE: score += 200
-                else: score += 50
-                score += len(pokemon.energies) * 10
+            if card.id in (Alakazam, Alakazam_TWM):
+                op_total_dmg = sum(p.damage for p in op_all_pokemon if hasattr(p, "damage"))
+                if card.id == Alakazam_TWM:
+                    # TWM Alakazam Strange Hacking counter: top priority when opponent has spread damage on field!
+                    if (op_has_grimmsnarl or op_has_dragapult_line) and op_total_dmg >= 30:
+                        score += 500
+                    else:
+                        score += 30
+                else:
+                    if safe_draws < 3: score = -1
+                    elif o.inPlayArea == AreaType.ACTIVE: score += 200
+                    else: score += 50
+                    score += len(pokemon.energies) * 10
             elif card.id == Kadabra:
                 kadabra_count_on_field = field_counts[Kadabra]
                 if kadabra_count_on_field >= 2:
