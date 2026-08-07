@@ -288,21 +288,21 @@ def heuristic_scores(obs):
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
             else:
-                if op_has_grimmsnarl and hand_counts[Boss_Orders] > 0 and len(my_field) > 1:
-                    # Aggressively target Grimmsnarl's engine (Froslass, Dudunsparce/Dunsparce, Munkidori) even to set up KOs!
-                    engine_candidates = [c for c in candidates if c[0] != 0 and c[1].id in (Froslass, Dunsparce65, Dunsparce305, Dudunsparce, Munkidori)]
-                    if engine_candidates:
-                        best = max(engine_candidates, key=lambda x: (10 if x[1].id in (Froslass, Dudunsparce) else 5, -x[1].hp))
-                        target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
-                        target_use_boss = True
-                if not target_use_boss:
-                    killable = [c for c in candidates if c[3]]
-                    if killable:
-                        best = max(killable, key=lambda x: (x[2], x[1].hp))
-                        target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
-                        target_use_boss = target_idx != 0
+                killable = [c for c in candidates if c[3]]
+                if killable:
+                    if op_has_grimmsnarl:
+                        # Prioritize 1-shotting Froslass, Dudunsparce, or Munkidori to take prizes while crippling their engine!
+                        engine_killable = [c for c in killable if c[1].id in (Froslass, Dunsparce65, Dunsparce305, Dudunsparce, Munkidori)]
+                        if engine_killable:
+                            best = max(engine_killable, key=lambda x: (10 if x[1].id in (Froslass, Dudunsparce) else 5, x[2], -x[1].hp))
+                        else:
+                            best = max(killable, key=lambda x: (x[2], x[1].hp))
                     else:
-                        target_idx = 0; target_pokemon = op_active
+                        best = max(killable, key=lambda x: (x[2], x[1].hp))
+                    target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                    target_use_boss = target_idx != 0
+                else:
+                    target_idx = 0; target_pokemon = op_active
 
     need_dudunsparce_draw = False
     if target_pokemon is not None and target_can_kill:
