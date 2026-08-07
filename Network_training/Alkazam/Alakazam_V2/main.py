@@ -283,11 +283,19 @@ def heuristic_scores(obs):
                 ck = pkmn.hp <= eff_max_dmg and eff_max_dmg > 0
                 candidates.append((oi, pkmn, pz, ck, hm_need))
             win_cands = [c for c in candidates if c[3] and my_prize_count <= c[2]]
-            # Dragapult Counter: Ignore active Dragapult ex and aggressively Boss benched developing engine targets (Drakloak, Latios ex, Dudunsparce, Rotom)!
+            # Dragapult Counter Strategy:
+            # 1. If Dragapult ex is ACTIVE: Build hand size to 16 cards and attack/KO active Dragapult ex!
+            # 2. If Active is a non-Dragapult filler basic (e.g. Budew): Use Boss's Orders to pull up benched engine targets (Drakloak, Latios ex, Dudunsparce, Rotom).
             drag_benched_targets = [c for c in candidates if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)] if op_has_dragapult_line else []
-            
-            if op_has_dragapult_line and hand_counts[Boss_Orders] > 0 and drag_benched_targets and len(my_field) > 1:
-                # Force Boss's Orders on developing bench units to starve Dragapult's engine!
+            active_is_dragapult = op_active and op_active.id == Dragapult_ex
+
+            if op_has_dragapult_line and active_is_dragapult:
+                # Active is Dragapult ex -> Focus on digging cards to KO active Dragapult ex!
+                target_idx = 0; target_pokemon = op_active; target_use_boss = False
+                target_can_kill = candidates[0][3]
+                target_prize_gain = prize_count(op_active)
+            elif op_has_dragapult_line and hand_counts[Boss_Orders] > 0 and drag_benched_targets and len(my_field) > 1:
+                # Active is useless filler (Budew/etc) -> Use Boss's Orders to target benched engine units (Drakloak, Latios, Dudunsparce)!
                 best = max(drag_benched_targets, key=lambda x: (10 if x[1].id == Drakloak else (8 if x[1].id == 755 else 5), prize_count(x[1]), -x[1].hp))
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = True
