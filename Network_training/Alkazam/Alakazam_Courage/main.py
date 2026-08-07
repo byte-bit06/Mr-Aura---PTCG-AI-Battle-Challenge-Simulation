@@ -327,9 +327,9 @@ def heuristic_scores(obs):
     if deck_count <= 3:
         overdraw = True
 
-    safe_draws = deck_count - my_prize_count - 1 if not can_win_this_turn else 999
+    safe_draws = max(0, deck_count - 3) if not can_win_this_turn else 999
     if overdraw:
-        safe_draws = min(safe_draws, 0)
+        safe_draws = 0
     has_attack_option = any(o.type == OptionType.ATTACK for o in select.option)
     attack_locked = (context == SelectContext.MAIN and active_id == Alakazam
                      and active_has_psychic and not has_attack_option)
