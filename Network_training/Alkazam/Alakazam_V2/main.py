@@ -527,12 +527,15 @@ def heuristic_scores(obs):
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
                     score = W["sacred_ash_hi"] if dis_abra >= 2 else (W["sacred_ash_lo"] if dis_abra >= 1 else -1)
                 elif cid == Enhanced_Hammer:
-                    if target_hammer_needed > 0: score = W["hammer_target"] + 15000
-                    elif op_has_crustle and any(count_special_defense_energies(p) > 0 for p in op_all_pokemon):
-                        # Top priority vs Crustle: Strip Mist Energy / Rocky Fighting Energy to enable Powerful Hand 1-shots!
-                        score = W["hammer_target"] + 20000
-                    elif any(count_special_defense_energies(p) > 0 for p in op_all_pokemon): score = W["hammer_any"]
-                    else: score = -1
+                    # Conserve 1x Enhanced Hammer: Only play when we have an active attacker ready to swing on that turn AND stripping special energy on active guarantees the KO!
+                    active_crustle_has_mist = op_active and (op_active.id in Crustle_IDs or op_active.id in Dwebble_IDs) and count_special_defense_energies(op_active) > 0
+                    if target_hammer_needed > 0 and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1):
+                        score = W["hammer_target"] + 25000
+                    elif active_crustle_has_mist and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1) and (hand_size - 1) * 20 >= op_active.hp:
+                        # Wise play vs Crustle: Only strip Mist Energy from Active Crustle when Alakazam is powered and hand size can 1-shot it right now!
+                        score = W["hammer_target"] + 30000
+                    else:
+                        score = -1
                 elif cid == Wondrous_Patch:
                     score = W["wondrous_patch"] if (discard_counts[Basic_Psychic_Energy] >= 1 and bench_abra_no_energy) else -1
                 elif cid == Meddling_Memo:
