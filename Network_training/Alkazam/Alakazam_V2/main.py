@@ -536,11 +536,9 @@ def heuristic_scores(obs):
                     else: score = -1
                 elif cid == Battle_Cage:
                     if stadium_id == Battle_Cage: score = -1
-                    elif our_stadium_up and stadium_id == Neutralization_Zone and op_has_bench_spread:
-                        score = W["cage_snipe"] + 2000
-                    elif our_stadium_up: score = -1
-                    elif op_has_bench_spread:
-                        score = W["cage_snipe"] + 2000
+                    elif op_has_bench_spread or op_has_grimmsnarl:
+                        # Top priority vs Grimmsnarl / Froslass / Munkidori spread!
+                        score = W["cage_snipe"] + 10000
                     elif stadium_id != 0 and not our_stadium_up: score = W["cage_counter"]
                     else: score = -1
                 elif cid == Nighttime_Mine:
