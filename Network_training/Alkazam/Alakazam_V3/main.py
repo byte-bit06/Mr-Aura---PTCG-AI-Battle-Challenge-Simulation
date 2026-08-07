@@ -987,6 +987,41 @@ def _leaf_eval(state, me_i):
     no_active = 0 if my_active else 1
     score -= 40.0 * no_active
 
+    # --- Matchup-Specific Dynamic MCTS Heuristics ---
+    op_all_mons = [p for p in (op.active + op.bench) if p is not None]
+    op_has_drag = any(getattr(p, "id", None) in (Dreepy, Drakloak, Dragapult_ex) for p in op_all_mons)
+    op_has_grimm = any(getattr(p, "id", None) in (Impidimp_G, Morgrem_G, Grimmsnarl_ex, Munkidori, Froslass) for p in op_all_mons)
+    op_has_crustle_mcts = any(getattr(p, "id", None) in Crustle_IDs or getattr(p, "id", None) in Dwebble_IDs for p in op_all_mons)
+
+    if op_has_drag:
+        # Dragapult Counter MCTS Heuristics:
+        # +15 score for having Battle Cage active to block Phantom Dive snipes
+        if state.stadium and state.stadium[0].id == Battle_Cage:
+            score += 15.0
+        # +15 score for large hand size (fueling 16-card 320 HP Powerful Hand KOs)
+        if hand_count >= 12:
+            score += 15.0
+        # +10 score for crippling benched Drakloak / support engine
+        benched_drak = sum(1 for p in op.bench if p and getattr(p, "id", None) in (Drakloak, 755))
+        if benched_drak == 0:
+            score += 10.0
+
+    elif op_has_grimm:
+        # Grimmsnarl Counter MCTS Heuristics:
+        # +20 score for Battle Cage active, +15 for shutting down engine (Froslass/Munkidori eliminated)
+        if state.stadium and state.stadium[0].id == Battle_Cage:
+            score += 20.0
+        grimm_engine_count = sum(1 for p in op_all_mons if getattr(p, "id", None) in (Froslass, Munkidori, Dudunsparce))
+        score -= grimm_engine_count * 8.0
+
+    elif op_has_crustle_mcts:
+        # Crustle Counter MCTS Heuristics:
+        # Penalty if active Crustle has Mist Energy attached and we haven't stripped it
+        if op_active and getattr(op_active, "id", None) in Crustle_IDs:
+            mist_on_crustle = any(getattr(e, "id", None) == Mist_Energy for e in getattr(op_active, "energyCards", []))
+            if mist_on_crustle:
+                score -= 25.0
+
     return max(0.0, min(100.0, score)) * 100.0
 
 
