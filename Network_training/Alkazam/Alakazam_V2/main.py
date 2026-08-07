@@ -639,7 +639,10 @@ def heuristic_scores(obs):
                     else:
                         score += 30
                 else:
-                    if safe_draws < 3: score = -1
+                    if op_has_dragapult_line:
+                        # Rush Alakazam evolution immediately vs Dragapult to start attacking early!
+                        score += 5000 + (2000 if o.inPlayArea == AreaType.ACTIVE else 0)
+                    elif safe_draws < 3: score = -1
                     elif o.inPlayArea == AreaType.ACTIVE: score += 200
                     else: score += 50
                     score += len(pokemon.energies) * 10
@@ -654,11 +657,7 @@ def heuristic_scores(obs):
                     if len(pokemon.energies) == 0: score += 50
                     elif hand_counts[Rare_Candy] > 0 and hand_counts[Alakazam] > 0: score -= 120
             elif card.id == Dudunsparce:
-                # Phase 3 Checkmate: Hold Dudunsparce evolution until hand gets disrupted or we need cards to swing for KO!
-                if op_has_dragapult_line and hand_size >= 12 and not target_can_kill:
-                    score = 10  # Hold evolution in hand to protect against Iono/Roxanne
-                else:
-                    score = -1 if safe_draws < 2 else score + 80
+                score = -1 if safe_draws < 2 else score + 80
             else:
                 score += 30
 
