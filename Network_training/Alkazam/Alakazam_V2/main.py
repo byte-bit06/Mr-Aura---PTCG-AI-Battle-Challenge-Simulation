@@ -297,12 +297,17 @@ def heuristic_scores(obs):
                         else:
                             best = max(killable, key=lambda x: (x[2], x[1].hp))
                     elif op_has_dragapult_line:
-                        # Dragapult Phase 2 Target Weak Links: Pull up low-HP support units (Xatu, Rotom V, Lumineon V, Poffin targets) requiring only ~7 hand size (140 dmg)
-                        support_killable = [c for c in killable if c[0] != 0 and c[1].hp <= 170]
-                        if support_killable:
-                            best = max(support_killable, key=lambda x: (x[2], -x[1].hp))
+                        # Prioritize high-value developing engine targets (Drakloak, Latios, Dudunsparce, Rotom) over useless basics!
+                        high_value_killable = [c for c in killable if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)]
+                        if high_value_killable:
+                            best = max(high_value_killable, key=lambda x: (10 if x[1].id == Drakloak else (8 if x[1].id == 755 else 5), x[2], -x[1].hp))
                         else:
-                            best = max(killable, key=lambda x: (x[2], x[1].hp))
+                            # Filter out low-value useless basics (e.g. Budew) when Bossing
+                            valid_bench_kills = [c for c in killable if c[0] != 0 and c[1].hp > 50]
+                            if valid_bench_kills:
+                                best = max(valid_bench_kills, key=lambda x: (x[2], x[1].hp))
+                            else:
+                                best = max(killable, key=lambda x: (x[2], x[1].hp))
                     else:
                         best = max(killable, key=lambda x: (x[2], x[1].hp))
                     target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
