@@ -121,10 +121,11 @@ Dreepy, Drakloak, Dragapult_ex = 119, 120, 121
 Impidimp_G, Morgrem_G, Grimmsnarl_ex = 646, 647, 648
 Froslass = 104
 Munkidori = 112
-Duskull = 131
-Secret_Box = 1092
+Rellor = 73
+Rabsca = 74
 Dwebble_IDs = {344, 532}
 Crustle_IDs = {345, 533}
+RABSCA_LINE = {Rellor, Rabsca}
 GRIMMSNARL_ENGINE_SPECIES = {Dunsparce65, Dunsparce305, Dudunsparce, Froslass, Munkidori, Impidimp_G, Morgrem_G}
 Slowpoke_IDs = (162, 327)
 Froakie_IDs = (33, 945)
@@ -409,6 +410,7 @@ def heuristic_scores(obs):
             elif context == SelectContext.SETUP_ACTIVE_POKEMON:
                 if card.id in DUNSPARCE_IDS: score = 12
                 elif card.id == Abra: score = 10
+                elif card.id in RABSCA_LINE: score = -1
                 elif card.id in TECH_BASICS: score = 2
 
             elif context == SelectContext.SETUP_BENCH_POKEMON:
@@ -455,6 +457,8 @@ def heuristic_scores(obs):
             elif context == SelectContext.TO_BENCH:
                 if card.id == Abra: score = 100 - abra_line_on_field * 5
                 elif card.id in DUNSPARCE_IDS: score = 80 - dunsparce_line_on_field * 5
+                elif card.id == Rellor: score = 90 if (op_has_dragapult_line or op_has_grimmsnarl) else -1
+                elif card.id == Rabsca: score = 95 if (op_has_dragapult_line or op_has_grimmsnarl) else -1
                 elif card.id == Psyduck: score = 60 if op_has_duskull else -1
                 elif card.id == Shaymin: score = 55 if (op_has_water_threat or op_has_grimmsnarl) else -1
 
@@ -480,6 +484,14 @@ def heuristic_scores(obs):
                     elif dunsparce_line_on_field < 2: score += W["play_dun_second"]
                     elif op_has_ex and len(my_field) < 5: score += W["play_dun_ex"]
                     else: score = -1
+                elif card.id == Rellor:
+                    # Rabsca/Rellor Bench Protection Heuristic:
+                    # ONLY play Rellor to bench vs Dragapult or Grimmsnarl spread decks!
+                    # NEVER play vs non-spread decks -> Keep in hand to increase hand size for Alakazam Powerful Hand damage!
+                    if (op_has_dragapult_line or op_has_grimmsnarl) and field_counts[Rellor] == 0 and field_counts[Rabsca] == 0 and bench_free >= 1:
+                        score = W["play_pokemon_base"] + 22000
+                    else:
+                        score = -1
                 elif card.id == Fezandipiti_ex:
                     score = W["play_fez"] if need_fez else -1
                 elif card.id == Genesect:
@@ -667,6 +679,12 @@ def heuristic_scores(obs):
                     elif hand_counts[Rare_Candy] > 0 and hand_counts[Alakazam] > 0: score -= 120
             elif card.id == Dudunsparce:
                 score = -1 if safe_draws < 2 else score + 80
+            elif card.id == Rabsca:
+                # Evolve Rabsca on bench vs Dragapult / Grimmsnarl to activate Spherical Shield bench protection!
+                if (op_has_dragapult_line or op_has_grimmsnarl):
+                    score = W["evolve_base"] + 25000
+                else:
+                    score = -1
             else:
                 score += 30
 
