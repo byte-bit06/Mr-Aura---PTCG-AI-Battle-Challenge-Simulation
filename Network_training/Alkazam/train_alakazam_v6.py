@@ -90,7 +90,26 @@ def play_game(env, p1_agent, p2_agent):
     steps = env.run([p1_agent, p2_agent])
     r1 = steps[-1][0].reward
     r2 = steps[-1][1].reward
-    return 1 if r1 == 1 else (0 if r2 == 1 else 0.5)
+    win = 1 if r1 == 1 else (0 if r2 == 1 else 0.5)
+
+    # Extract exact final prizes taken & conceded from the last step observation dictionary
+    p1_taken, p1_conceded = 0, 0
+    for idx in range(len(steps) - 1, -1, -1):
+        step = steps[idx]
+        if isinstance(step, list) and len(step) > 0 and isinstance(step[0], dict):
+            obs_dict = step[0].get("observation", {})
+            if isinstance(obs_dict, dict) and "current" in obs_dict:
+                curr = obs_dict["current"]
+                if isinstance(curr, dict) and "players" in curr and len(curr["players"]) >= 2:
+                    p0 = curr["players"][0]
+                    p1 = curr["players"][1]
+                    p0_prz = len(p0.get("prize", []))
+                    p1_prz = len(p1.get("prize", []))
+                    p1_taken = 6 - p0_prz
+                    p1_conceded = 6 - p1_prz
+                    break
+
+    return win, p1_taken, p1_conceded
 
 
 def evaluate_genome(env, genome, games_per_opp=2):
@@ -99,19 +118,30 @@ def evaluate_genome(env, genome, games_per_opp=2):
     
     total_wins = 0
     total_games = 0
+    total_prizes_taken = 0
+    total_prizes_conceded = 0
     
     for opp_name, opp_agent in opponents.items():
         for g in range(games_per_opp):
             if g % 2 == 0:
-                res = play_game(env, primary_agent, opp_agent)
-                total_wins += res
+                win, taken, conc = play_game(env, primary_agent, opp_agent)
+                total_wins += win
+                total_prizes_taken += taken
+                total_prizes_conceded += conc
             else:
-                res = play_game(env, opp_agent, primary_agent)
-                total_wins += (1 - res if res in (0, 1) else 0.5)
+                win, conc, taken = play_game(env, opp_agent, primary_agent)
+                total_wins += (1 - win if win in (0, 1) else 0.5)
+                total_prizes_taken += taken
+                total_prizes_conceded += conc
             total_games += 1
             
     win_rate = (total_wins / total_games) * 100.0 if total_games > 0 else 0.0
-    return win_rate
+    avg_prizes_taken = total_prizes_taken / total_games if total_games > 0 else 0.0
+    avg_prizes_conceded = total_prizes_conceded / total_games if total_games > 0 else 0.0
+
+    # Composite Fitness: 70% Win Rate + Net Prize Differential (Prizes Taken - Prizes Conceded)
+    fitness_score = win_rate + (avg_prizes_taken - avg_prizes_conceded) * 3.0
+    return fitness_score, win_rate, avg_prizes_taken, avg_prizes_conceded
 
 
 def mutate_genome(parent_genome, mutation_rate=0.2, mutation_scale=0.15):
@@ -135,9 +165,9 @@ def run_evolution(generations=15, pop_size=6, games_per_opp=2):
     print(f"==========================================================\n", flush=True)
     
     # Evaluate baseline genome
-    best_score = evaluate_genome(env, base_genome, games_per_opp=games_per_opp)
+    best_fitness, best_wr, best_taken, best_conc = evaluate_genome(env, base_genome, games_per_opp=games_per_opp)
     best_genome = base_genome
-    print(f"Generation  0 (Baseline) -> Overall Win Rate: {best_score:.1f}%\n", flush=True)
+    print(f"Generation  0 (Baseline) -> Win Rate: {best_wr:.1f}% | Avg Prizes Taken: {best_taken:.2f} | Avg Prizes Conceded: {best_conc:.2f} | Fitness: {best_fitness:.2f}\n", flush=True)
     
     population = [best_genome] + [mutate_genome(best_genome) for _ in range(pop_size - 1)]
     
@@ -146,24 +176,27 @@ def run_evolution(generations=15, pop_size=6, games_per_opp=2):
         scores = []
         
         for i, genome in enumerate(population):
-            score = evaluate_genome(env, genome, games_per_opp=games_per_opp)
-            scores.append((score, genome))
+            fitness, wr, taken, conc = evaluate_genome(env, genome, games_per_opp=games_per_opp)
+            scores.append((fitness, wr, taken, conc, genome))
             
         scores.sort(key=lambda x: x[0], reverse=True)
-        gen_best_score, gen_best_genome = scores[0]
+        gen_best_fitness, gen_wr, gen_taken, gen_conc, gen_best_genome = scores[0]
         
-        if gen_best_score > best_score:
-            best_score = gen_best_score
+        if gen_best_fitness > best_fitness:
+            best_fitness = gen_best_fitness
+            best_wr = gen_wr
+            best_taken = gen_taken
+            best_conc = gen_conc
             best_genome = gen_best_genome
             with open(WEIGHTS_JSON_PATH, "w") as f:
                 json.dump(best_genome, f, indent=4)
-            print(f" *** NEW BEST GENOME SAVED to alak_w.json! Score: {best_score:.1f}% ***", flush=True)
+            print(f" *** NEW BEST GENOME SAVED to alak_w.json! Win Rate: {best_wr:.1f}% | Prizes Taken: {best_taken:.2f} | Prizes Conceded: {best_conc:.2f} ***", flush=True)
             
         elapsed = time.time() - gen_start
-        print(f"Generation {gen:2d}/{generations} Complete | Best Gen Score: {gen_best_score:.1f}% | Overall Best: {best_score:.1f}% ({elapsed:.1f}s)", flush=True)
+        print(f"Generation {gen:2d}/{generations} Complete | Best Gen Win Rate: {gen_wr:.1f}% (Prizes: +{gen_taken:.2f} / -{gen_conc:.2f}) | Overall Best: {best_wr:.1f}% ({elapsed:.1f}s)", flush=True)
         
         # Breed next generation from top 2 survivors
-        survivors = [scores[0][1], scores[1][1]]
+        survivors = [scores[0][4], scores[1][4]]
         next_pop = copy.deepcopy(survivors)
         while len(next_pop) < pop_size:
             p = random.choice(survivors)
@@ -171,7 +204,7 @@ def run_evolution(generations=15, pop_size=6, games_per_opp=2):
         population = next_pop
 
     print(f"\n==========================================================", flush=True)
-    print(f" Self-Learning Complete! Final Best Win Rate: {best_score:.1f}%")
+    print(f" Self-Learning Complete! Final Best Win Rate: {best_wr:.1f}% | Avg Prizes Taken: {best_taken:.2f} | Avg Prizes Conceded: {best_conc:.2f}")
     print(f" Optimized weights saved to: {WEIGHTS_JSON_PATH}")
     print(f"==========================================================\n", flush=True)
 
