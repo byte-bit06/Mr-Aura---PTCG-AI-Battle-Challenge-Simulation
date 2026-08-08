@@ -114,6 +114,8 @@ DUNSPARCE_IDS = {Dunsparce65, Dunsparce305}
 DUNSPARCE_LINE = DUNSPARCE_IDS | {Dudunsparce}
 ABRA_LINE = {Abra, Kadabra, Alakazam, Alakazam_TWM}
 PSYCHIC_ENERGY_IDS = {Basic_Psychic_Energy, Telepath_Psychic_Energy}
+TEAM_ROCKET_ENERGY = 15
+SPECIAL_ENERGY_IDS = {Mist_Energy, Enriching_Energy, Telepath_Psychic_Energy, Rock_Fighting_Energy, TEAM_ROCKET_ENERGY, 12, 16}
 TECH_BASICS = {Fezandipiti_ex, Genesect, Shaymin, Psyduck, Fan_Rotom}
 
 Duraludon, Archaludon_ex = 169, 190
@@ -220,6 +222,24 @@ def heuristic_scores(obs):
         for p in op_all_pokemon)
     op_has_tools = any(len(p.tools) > 0 for p in op_all_pokemon)
     op_used_ace_spec = any(card.id == Secret_Box for card in op_state.discard)
+
+    op_has_team_rocket_energy = any(
+        ec.id == TEAM_ROCKET_ENERGY or "Rocket" in getattr(ec, "name", "")
+        for p in op_all_pokemon for ec in p.energyCards
+    )
+    op_has_special_energy = any(
+        ec.id in SPECIAL_ENERGY_IDS or count_special_defense_energies(p) > 0
+        for p in op_all_pokemon for ec in p.energyCards
+    )
+
+    can_evolve_this_turn = (
+        (hand_counts[Alakazam] > 0 or hand_counts[Alakazam_TWM] > 0) and (
+            field_counts[Kadabra] > 0 or (field_counts[Abra] > 0 and hand_counts[Rare_Candy] > 0)
+        )
+    ) or (
+        hand_counts[Kadabra] > 0 and field_counts[Abra] > 0
+    )
+    evolution_stalled = (field_counts[Alakazam] == 0 and field_counts[Alakazam_TWM] == 0 and not can_evolve_this_turn)
 
     stadium_id = state.stadium[0].id if state.stadium else 0
     our_stadium_up = stadium_id in OUR_STADIUMS
@@ -442,8 +462,13 @@ def heuristic_scores(obs):
                 elif card.id == Enriching_Energy:
                     score += 20
 
-            elif context == SelectContext.ATTACH_FROM:
-                if isinstance(card, Pokemon):
+            elif context in (SelectContext.ATTACH_FROM, SelectContext.DISCARD, SelectContext.CARD):
+                if o.playerIndex != my_index:
+                    if card.id == TEAM_ROCKET_ENERGY or "Rocket" in getattr(card, "name", ""):
+                        score += 50000
+                    elif card.id in SPECIAL_ENERGY_IDS:
+                        score += 25000
+                elif isinstance(card, Pokemon):
                     if need_retreat_energy and o.area == AreaType.ACTIVE: score = 150
                     elif len(card.energyCards) >= 1: score = -1
                     elif card.id in ABRA_LINE:
@@ -527,22 +552,30 @@ def heuristic_scores(obs):
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
                     score = W["sacred_ash_hi"] if dis_abra >= 2 else (W["sacred_ash_lo"] if dis_abra >= 1 else -1)
                 elif cid == Enhanced_Hammer:
-                    # Conserve 1x Enhanced Hammer: Only play when we have an active attacker ready to swing on that turn AND stripping special energy on active guarantees the KO!
+                    # Dynamic valuation normalized to trainer scale (18k-22k for high priority threats)
                     active_crustle_has_mist = op_active and (op_active.id in Crustle_IDs or op_active.id in Dwebble_IDs) and count_special_defense_energies(op_active) > 0
-                    if target_hammer_needed > 0 and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1):
-                        score = W["hammer_target"] + 25000
+                    if op_has_team_rocket_energy:
+                        # Spike priority to destroy Team Rocket Energy immediately (above standard trainers)
+                        score = W["poffin_early"] + 4000
+                    elif op_has_special_energy:
+                        score = W["poffin_early"] + 1000
+                    elif evolution_stalled and any(len(p.energyCards) >= 1 for p in op_all_pokemon):
+                        # Evolution timer stalled -> slow down opponent attacks by discarding energy
+                        score = W["hammer_target"] + 5000
+                    elif target_hammer_needed > 0 and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1):
+                        score = W["hammer_target"] + 5000
                     elif active_crustle_has_mist and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1) and (hand_size - 1) * 20 >= op_active.hp:
-                        # Wise play vs Crustle: Only strip Mist Energy from Active Crustle when Alakazam is powered and hand size can 1-shot it right now!
-                        score = W["hammer_target"] + 30000
+                        score = W["hammer_target"] + 8000
                     else:
                         score = -1
                 elif cid == Wondrous_Patch:
                     score = W["wondrous_patch"] if (discard_counts[Basic_Psychic_Energy] >= 1 and bench_abra_no_energy) else -1
                 elif cid == Meddling_Memo:
-                    score = W["meddling_memo"] if op_state.handCount >= 5 else -1
+                    score = (W["meddling_memo"] + (3000 if evolution_stalled else 0)) if (op_state.handCount >= 5 or (evolution_stalled and op_state.handCount >= 4)) else -1
                 elif cid == Boss_Orders:
                     if len(my_field) <= 1: score = -1
                     elif target_use_boss and target_can_kill: score = W["boss_kill"]
+                    elif evolution_stalled and any(len(p.energyCards) >= 2 for p in op_all_pokemon): score = W["boss_kill"] + 3000
                     else: score = -1
                 elif cid == Hilda:
                     score = W["hilda"] if (safe_draws >= 2 and not overdraw) else -1
@@ -559,9 +592,9 @@ def heuristic_scores(obs):
                     rec = sum(discard_counts[x] for x in (Abra, Kadabra, Alakazam, Dunsparce65, Dunsparce305, Basic_Psychic_Energy))
                     score = W["lana"] if rec >= 2 else -1
                 elif cid == Xerosic:
-                    score = W["xerosic"] if op_state.handCount >= 6 else -1
+                    score = (W["xerosic"] + (3000 if evolution_stalled else 0)) if (op_state.handCount >= 6 or (evolution_stalled and op_state.handCount >= 4)) else -1
                 elif cid == Eri:
-                    score = W["eri"] if op_state.handCount >= 4 else -1
+                    score = (W["eri"] + (3000 if evolution_stalled else 0)) if (op_state.handCount >= 4 or (evolution_stalled and op_state.handCount >= 3)) else -1
                 elif cid == Neutralization_Zone:
                     if our_stadium_up and stadium_id == Neutralization_Zone: score = -1
                     elif op_has_dragapult_line and state.turn <= 2 and hand_counts.get(Battle_Cage, 0) > 0:
@@ -692,8 +725,14 @@ def heuristic_scores(obs):
                 score = W["ability_default"]
 
         elif o.type == OptionType.RETREAT:
-            if attack_locked and bench_ready_alak: score = W["boss_kill"]
-            elif active_id == Alakazam and active_has_psychic: score = -1
+            # Strict Courage Guard:
+            # The algorithm must strictly forbid retreating a powered-up Abra unless a fully built Alakazam is ready on the bench.
+            active_is_abra = (active_id == Abra)
+            active_has_energy = active_pokemon and (len(active_pokemon.energyCards) >= 1 or len(getattr(active_pokemon, "energies", [])) >= 1)
+            if active_is_abra and active_has_energy and not bench_ready_alak:
+                score = -99999
+            elif attack_locked and bench_ready_alak: score = W["boss_kill"]
+            elif active_id in (Alakazam, Alakazam_TWM) and active_has_psychic: score = -1
             elif use_kadabra_finish and active_id != Kadabra and field_counts[Kadabra] >= 1: score = W["retreat_kadabra"]
             elif active_id in (Abra, Dunsparce65, Dunsparce305, Dudunsparce, Psyduck, Shaymin, Genesect, Fan_Rotom):
                 score = W["retreat_promote"] if (field_counts[Alakazam] >= 1 or field_counts[Kadabra] >= 1) else -1
@@ -701,9 +740,19 @@ def heuristic_scores(obs):
 
         elif o.type == OptionType.ATTACK:
             score = W["attack_base"]
-            if o.attackId == ATTACK_POWERFUL_HAND: score += W["attack_powerful"]
+            active_is_abra = (active_id == Abra)
+            active_has_energy = active_pokemon and (len(active_pokemon.energyCards) >= 1 or len(getattr(active_pokemon, "energies", [])) >= 1)
+            if o.attackId == ATTACK_TELEPORTATION:
+                if active_is_abra and active_has_energy:
+                    # Force Teleportation attack over idling, normalized within ATTACK scale (1k-2k) so setup actions occur FIRST
+                    if not bench_ready_alak:
+                        score += W["attack_teleport"] + 500
+                    else:
+                        score += W["attack_teleport"] + 200
+                else:
+                    score += W["attack_teleport"]
+            elif o.attackId == ATTACK_POWERFUL_HAND: score += W["attack_powerful"]
             elif o.attackId == ATTACK_SUPER_PSY_BOLT: score += W["attack_psybolt_kill"] if op_active_hp <= 30 else W["attack_psybolt"]
-            elif o.attackId == ATTACK_TELEPORTATION: score += W["attack_teleport"]
 
         scores.append(score)
     return scores
