@@ -339,8 +339,8 @@ def heuristic_scores(obs):
                     # In this situation, taking the winning ex KO takes top priority over disrupting Electric energy.
                     is_game_winning_ex = 10000 if (my_prize_count <= 2 and pz >= my_prize_count and ck) else 0
                     
-                    # Electric energy disruption applies during early/mid game when we are NOT in immediate game-winning ex range
-                    iono_elec_score = (elec_energy_cnt * 1000) if (my_prize_count > 2 and (op_has_iono_deck or elec_energy_cnt > 0)) else 0
+                    # Electric energy disruption applies ONLY when facing an Iono deck during early/mid game (when my_prize_count > 2)
+                    iono_elec_score = (elec_energy_cnt * 1000) if (op_has_iono_deck and my_prize_count > 2) else 0
                     
                     hp_val = pkmn.hp
                     kill_bonus = 500 if ck else 0
