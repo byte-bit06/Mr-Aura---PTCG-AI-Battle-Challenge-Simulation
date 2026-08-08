@@ -649,7 +649,8 @@ def heuristic_scores(obs):
                 elif pokemon.id in ABRA_LINE: score = W["cape_abra"]
                 else: score = -1
             elif card.id in PSYCHIC_ENERGY_IDS:
-                if need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
+                if pokemon.id in DUNSPARCE_LINE: score = -1  # NEVER attach energy to Dunsparce or Dudunsparce!
+                elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
                 elif len(pokemon.energyCards) >= 1: score = -1
                 elif pokemon.id in ABRA_LINE:
                     score = W["energy_abra"] + {Alakazam: 30, Kadabra: 20, Abra: 10}.get(pokemon.id, 0)
@@ -657,14 +658,16 @@ def heuristic_scores(obs):
                 else: score = -1
                 if card.id == Telepath_Psychic_Energy and safe_draws < 2 and score > 0: score = -1
             elif card.id == Enriching_Energy:
-                if pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
+                if pokemon.id in DUNSPARCE_LINE: score = -1  # NEVER attach energy to Dunsparce or Dudunsparce!
+                elif pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
                     score = W["enriching_2nd"] + (200 if o.inPlayArea == AreaType.ACTIVE else 0)
                 elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
                 elif pokemon.id in ABRA_LINE: score = W["enriching_1st"]
                 else: score = -1
                 if safe_draws < 4 and score > 0: score = -1
             elif card.id == Mist_Energy:
-                if pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
+                if pokemon.id in DUNSPARCE_LINE: score = -1  # NEVER attach energy to Dunsparce or Dudunsparce!
+                elif pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
                     score = W["mist_2nd"] + (200 if o.inPlayArea == AreaType.ACTIVE else 0)
                 elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["mist_retreat"]
                 else: score = -1
@@ -716,8 +719,10 @@ def heuristic_scores(obs):
             card = get_card(obs, o.area, o.index, my_index)
             if card is None: scores.append(0); continue
             if card.id == Dudunsparce:
-                # Phase 3 Checkmate: Evolve & use Run Away Draw after hand disruption to re-explode hand size!
-                if len(my_field) <= 1: score = -1
+                # Dudunsparce Run Away Draw Ability Heuristic:
+                # Require AT LEAST 2 Pokémon on the bench before using Run Away Draw (so we do not leave bench empty or active vulnerable)!
+                benched_mon_count = len([b for b in my_state.bench if b is not None])
+                if benched_mon_count < 2: score = -1
                 elif safe_draws < 3 or overdraw: score = -1
                 elif op_has_dragapult_line and hand_size < 8: score = W["ability_dudun"] + 2000
                 elif need_dudunsparce_draw: score = W["ability_dudun"]
