@@ -324,11 +324,24 @@ def heuristic_scores(obs):
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
             elif hand_counts[Boss_Orders] > 0 and benched_candidates and len(my_field) > 1:
-                # If we have Boss's Orders, check for benched killable targets with highest priority
-                # Scored by: (is_killable, game_winning_ex_priority, electric_energy_priority, is_high_priority_target, has_mist_with_hammer, energy_cards_count, hp_value, prize_yield)
+                # Enhanced Matchup-Specific Directives (Grimmsnarl, Dragapult, Iono, Mirror)
                 def boss_target_score(c):
                     idx, pkmn, pz, ck, hm = c
-                    is_high_target = 100 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
+                    pid = pkmn.id
+                    
+                    # 1. Anti-Grimmsnarl: Priority Froslass (104), Munkidori (112), Morgrem (647), Snorunt (860)
+                    grimm_engine_score = 0
+                    if op_has_grimmsnarl:
+                        if pid == Froslass: grimm_engine_score = 50000
+                        elif pid == Munkidori: grimm_engine_score = 40000
+                        elif pid in (Morgrem_G, 860): grimm_engine_score = 30000
+                    
+                    # 2. Anti-Dragapult: Priority benched Drakloak (120) before Dragapult ex
+                    drag_drakloak_score = 0
+                    if op_has_dragapult_line and pid == Drakloak:
+                        drag_drakloak_score = 45000
+                    
+                    is_high_target = 100 if pid in HIGH_PRIORITY_BOSS_TARGETS else 0
                     has_mist = 50 if (count_special_defense_energies(pkmn) > 0 and hand_counts[Enhanced_Hammer] >= 1) else 0
                     has_energy = 20 if len(pkmn.energyCards) > 0 else 0
                     energy_cnt = len(pkmn.energyCards)
@@ -339,7 +352,7 @@ def heuristic_scores(obs):
                     
                     hp_val = pkmn.hp
                     kill_bonus = 500 if ck else 0
-                    return (kill_bonus, is_game_winning_ex, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
+                    return (kill_bonus, is_game_winning_ex, grimm_engine_score, drag_drakloak_score, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
                 
                 benched_killable = [c for c in benched_candidates if c[3]]
                 benched_reachable = [c for c in benched_candidates if c[1].hp <= (max_hand_size * 20)]
@@ -594,14 +607,16 @@ def heuristic_scores(obs):
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
                     score = W["sacred_ash_hi"] if dis_abra >= 2 else (W["sacred_ash_lo"] if dis_abra >= 1 else -1)
                 elif cid == Enhanced_Hammer:
-                    # Enhanced Hammer logic: Strip Mist Energy (or Special Energy) from Active or Boss target being attacked this turn
+                    active_has_special = op_active and len(op_active.energyCards) >= 1
                     active_has_mist = op_active and count_special_defense_energies(op_active) > 0
                     target_has_mist = target_pokemon and count_special_defense_energies(target_pokemon) > 0
                     attacker_ready = active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1
                     
                     if target_has_mist and attacker_ready:
-                        # Highest Priority: Strip Mist Energy from high-yield target or Active being attacked this turn!
                         score = W["hammer_target"] + 40000
+                    elif (op_has_dragapult_line or op_has_grimmsnarl) and active_has_special:
+                        # Anti-Dragapult / Anti-Grimmsnarl: Strip special energy immediately to stall their setup!
+                        score = W["hammer_target"] + 35000
                     elif target_hammer_needed > 0 and attacker_ready:
                         score = W["hammer_target"] + 30000
                     elif active_has_mist and attacker_ready:
