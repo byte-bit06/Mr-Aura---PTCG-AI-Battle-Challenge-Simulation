@@ -305,11 +305,13 @@ def heuristic_scores(obs):
             drag_benched_targets = [c for c in candidates if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)] if op_has_dragapult_line else []
             active_is_dragapult = op_active and op_active.id == Dragapult_ex
 
-            # Enhanced High-Yield & General Prize Boss's Orders Target Selection:
-            # 1. Winning KO takes top priority.
-            # 2. Boss's Orders is used on BENCHED targets (NEVER if already active).
-            # 3. High priority targets from boss_targets.csv (or targets with energy attached) get highest priority IF we can KO them.
-            # 4. Weaker benched Pokémon can also be targeted with Boss's Orders to pick up easy prize cards!
+            # ALWAYS Consider Benched Boss's Orders Targets over Blind Active Attack:
+            # 1. Winning KO takes ultimate priority.
+            # 2. When Boss's Orders is in hand:
+            #    - Check ALL benched Pokémon that we can KO (including using hand-expanding draw cards like Hilda/Dawn/Dudunsparce).
+            #    - Prioritize benched targets in HIGH_PRIORITY_BOSS_TARGETS.
+            #    - Prioritize benched targets with maximum HP and high attached energy (e.g. 1-shotting high-HP ex / stage-2 attackers).
+            #    - NEVER blindly attack active if a high-yield/high-HP/energy benched target can be KO'd via Boss's Orders.
             benched_candidates = [c for c in candidates if c[0] != 0]
             benched_killable = [c for c in benched_candidates if c[3]]
             
@@ -317,19 +319,33 @@ def heuristic_scores(obs):
                 best = min(win_cands, key=lambda x: (0 if x[0] == 0 else 1, -x[1].hp))
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
-            elif hand_counts[Boss_Orders] > 0 and benched_killable and len(my_field) > 1:
-                # Prioritize benched targets: High list targets + Mist Energy (with Hammer) + EnergyAttached > General prize kills
+            elif hand_counts[Boss_Orders] > 0 and benched_candidates and len(my_field) > 1:
+                # If we have Boss's Orders, check for benched killable targets with highest priority
+                # Scored by: (is_killable, is_high_priority_target, has_mist_with_hammer, energy_cards_count, hp_value, prize_yield)
                 def boss_target_score(c):
                     idx, pkmn, pz, ck, hm = c
-                    is_high_target = 10 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
-                    has_mist = 15 if (count_special_defense_energies(pkmn) > 0 and hand_counts[Enhanced_Hammer] >= 1) else 0
-                    has_energy = 5 if len(pkmn.energyCards) > 0 else 0
+                    is_high_target = 100 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
+                    has_mist = 50 if (count_special_defense_energies(pkmn) > 0 and hand_counts[Enhanced_Hammer] >= 1) else 0
+                    has_energy = 20 if len(pkmn.energyCards) > 0 else 0
                     energy_cnt = len(pkmn.energyCards)
-                    return (has_mist, is_high_target, has_energy, pz, energy_cnt, -pkmn.hp)
+                    hp_val = pkmn.hp
+                    kill_bonus = 500 if ck else 0
+                    return (kill_bonus, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
                 
-                best = max(benched_killable, key=boss_target_score)
-                target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
-                target_use_boss = True
+                # Filter benched targets that we can either kill directly or kill after drawing cards
+                valid_benched = [c for c in benched_candidates if c[3] or (c[1].hp <= (max_hand_size * 20))]
+                if valid_benched:
+                    best = max(valid_benched, key=boss_target_score)
+                    target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                    target_use_boss = True
+                else:
+                    killable = [c for c in candidates if c[3]]
+                    if killable:
+                        best = max(killable, key=lambda x: (10 if x[1].id in HIGH_PRIORITY_BOSS_TARGETS else 0, x[2], x[1].hp))
+                        target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                        target_use_boss = target_idx != 0
+                    else:
+                        target_idx = 0; target_pokemon = op_active
             else:
                 killable = [c for c in candidates if c[3]]
                 if killable:
