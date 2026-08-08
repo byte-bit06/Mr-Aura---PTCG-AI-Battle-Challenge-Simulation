@@ -206,9 +206,39 @@ def run_parallel_evolution(target_hours=12.0, pop_size=16, games_per_opp=10, max
                 best_taken = gen_taken
                 best_conc = gen_conc
                 best_genome = gen_best_genome
+                
+                # 1. Save optimal weights to alak_w.json (loaded dynamically by main.py)
                 with open(WEIGHTS_JSON_PATH, "w") as f:
                     json.dump(best_genome, f, indent=4)
-                print(f" *** NEW BEST GENOME SAVED to alak_w.json! Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} ***", flush=True)
+                    
+                # 2. Save full training checkpoint state to train_checkpoint.json
+                checkpoint_path = os.path.join(AGENT_DIR, "train_checkpoint.json")
+                checkpoint_data = {
+                    "generation": generation,
+                    "elapsed_hours": (time.time() - start_time) / 3600.0,
+                    "best_fitness": best_fitness,
+                    "best_win_rate": best_wr,
+                    "best_prizes_taken": best_taken,
+                    "best_prizes_conceded": best_conc,
+                    "best_genome": best_genome
+                }
+                with open(checkpoint_path, "w") as f:
+                    json.dump(checkpoint_data, f, indent=4)
+                
+                # 3. Auto-rebuild submission.tar.gz archive with latest best weights
+                try:
+                    import tarfile
+                    sub_tar = os.path.join(AGENT_DIR, "submission.tar.gz")
+                    files_to_pack = ["main.py", "deck.csv", "EN Card Data.csv", "cg", "group.txt", "boss's_order_targets.csv", "alak_w.json"]
+                    with tarfile.open(sub_tar, "w:gz") as tar:
+                        for fn in files_to_pack:
+                            fp = os.path.join(AGENT_DIR, fn)
+                            if os.path.exists(fp):
+                                tar.add(fp, arcname=fn)
+                except Exception as e:
+                    pass
+
+                print(f" *** NEW BEST GENOME SAVED & CHECKPOINTED! Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} ***", flush=True)
 
             elapsed_gen = time.time() - gen_start
             elapsed_total = (time.time() - start_time) / 3600.0
