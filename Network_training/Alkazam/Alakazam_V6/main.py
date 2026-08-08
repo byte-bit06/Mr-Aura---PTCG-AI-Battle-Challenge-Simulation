@@ -32,18 +32,10 @@ WEIGHTS = {
     "lillie": 3400, "lana": 3300, "xerosic": 3250, "eri": 3150,
     "nz_ex": 19500, "nz_counter": 7500,
     "cage_counter": 19000, "cage_snipe": 18500,
-    "mine_counter": 18800, "jamming_tools": 18900, "jamming_counter": 18700,
-    # ATTACH
-    "helmet": 7000, "fan_abra": 7200, "fan_genesect": 7100, "balloon": 7300,
-    "cape_alak": 9800, "cape_kadabra": 9600, "cape_abra": 7500,
-    "energy_retreat": 9500, "energy_abra": 8000,
-    "enriching_2nd": 4500, "enriching_1st": 2000,
-    "mist_2nd": 4200, "mist_retreat": 9400,
-    # EVOLVE / ABILITY / RETREAT / ATTACK
-    "evolve_base": 9000,
-    "ability_dudun": 30000, "ability_fez": 29000, "ability_fanrotom": 29500, "ability_default": 28000,
-    "retreat_kadabra": 2500, "retreat_promote": 2000,
-    "attack_base": 1000, "attack_powerful": 500, "attack_psybolt_kill": 600, "attack_psybolt": 100, "attack_teleport": 50,
+    # MATCHUP STRATEGY WEIGHTS (Grimmsnarl, Dragapult, Iono, Mirror)
+    "boss_grimm_froslass": 50000, "boss_grimm_munkidori": 40000, "boss_grimm_pre_evo": 30000,
+    "boss_drag_drakloak": 45000, "boss_iono_electric_mult": 1000,
+    "hammer_drag_grimm_strip": 35000, "post_iono_dudun_priority": 35000,
 }
 # ---- memetic-tuned overrides (baked, seed for wm4 evo) ----
 WEIGHTS.update({"play_pokemon_base": 20000, "play_abra_early": 604, "play_abra_need": 200, "play_abra_extra": 50, "play_dun_first_early": 178, "play_dun_first_late": 70, "play_dun_second": 50, "play_dun_ex": 59, "play_fez": 20080, "play_genesect": 20100, "play_psyduck": 20300, "play_shaymin": 19807, "play_fanrotom": 20250, "play_bench_penalty": 3923, "poffin_early": 18000, "poffin_fallback": 4083, "poffin_late": 15000, "pokepad_early": 17000, "pokepad_need": 14000, "pokepad_ok": 12000, "rare_candy": 16000, "night_stretcher_mon": 13000, "night_stretcher_energy": 11000, "sacred_ash_hi": 13500, "sacred_ash_lo": 11000, "hammer_target": 6500, "hammer_any": 6993, "wondrous_patch": 8500, "meddling_memo": 6000, "boss_kill": 2262, "hilda": 3000, "dawn_emergency": 16500, "dawn": 3100, "lillie": 3400, "lana": 4249, "xerosic": 3250, "eri": 3150, "nz_ex": 19500, "nz_counter": 7500, "cage_counter": 19000, "cage_snipe": 18500, "mine_counter": 18495, "jamming_tools": 18900, "jamming_counter": 18700, "helmet": 7000, "fan_abra": 4301, "fan_genesect": 5611, "balloon": 7300, "cape_alak": 9800, "cape_kadabra": 9600, "cape_abra": 7500, "energy_retreat": 9500, "energy_abra": 8000, "enriching_2nd": 6249, "enriching_1st": 2000, "mist_2nd": 4200, "mist_retreat": 9400, "evolve_base": 5951, "ability_dudun": 30000, "ability_fez": 38066, "ability_fanrotom": 29500, "ability_default": 38085, "retreat_kadabra": 2500, "retreat_promote": 2000, "attack_base": 1000, "attack_powerful": 655, "attack_psybolt_kill": 600, "attack_psybolt": 127, "attack_teleport": 67})
@@ -332,14 +324,14 @@ def heuristic_scores(obs):
                     # 1. Anti-Grimmsnarl: Priority Froslass (104), Munkidori (112), Morgrem (647), Snorunt (860)
                     grimm_engine_score = 0
                     if op_has_grimmsnarl:
-                        if pid == Froslass: grimm_engine_score = 50000
-                        elif pid == Munkidori: grimm_engine_score = 40000
-                        elif pid in (Morgrem_G, 860): grimm_engine_score = 30000
+                        if pid == Froslass: grimm_engine_score = W.get("boss_grimm_froslass", 50000)
+                        elif pid == Munkidori: grimm_engine_score = W.get("boss_grimm_munkidori", 40000)
+                        elif pid in (Morgrem_G, 860): grimm_engine_score = W.get("boss_grimm_pre_evo", 30000)
                     
                     # 2. Anti-Dragapult: Priority benched Drakloak (120) before Dragapult ex
                     drag_drakloak_score = 0
                     if op_has_dragapult_line and pid == Drakloak:
-                        drag_drakloak_score = 45000
+                        drag_drakloak_score = W.get("boss_drag_drakloak", 45000)
                     
                     is_high_target = 100 if pid in HIGH_PRIORITY_BOSS_TARGETS else 0
                     has_mist = 50 if (count_special_defense_energies(pkmn) > 0 and hand_counts[Enhanced_Hammer] >= 1) else 0
@@ -348,7 +340,7 @@ def heuristic_scores(obs):
                     elec_energy_cnt = count_electric_energy(pkmn)
                     
                     is_game_winning_ex = 10000 if (my_prize_count <= 2 and pz >= my_prize_count and ck) else 0
-                    iono_elec_score = (elec_energy_cnt * 1000) if (op_has_iono_deck and my_prize_count > 2) else 0
+                    iono_elec_score = (elec_energy_cnt * W.get("boss_iono_electric_mult", 1000)) if (op_has_iono_deck and my_prize_count > 2) else 0
                     
                     hp_val = pkmn.hp
                     kill_bonus = 500 if ck else 0
@@ -616,7 +608,7 @@ def heuristic_scores(obs):
                         score = W["hammer_target"] + 40000
                     elif (op_has_dragapult_line or op_has_grimmsnarl) and active_has_special:
                         # Anti-Dragapult / Anti-Grimmsnarl: Strip special energy immediately to stall their setup!
-                        score = W["hammer_target"] + 35000
+                        score = W["hammer_target"] + W.get("hammer_drag_grimm_strip", 35000)
                     elif target_hammer_needed > 0 and attacker_ready:
                         score = W["hammer_target"] + 30000
                     elif active_has_mist and attacker_ready:
@@ -799,7 +791,7 @@ def heuristic_scores(obs):
                 elif overdraw: score = -1
                 elif hand_size <= 4:
                     # Post-Iono Re-Explosion: Top Priority!
-                    score = W["ability_dudun"] + 35000
+                    score = W["ability_dudun"] + W.get("post_iono_dudun_priority", 35000)
                 elif cards_needed_for_ko > 0: score = W["ability_dudun"] + 25000 + cards_needed_for_ko * 2000
                 elif need_dudunsparce_draw or hand_size < 10: score = W["ability_dudun"] + 15000
                 elif active_id not in ABRA_LINE and o.area == AreaType.ACTIVE: score = W["ability_dudun"]
