@@ -66,5 +66,13 @@
     "attack_base": 1000,
     "attack_powerful": 655,
     "attack_psybolt_kill": 600,
-    "attack_psybolt": 127, "attack_teleport": 67
+    "attack_psybolt": 127,
+    "attack_teleport": 67,
+    "boss_grimm_froslass": 50000,
+    "boss_grimm_munkidori": 40000,
+    "boss_grimm_pre_evo": 30000,
+    "boss_drag_drakloak": 45000,
+    "boss_iono_electric_mult": 1000,
+    "hammer_drag_grimm_strip": 35000,
+    "post_iono_dudun_priority": 35000
 }
