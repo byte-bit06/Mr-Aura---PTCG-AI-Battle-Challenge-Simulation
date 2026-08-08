@@ -334,17 +334,13 @@ def heuristic_scores(obs):
                     energy_cnt = len(pkmn.energyCards)
                     elec_energy_cnt = count_electric_energy(pkmn)
                     
-                    # Game-Winning ex Priority Rule:
                     is_game_winning_ex = 10000 if (my_prize_count <= 2 and pz >= my_prize_count and ck) else 0
-                    
-                    # Electric energy disruption applies ONLY when facing an Iono deck during early/mid game (when my_prize_count > 2)
                     iono_elec_score = (elec_energy_cnt * 1000) if (op_has_iono_deck and my_prize_count > 2) else 0
                     
                     hp_val = pkmn.hp
                     kill_bonus = 500 if ck else 0
                     return (kill_bonus, is_game_winning_ex, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
                 
-                # Filter benched targets: FIRST check killable benched targets
                 benched_killable = [c for c in benched_candidates if c[3]]
                 benched_reachable = [c for c in benched_candidates if c[1].hp <= (max_hand_size * 20)]
                 
@@ -352,11 +348,10 @@ def heuristic_scores(obs):
                     best = max(benched_killable, key=boss_target_score)
                     target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                     target_use_boss = True
-                elif benched_reachable:
+                elif benched_reachable and (op_active is None or len(op_active.energyCards) == 0 or op_active.hp > max_damage):
                     best = max(benched_reachable, key=boss_target_score)
                     target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
-                    # Only use Boss if we need a Supporter draw (Hilda/Dawn) to reach the KO or if current active is filler
-                    target_use_boss = (hand_counts[Hilda] > 0 or hand_counts[Dawn] > 0 or field_counts[Dudunsparce] > 0)
+                    target_use_boss = True
                 else:
                     killable = [c for c in candidates if c[3]]
                     if killable:
