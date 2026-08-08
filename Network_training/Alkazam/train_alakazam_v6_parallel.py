@@ -166,36 +166,43 @@ def mutate_genome(parent_genome, mutation_rate=0.25, mutation_scale=0.18):
     return child
 
 
-def run_parallel_evolution(target_hours=12.0, pop_size=16, games_per_opp=10, max_workers=16):
+def run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, max_workers=20):
     with open(WEIGHTS_JSON_PATH, "r") as f:
         base_genome = json.load(f)
 
     start_time = time.time()
-    end_time = start_time + (target_hours * 3600.0)
+    total_games_played = 0
 
     print(f"\n=========================================================================", flush=True)
-    print(f" Starting 12-Hour Multi-Core Parallel Evolutionary Optimizer for Alakazam V6")
-    print(f" Target Run Time : {target_hours:.1f} Hours ({target_hours*3600:.0f} Seconds)")
+    print(f" Starting 1,000,000 Game Parallel Evolutionary Optimizer for Alakazam V6")
+    print(f" Target Games    : {target_games:,} Games")
     print(f" Population Size : {pop_size} Candidates per Generation")
-    print(f" Games/Opponent  : {games_per_opp} Games (Total {games_per_opp * 9} games per Candidate)")
+    print(f" Games/Opponent  : {games_per_opp} Games ({games_per_opp * 9} games per Candidate)")
     print(f" Parallel Cores  : {max_workers} Worker Processes")
     print(f"=========================================================================\n", flush=True)
 
     # Evaluate baseline genome
     best_fitness, best_wr, best_taken, best_conc, _ = _worker_eval_genome(base_genome, games_per_opp=games_per_opp)
     best_genome = base_genome
+    total_games_played += games_per_opp * 9
     print(f"Generation  0 (Baseline) -> Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} | Fitness: {best_fitness:.2f}\n", flush=True)
 
     population = [best_genome] + [mutate_genome(best_genome) for _ in range(pop_size - 1)]
     generation = 1
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        while time.time() < end_time:
+        while total_games_played < target_games:
             gen_start = time.time()
             
-            # Map evaluation across all 16 parallel CPU cores
+            # Dynamic Mutation Annealing: Fine-tune mutation scale as training progresses
+            progress = min(1.0, total_games_played / target_games)
+            current_mutation_scale = max(0.04, 0.20 * (1.0 - 0.75 * progress))
+            
+            # Map evaluation across all 20 parallel CPU cores
             futures = [executor.submit(_worker_eval_genome, g, games_per_opp) for g in population]
             results = [f.result() for f in futures]
+
+            total_games_played += pop_size * games_per_opp * 9
 
             results.sort(key=lambda x: x[0], reverse=True)
             gen_best_fitness, gen_wr, gen_taken, gen_conc, gen_best_genome = results[0]
@@ -215,6 +222,8 @@ def run_parallel_evolution(target_hours=12.0, pop_size=16, games_per_opp=10, max
                 checkpoint_path = os.path.join(AGENT_DIR, "train_checkpoint.json")
                 checkpoint_data = {
                     "generation": generation,
+                    "total_games_played": total_games_played,
+                    "target_games": target_games,
                     "elapsed_hours": (time.time() - start_time) / 3600.0,
                     "best_fitness": best_fitness,
                     "best_win_rate": best_wr,
@@ -242,22 +251,24 @@ def run_parallel_evolution(target_hours=12.0, pop_size=16, games_per_opp=10, max
 
             elapsed_gen = time.time() - gen_start
             elapsed_total = (time.time() - start_time) / 3600.0
-            remaining_hours = max(0.0, target_hours - elapsed_total)
+            games_per_sec = (pop_size * games_per_opp * 9) / elapsed_gen if elapsed_gen > 0 else 0
+            pct_complete = (total_games_played / target_games) * 100.0
 
-            print(f"Gen {generation:3d} Complete ({elapsed_gen:.1f}s) | Gen Win Rate: {gen_wr:.1f}% (+{gen_taken:.2f}/-{gen_conc:.2f}) | Overall Best: {best_wr:.1f}% | Time Left: {remaining_hours:.2f} hrs", flush=True)
+            print(f"Gen {generation:3d} ({elapsed_gen:.1f}s, {games_per_sec:.1f} g/s) | Played: {total_games_played:,}/{target_games:,} ({pct_complete:.1f}%) | Gen WR: {gen_wr:.1f}% (+{gen_taken:.2f}/-{gen_conc:.2f}) | Overall Best: {best_wr:.1f}%", flush=True)
 
-            # Breed next generation from top 3 elite survivors + cross-mutations
-            survivors = [results[0][4], results[1][4], results[2][4]]
+            # Breed next generation from top 4 elite survivors + annealed mutations
+            survivors = [results[0][4], results[1][4], results[2][4], results[3][4]]
             next_pop = copy.deepcopy(survivors)
             while len(next_pop) < pop_size:
                 parent = random.choice(survivors)
-                next_pop.append(mutate_genome(parent))
+                next_pop.append(mutate_genome(parent, mutation_rate=0.25, mutation_scale=current_mutation_scale))
             population = next_pop
 
             generation += 1
 
     print(f"\n=========================================================================", flush=True)
-    print(f" 12-Hour Self-Learning Complete!")
+    print(f" 1,000,000 Game Self-Learning Optimization Complete!")
+    print(f" Total Games Played        : {total_games_played:,}")
     print(f" Final Best Win Rate       : {best_wr:.1f}%")
     print(f" Final Avg Prizes Taken    : {best_taken:.2f}")
     print(f" Final Avg Prizes Conceded : {best_conc:.2f}")
@@ -267,5 +278,5 @@ def run_parallel_evolution(target_hours=12.0, pop_size=16, games_per_opp=10, max
 
 
 if __name__ == "__main__":
-    # Target: 12 Hours, Pop Size: 16, Games per Opponent: 10, Max Worker Cores: 16
-    run_parallel_evolution(target_hours=12.0, pop_size=16, games_per_opp=10, max_workers=16)
+    # Target: 1,000,000 Games, Pop Size: 24, Games per Opponent: 16, Worker Cores: 20
+    run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, max_workers=20)
