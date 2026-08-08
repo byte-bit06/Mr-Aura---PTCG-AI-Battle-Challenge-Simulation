@@ -117,7 +117,26 @@ def play_match(env, p1_name, p1_agent, p2_name, p2_agent, match_name):
     else:
         winner = "Tie"
 
-    return winner
+    # Extract final prize state for detailed prize statistics
+    p1_taken, p1_conceded = 0, 0
+    for st in reversed(steps):
+        s0 = st[0]
+        if isinstance(s0, dict) and s0.get("observation") and isinstance(s0["observation"], dict):
+            raw_obs = s0["observation"].get("obs")
+            if isinstance(raw_obs, str) and len(raw_obs) > 10:
+                try:
+                    obs0 = cg.api.json_to_dataclass(json.loads(raw_obs), cg.api.GameState)
+                    my_i = obs0.current.yourIndex
+                    op_i = obs0.current.opIndex
+                    p1_prizes_rem = len(obs0.players[my_i].prize)
+                    p2_prizes_rem = len(obs0.players[op_i].prize)
+                    p1_taken = 6 - p1_prizes_rem
+                    p1_conceded = 6 - p2_prizes_rem
+                    break
+                except Exception:
+                    pass
+
+    return winner, p1_taken, p1_conceded
 
 
 def main():
@@ -133,15 +152,17 @@ def main():
 
     for opp_name, opp_agent in opponents.items():
         results = {"win": 0, "loss": 0, "tie": 0}
+        total_prizes_taken = 0
+        total_prizes_conceded = 0
         print(f"--- Evaluator: {primary_name} vs {opp_name} ({games} Games) ---", flush=True)
 
         for i in range(games):
             if i % 2 == 0:
-                winner = play_match(env, primary_name, primary_agent, opp_name,
-                                    opp_agent, f"{primary_name}_vs_{opp_name}_{i+1}")
+                winner, p_taken, p_conc = play_match(env, primary_name, primary_agent, opp_name,
+                                                     opp_agent, f"{primary_name}_vs_{opp_name}_{i+1}")
             else:
-                winner = play_match(env, opp_name, opp_agent, primary_name,
-                                    primary_agent, f"{opp_name}_vs_{primary_name}_{i+1}")
+                winner, p_conc, p_taken = play_match(env, opp_name, opp_agent, primary_name,
+                                                     primary_agent, f"{opp_name}_vs_{primary_name}_{i+1}")
 
             if winner == primary_name:
                 results["win"] += 1
@@ -150,31 +171,43 @@ def main():
             else:
                 results["tie"] += 1
 
+            total_prizes_taken += p_taken
+            total_prizes_conceded += p_conc
+
         w = results["win"]
         l = results["loss"]
         t = results["tie"]
         pct = (w / games) * 100.0 if games > 0 else 0.0
-        summary_table.append((opp_name, w, l, t, pct))
+        avg_taken = total_prizes_taken / games if games > 0 else 0.0
+        avg_conc = total_prizes_conceded / games if games > 0 else 0.0
 
-        print(f"  Result vs {opp_name}: {w} Wins, {l} Losses, {t} Ties ({pct:.1f}% Win Rate)\n", flush=True)
+        summary_table.append((opp_name, w, l, t, pct, total_prizes_taken, total_prizes_conceded, avg_taken, avg_conc))
 
-    print(f"\n=======================================================", flush=True)
-    print(f"            COMPREHENSIVE EVALUATION SUMMARY           ", flush=True)
-    print(f"=======================================================", flush=True)
-    print(f"{'Opponent':<25} | {'Wins':<5} | {'Losses':<6} | {'Ties':<5} | {'Win Rate':<8}", flush=True)
-    print(f"-" * 60, flush=True)
+        print(f"  Result vs {opp_name}: {w} Wins, {l} Losses, {t} Ties ({pct:.1f}% Win Rate) | Avg Prizes Taken: {avg_taken:.2f} | Avg Prizes Conceded: {avg_conc:.2f}\n", flush=True)
+
+    print(f"\n==========================================================================================================", flush=True)
+    print(f"                               COMPREHENSIVE EVALUATION SUMMARY (WITH PRIZES)                             ", flush=True)
+    print(f"==========================================================================================================", flush=True)
+    print(f"{'Opponent':<23} | {'Wins':<4} | {'Losses':<6} | {'Ties':<4} | {'Win Rate':<8} | {'Prizes Taken (Avg)':<18} | {'Prizes Conceded (Avg)':<21}", flush=True)
+    print(f"-" * 95, flush=True)
     
     total_w, total_l, total_t = 0, 0, 0
-    for opp_name, w, l, t, pct in summary_table:
+    sum_taken, sum_conc = 0, 0
+    for opp_name, w, l, t, pct, p_taken, p_conc, avg_t, avg_c in summary_table:
         total_w += w
         total_l += l
         total_t += t
-        print(f"{opp_name:<25} | {w:<5} | {l:<6} | {t:<5} | {pct:>6.1f}%", flush=True)
+        sum_taken += p_taken
+        sum_conc += p_conc
+        print(f"{opp_name:<23} | {w:<4} | {l:<6} | {t:<4} | {pct:>6.1f}%  | {p_taken:>3d} total ({avg_t:>4.2f}/gm)    | {p_conc:>3d} total ({avg_c:>4.2f}/gm)", flush=True)
 
     total_games = total_w + total_l + total_t
     overall_pct = (total_w / total_games) * 100.0 if total_games > 0 else 0.0
-    print(f"-" * 60, flush=True)
-    print(f"{'OVERALL TOTAL':<25} | {total_w:<5} | {total_l:<6} | {total_t:<5} | {overall_pct:>6.1f}%\n", flush=True)
+    overall_avg_t = sum_taken / total_games if total_games > 0 else 0.0
+    overall_avg_c = sum_conc / total_games if total_games > 0 else 0.0
+
+    print(f"-" * 95, flush=True)
+    print(f"{'OVERALL TOTAL':<23} | {total_w:<4} | {total_l:<6} | {total_t:<4} | {overall_pct:>6.1f}%  | {sum_taken:>3d} total ({overall_avg_t:>4.2f}/gm)    | {sum_conc:>3d} total ({overall_avg_c:>4.2f}/gm)\n", flush=True)
 
 
 if __name__ == "__main__":
