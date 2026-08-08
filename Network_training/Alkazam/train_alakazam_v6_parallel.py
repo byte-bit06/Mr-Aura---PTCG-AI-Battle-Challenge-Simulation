@@ -204,7 +204,7 @@ def mutate_genome(parent_genome, mutation_rate=0.25, mutation_scale=0.18):
     return child
 
 
-def run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, max_workers=20):
+def run_parallel_evolution(target_games=1000000, pop_size=12, games_per_opp=4, max_workers=12):
     with open(WEIGHTS_JSON_PATH, "r") as f:
         base_genome = json.load(f)
 
@@ -220,10 +220,11 @@ def run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, 
     print(f"=========================================================================\n", flush=True)
 
     # Evaluate baseline genome
+    print(f"Evaluating Baseline Genome...", end="", flush=True)
     best_fitness, best_wr, best_taken, best_conc, _ = _worker_eval_genome(base_genome, games_per_opp=games_per_opp)
     best_genome = base_genome
     total_games_played += games_per_opp * 9
-    print(f"Generation  0 (Baseline) -> Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} | Fitness: {best_fitness:.2f}\n", flush=True)
+    print(f" Done! -> Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} | Fitness: {best_fitness:.2f}\n", flush=True)
 
     population = [best_genome] + [mutate_genome(best_genome) for _ in range(pop_size - 1)]
     generation = 1
@@ -236,9 +237,17 @@ def run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, 
             progress = min(1.0, total_games_played / target_games)
             current_mutation_scale = max(0.04, 0.20 * (1.0 - 0.75 * progress))
             
-            # Map evaluation across all 20 parallel CPU cores
-            futures = [executor.submit(_worker_eval_genome, g, games_per_opp) for g in population]
-            results = [f.result() for f in futures]
+            # Map evaluation across parallel CPU cores with real-time feedback
+            from concurrent.futures import as_completed
+            futures = {executor.submit(_worker_eval_genome, g, games_per_opp): i for i, g in enumerate(population)}
+            
+            results = []
+            completed_cnt = 0
+            for future in as_completed(futures):
+                cand_res = future.result()
+                results.append(cand_res)
+                completed_cnt += 1
+                print(f"  [Gen {generation}] Candidate {completed_cnt:2d}/{pop_size} Complete | Candidate WR: {cand_res[1]:.1f}% | Fitness: {cand_res[0]:.2f}", flush=True)
 
             total_games_played += pop_size * games_per_opp * 9
 
@@ -316,5 +325,5 @@ def run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, 
 
 
 if __name__ == "__main__":
-    # Target: 1,000,000 Games, Pop Size: 24, Games per Opponent: 16, Worker Cores: 20
-    run_parallel_evolution(target_games=1000000, pop_size=24, games_per_opp=16, max_workers=20)
+    # Target: 1,000,000 Games, Pop Size: 12, Games per Opponent: 4, Worker Cores: 12
+    run_parallel_evolution(target_games=1000000, pop_size=12, games_per_opp=4, max_workers=12)
