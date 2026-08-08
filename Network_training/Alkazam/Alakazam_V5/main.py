@@ -709,14 +709,21 @@ def heuristic_scores(obs):
                 elif len(pokemon.energyCards) >= 1: score = -1
                 elif pokemon.id in ABRA_LINE:
                     score = W["energy_abra"] + {Alakazam: 30, Kadabra: 20, Abra: 10}.get(pokemon.id, 0)
-                    if o.inPlayArea == AreaType.ACTIVE: score += 5
+                    if o.inPlayArea == AreaType.ACTIVE:
+                        # Massive Priority: Power up Active attacker immediately when not heavily damaged!
+                        active_is_healthy = pokemon.hp >= 50
+                        score += 30000 if active_is_healthy else 100
+                    else:
+                        score += 10
                 else: score = -1
                 if card.id == Telepath_Psychic_Energy and safe_draws < 2 and score > 0: score = -1
             elif card.id == Enriching_Energy:
                 if pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
                     score = W["enriching_2nd"] + (200 if o.inPlayArea == AreaType.ACTIVE else 0)
                 elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
-                elif pokemon.id in ABRA_LINE: score = W["enriching_1st"]
+                elif pokemon.id in ABRA_LINE:
+                    score = W["enriching_1st"]
+                    if o.inPlayArea == AreaType.ACTIVE and pokemon.hp >= 50: score += 25000
                 else: score = -1
                 if safe_draws < 4 and score > 0: score = -1
             elif card.id == Mist_Energy:
@@ -740,16 +747,21 @@ def heuristic_scores(obs):
                     else:
                         score += 30
                 else:
-                    if op_has_dragapult_line:
-                        # Rush Alakazam evolution immediately vs Dragapult to start attacking early!
+                    active_is_healthy = pokemon.hp >= 50
+                    if o.inPlayArea == AreaType.ACTIVE and active_is_healthy:
+                        # Top Priority: Evolve Active Kadabra/Abra into Alakazam ex immediately to attack!
+                        score += 35000
+                    elif op_has_dragapult_line:
                         score += 5000 + (2000 if o.inPlayArea == AreaType.ACTIVE else 0)
                     elif safe_draws < 3: score = -1
                     elif o.inPlayArea == AreaType.ACTIVE: score += 200
                     else: score += 50
                     score += len(pokemon.energies) * 10
             elif card.id == Kadabra:
-                kadabra_count_on_field = field_counts[Kadabra]
-                if kadabra_count_on_field >= 2:
+                active_is_healthy = pokemon.hp >= 40
+                if o.inPlayArea == AreaType.ACTIVE and active_is_healthy:
+                    score += 25000
+                elif field_counts[Kadabra] >= 2:
                     # Maintain exactly 2 Kadabras on field for maximum setup efficiency!
                     score = -1
                 elif safe_draws < 2: score = -1
