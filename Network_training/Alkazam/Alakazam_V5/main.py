@@ -168,6 +168,14 @@ def count_special_defense_energies(pokemon):
     return sum(1 for ec in pokemon.energyCards if ec.id in (Mist_Energy, Rock_Fighting_Energy))
 
 
+# High-yield target Pokémon IDs from boss_targets.csv
+HIGH_PRIORITY_BOSS_TARGETS = {
+    860, 648, 647, 140, 66, 305, 431, 756, 380, 381, 1071, 121, 120,
+    117, 96, 184, 272, 63, 108, 93, 848, 849, 861, 65, 1145, 326, 411,
+    1031, 1030, 306, 293, 292, 103, 141
+}
+
+
 def heuristic_scores(obs):
     state = obs.current
     select = obs.select
@@ -292,20 +300,30 @@ def heuristic_scores(obs):
             drag_benched_targets = [c for c in candidates if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)] if op_has_dragapult_line else []
             active_is_dragapult = op_active and op_active.id == Dragapult_ex
 
-            if op_has_dragapult_line and active_is_dragapult:
-                # Active is Dragapult ex -> Focus on digging cards to KO active Dragapult ex!
-                target_idx = 0; target_pokemon = op_active; target_use_boss = False
-                target_can_kill = candidates[0][3]
-                target_prize_gain = prize_count(op_active)
-            elif op_has_dragapult_line and hand_counts[Boss_Orders] > 0 and drag_benched_targets and len(my_field) > 1:
-                # Active is useless filler (Budew/etc) -> Use Boss's Orders to target benched engine units (Drakloak, Latios, Dudunsparce)!
-                best = max(drag_benched_targets, key=lambda x: (10 if x[1].id == Drakloak else (8 if x[1].id == 755 else 5), prize_count(x[1]), -x[1].hp))
-                target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
-                target_use_boss = True
-            elif win_cands:
+            # Enhanced High-Yield Boss's Orders Target Selection:
+            # 1. Winning KO takes top priority.
+            # 2. If we have Boss's Orders in hand and can KO a benched target (from HIGH_PRIORITY_BOSS_TARGETS or high prize yield):
+            #    - NEVER use Boss's Orders if the target is ALREADY in the active spot!
+            #    - Prioritize benched Pokémon with energy attached over un-energized targets.
+            #    - Prioritize high-yield targets (ex / Mega / Stage 2 / high HP / high competition occurrences).
+            benched_killable = [c for c in candidates if c[0] != 0 and c[3]]
+            
+            if win_cands:
                 best = min(win_cands, key=lambda x: (0 if x[0] == 0 else 1, -x[1].hp))
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
+            elif hand_counts[Boss_Orders] > 0 and benched_killable and len(my_field) > 1:
+                # Prioritize benched high-yield targets with energy attached
+                def boss_target_score(c):
+                    idx, pkmn, pz, ck, hm = c
+                    is_high_target = 1 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
+                    has_energy = 1 if len(pkmn.energyCards) > 0 else 0
+                    energy_cnt = len(pkmn.energyCards)
+                    return (has_energy, is_high_target, pz, energy_cnt, pkmn.hp)
+                
+                best = max(benched_killable, key=boss_target_score)
+                target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                target_use_boss = True
             else:
                 killable = [c for c in candidates if c[3]]
                 if killable:
@@ -316,7 +334,7 @@ def heuristic_scores(obs):
                         else:
                             best = max(killable, key=lambda x: (x[2], x[1].hp))
                     elif op_has_dragapult_line:
-                        high_value_killable = [c for c in killable if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)]
+                        high_value_killable = [c for c in killable if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom, Dragapult_ex) or prize_count(c[1]) >= 2)]
                         if high_value_killable:
                             best = max(high_value_killable, key=lambda x: (10 if x[1].id == Drakloak else (8 if x[1].id == 755 else 5), x[2], -x[1].hp))
                         else:
@@ -1050,6 +1068,13 @@ def _advance_forced(sid, cur, owner, deadline, limit=8):
         sid, cur = ss.searchId, ss.observation
     return sid, cur
 
+
+# Load High Priority Boss's Orders targets from boss_targets.csv
+HIGH_PRIORITY_BOSS_TARGETS = {
+    860, 648, 647, 140, 66, 305, 431, 756, 380, 381, 1071, 121, 120,
+    117, 96, 184, 272, 63, 108, 93, 848, 849, 861, 65, 1145, 326, 411,
+    1031, 1030, 306, 293, 292, 103, 141
+}
 
 # ==================== 2-ply minimax ====================
 
