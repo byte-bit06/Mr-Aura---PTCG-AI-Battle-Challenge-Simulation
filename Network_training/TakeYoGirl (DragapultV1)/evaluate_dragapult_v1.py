@@ -69,7 +69,7 @@ def _find_package_root(pkg, start, levels=6):
 _CG_ROOT = None
 try:
     import cg  # already importable (installed, or PYTHONPATH is set)
-    _CG_ROOT = '(already on path)'
+    _CG_ROOT = r'C:\Users\Shaur\Coding Project\AWS\Network_training\cg'
 except ImportError:
     _CG_ROOT = _find_package_root('cg', _HERE)
     if _CG_ROOT:
@@ -237,3 +237,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+ 

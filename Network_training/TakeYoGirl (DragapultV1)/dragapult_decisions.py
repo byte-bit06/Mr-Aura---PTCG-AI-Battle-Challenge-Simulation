@@ -181,8 +181,6 @@ def should_bench(view, cid):
     if cid == ID.BUDEW:
         if view.count_in_play([ID.BUDEW]) >= 1:
             return Decision(False, W["bench_budew_dup_deny"], "already have a Budew doing the item-lock job")
-        if view.turn > 2 or _attacker_charged_on_bench(view) or view.count_in_play([ID.DRAGAPULT_EX, ID.DRAKLOAK]) >= 1:
-            return Decision(False, 0.0, "late game Budew bench ban — Budew is useless on bench after early setup")
         return Decision(True, W["bench_budew"], "Budew for the free item lock (rule B)")
 
     return Decision(True, W["bench_default"], "no specific gate")
@@ -372,8 +370,18 @@ def switch_target_score(view, cid, pokemon):
         # Rule B: Budew belongs active whenever nothing better is ready to
         # attack — it swings Itchy Pollen for free and item-locks every turn
         # at zero cost until we're set up.
+        # But only if we have a Dragapult with enough energy for its largest attack
         attacker_ready = phantom_dive_available(view) or _attacker_charged_on_bench(view) or view.count_in_play([ID.DUSKNOIR]) > 0
-        return W["switch_budew_ready"] if attacker_ready else W["switch_budew_not_ready"]
+        dragapult_ready = False
+        if view.count_in_play([ID.DRAGAPULT_EX]) > 0:
+            dragapult = next((p for p in view.my_board if p is not None and p.id == ID.DRAGAPULT_EX), None)
+            if dragapult is not None and view.energy_count(dragapult) >= 2:
+                dragapult_ready = True
+
+        if attacker_ready or dragapult_ready:
+            return W["switch_budew_ready"]
+        else:
+            return W["switch_budew_not_ready"]
 
     if cid == ID.DRAGAPULT_EX and energy_n >= 2:
         return W["switch_dragapult_charged"]
@@ -436,7 +444,9 @@ def search_target_score(view, cid):
     if cid in (ID.BASIC_FIRE_ENERGY, ID.BASIC_PSYCHIC_ENERGY, ID.NEO_UPPER_ENERGY):
         return W["search_hit_energy"]
     if cid == ID.BUDEW:
-        if view.turn <= 2 and view.count_in_play([ID.BUDEW]) == 0 and not _attacker_charged_on_bench(view) and view.count_in_play([ID.DRAGAPULT_EX, ID.DRAKLOAK]) == 0:
+        # Always search for Budew in the early game until we get it
+        # This ensures we prioritize getting the key card early
+        if view.count_in_play([ID.BUDEW]) == 0:
             return W["search_hit_budew"]
         return 0.0
     if cid == ID.DUSKULL and view.turn <= 4:
