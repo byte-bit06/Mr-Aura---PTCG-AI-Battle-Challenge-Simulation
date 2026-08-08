@@ -318,13 +318,14 @@ def heuristic_scores(obs):
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
             elif hand_counts[Boss_Orders] > 0 and benched_killable and len(my_field) > 1:
-                # Prioritize benched targets: High list targets + EnergyAttached > General prize kills
+                # Prioritize benched targets: High list targets + Mist Energy (with Hammer) + EnergyAttached > General prize kills
                 def boss_target_score(c):
                     idx, pkmn, pz, ck, hm = c
                     is_high_target = 10 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
+                    has_mist = 15 if (count_special_defense_energies(pkmn) > 0 and hand_counts[Enhanced_Hammer] >= 1) else 0
                     has_energy = 5 if len(pkmn.energyCards) > 0 else 0
                     energy_cnt = len(pkmn.energyCards)
-                    return (is_high_target, has_energy, pz, energy_cnt, -pkmn.hp)
+                    return (has_mist, is_high_target, has_energy, pz, energy_cnt, -pkmn.hp)
                 
                 best = max(benched_killable, key=boss_target_score)
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
@@ -559,13 +560,18 @@ def heuristic_scores(obs):
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
                     score = W["sacred_ash_hi"] if dis_abra >= 2 else (W["sacred_ash_lo"] if dis_abra >= 1 else -1)
                 elif cid == Enhanced_Hammer:
-                    # Conserve 1x Enhanced Hammer: Only play when we have an active attacker ready to swing on that turn AND stripping special energy on active guarantees the KO!
-                    active_crustle_has_mist = op_active and (op_active.id in Crustle_IDs or op_active.id in Dwebble_IDs) and count_special_defense_energies(op_active) > 0
-                    if target_hammer_needed > 0 and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1):
-                        score = W["hammer_target"] + 25000
-                    elif active_crustle_has_mist and (active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1) and (hand_size - 1) * 20 >= op_active.hp:
-                        # Wise play vs Crustle: Only strip Mist Energy from Active Crustle when Alakazam is powered and hand size can 1-shot it right now!
+                    # Enhanced Hammer logic: Strip Mist Energy (or Special Energy) from Active or Boss target being attacked this turn
+                    active_has_mist = op_active and count_special_defense_energies(op_active) > 0
+                    target_has_mist = target_pokemon and count_special_defense_energies(target_pokemon) > 0
+                    attacker_ready = active_pokemon and active_pokemon.id in ABRA_LINE and len(active_pokemon.energyCards) >= 1
+                    
+                    if target_has_mist and attacker_ready:
+                        # Highest Priority: Strip Mist Energy from high-yield target or Active being attacked this turn!
+                        score = W["hammer_target"] + 40000
+                    elif target_hammer_needed > 0 and attacker_ready:
                         score = W["hammer_target"] + 30000
+                    elif active_has_mist and attacker_ready:
+                        score = W["hammer_target"] + 25000
                     else:
                         score = -1
                 elif cid == Wondrous_Patch:
