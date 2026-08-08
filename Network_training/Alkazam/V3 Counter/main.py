@@ -477,10 +477,11 @@ def heuristic_scores(obs):
                     else: score = 10
 
             elif context == SelectContext.TO_BENCH:
+                rabsca_line_on_field = field_counts[Rellor] + field_counts[Rabsca]
                 if card.id == Abra: score = 100 - abra_line_on_field * 5
                 elif card.id in DUNSPARCE_IDS: score = 80 - dunsparce_line_on_field * 5
-                elif card.id == Rellor: score = 90 if (op_has_dragapult_line or op_has_grimmsnarl) else -1
-                elif card.id == Rabsca: score = 95 if (op_has_dragapult_line or op_has_grimmsnarl) else -1
+                elif card.id == Rellor: score = 90 if (op_has_dragapult_line or op_has_grimmsnarl) and rabsca_line_on_field == 0 else -1
+                elif card.id == Rabsca: score = 95 if (op_has_dragapult_line or op_has_grimmsnarl) and rabsca_line_on_field == 0 else -1
                 elif card.id == Psyduck: score = 60 if op_has_duskull else -1
                 elif card.id == Shaymin: score = 55 if (op_has_water_threat or op_has_grimmsnarl) else -1
 
