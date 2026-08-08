@@ -650,7 +650,7 @@ def heuristic_scores(obs):
                 elif pokemon.id in ABRA_LINE: score = W["cape_abra"]
                 else: score = -1
             elif card.id in PSYCHIC_ENERGY_IDS:
-                if pokemon.id in DUNSPARCE_LINE: score = -1  # NEVER attach energy to Dunsparce or Dudunsparce!
+                if pokemon.id in DUNSPARCE_LINE or pokemon.id in RABSCA_LINE: score = -1  # NEVER attach energy to Dunsparce/Dudunsparce or Rellor/Rabsca!
                 elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
                 elif len(pokemon.energyCards) >= 1: score = -1
                 elif pokemon.id in ABRA_LINE:
@@ -659,7 +659,7 @@ def heuristic_scores(obs):
                 else: score = -1
                 if card.id == Telepath_Psychic_Energy and safe_draws < 2 and score > 0: score = -1
             elif card.id == Enriching_Energy:
-                if pokemon.id in DUNSPARCE_LINE: score = -1  # NEVER attach energy to Dunsparce or Dudunsparce!
+                if pokemon.id in DUNSPARCE_LINE or pokemon.id in RABSCA_LINE: score = -1  # NEVER attach energy to Dunsparce/Dudunsparce or Rellor/Rabsca!
                 elif pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
                     score = W["enriching_2nd"] + (200 if o.inPlayArea == AreaType.ACTIVE else 0)
                 elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
@@ -667,7 +667,7 @@ def heuristic_scores(obs):
                 else: score = -1
                 if safe_draws < 4 and score > 0: score = -1
             elif card.id == Mist_Energy:
-                if pokemon.id in DUNSPARCE_LINE: score = -1  # NEVER attach energy to Dunsparce or Dudunsparce!
+                if pokemon.id in DUNSPARCE_LINE or pokemon.id in RABSCA_LINE: score = -1  # NEVER attach energy to Dunsparce/Dudunsparce or Rellor/Rabsca!
                 elif pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
                     score = W["mist_2nd"] + (200 if o.inPlayArea == AreaType.ACTIVE else 0)
                 elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["mist_retreat"]
