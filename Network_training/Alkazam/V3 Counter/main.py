@@ -294,23 +294,33 @@ def heuristic_scores(obs):
             active_is_dragapult = op_active and op_active.id == Dragapult_ex
 
             # High-Value Boss Target Evaluation before attacking:
-            # Check if Boss's Orders can KO a benched Pokémon that offers MORE prizes, higher HP, or more energy than active!
+            # Check if Boss's Orders can 1-shot KO a benched Pokémon that is a main attacker, has energy, offers more prizes, or high HP/ex!
             benched_killable = [c for c in candidates if c[0] != 0 and c[3]]
             active_prize = prize_count(op_active)
             active_energy = len(getattr(op_active, "energyCards", getattr(op_active, "energies", [])))
             
-            better_benched_targets = []
+            high_value_boss_targets = []
             for c in benched_killable:
                 pkmn = c[1]
                 pz = c[2]
                 eng = len(getattr(pkmn, "energyCards", getattr(pkmn, "energies", [])))
-                # Target is better if it gives more prizes, or has more energy attached, or has higher HP than active
-                if pz > active_prize or eng > active_energy or pkmn.hp > op_active.hp:
-                    better_benched_targets.append((c, pz, eng, pkmn.hp))
+                is_ex_or_mega = getattr(pkmn, "ex", False) or getattr(pkmn, "megaEx", False)
+                is_main_attacker = pkmn.id in (Dragapult_ex, Grimmsnarl_ex, Archaludon_ex, 755, Drakloak)
+                
+                # Calculate priority score for Boss KO target
+                priority = 0
+                if pz > active_prize: priority += 1000  # More prize cards!
+                if is_main_attacker: priority += 800     # Opponent's main attacker!
+                if eng > 0: priority += 500 + eng * 100  # Wipes out opponent's energy setup!
+                if is_ex_or_mega: priority += 400        # High HP ex/Mega KO!
+                if pkmn.hp > op_active.hp: priority += 200
 
-            if hand_counts[Boss_Orders] > 0 and better_benched_targets and len(my_field) > 1:
-                # Force Boss's Orders on the highest-value benched KO target!
-                best_tuple = max(better_benched_targets, key=lambda x: (x[1], x[2], x[3]))
+                if priority > 0:
+                    high_value_boss_targets.append((c, priority))
+
+            if hand_counts[Boss_Orders] > 0 and high_value_boss_targets and len(my_field) > 1:
+                # Force Boss's Orders on the highest-priority benched target to slow down opponent setup!
+                best_tuple = max(high_value_boss_targets, key=lambda x: x[1])
                 best = best_tuple[0]
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = True
@@ -651,19 +661,19 @@ def heuristic_scores(obs):
                 else: score = -1
             elif card.id in PSYCHIC_ENERGY_IDS:
                 if pokemon.id in DUNSPARCE_LINE or pokemon.id in RABSCA_LINE: score = -1  # NEVER attach energy to Dunsparce/Dudunsparce or Rellor/Rabsca!
-                elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
+                elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"] + 10000
                 elif len(pokemon.energyCards) >= 1: score = -1
                 elif pokemon.id in ABRA_LINE:
-                    score = W["energy_abra"] + {Alakazam: 30, Kadabra: 20, Abra: 10}.get(pokemon.id, 0)
-                    if o.inPlayArea == AreaType.ACTIVE: score += 5
+                    score = W["energy_abra"] + 5000 + {Alakazam: 1000, Kadabra: 500, Abra: 200}.get(pokemon.id, 0)
+                    if o.inPlayArea == AreaType.ACTIVE: score += 1000
                 else: score = -1
                 if card.id == Telepath_Psychic_Energy and safe_draws < 2 and score > 0: score = -1
             elif card.id == Enriching_Energy:
                 if pokemon.id in DUNSPARCE_LINE or pokemon.id in RABSCA_LINE: score = -1  # NEVER attach energy to Dunsparce/Dudunsparce or Rellor/Rabsca!
                 elif pokemon.id in ABRA_LINE and len(pokemon.energyCards) >= 1:
-                    score = W["enriching_2nd"] + (200 if o.inPlayArea == AreaType.ACTIVE else 0)
-                elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"]
-                elif pokemon.id in ABRA_LINE: score = W["enriching_1st"]
+                    score = W["enriching_2nd"] + 6000 + (2000 if o.inPlayArea == AreaType.ACTIVE else 0)
+                elif need_retreat_energy and o.inPlayArea == AreaType.ACTIVE: score = W["energy_retreat"] + 10000
+                elif pokemon.id in ABRA_LINE: score = W["enriching_1st"] + 5000
                 else: score = -1
                 if safe_draws < 4 and score > 0: score = -1
             elif card.id == Mist_Energy:
