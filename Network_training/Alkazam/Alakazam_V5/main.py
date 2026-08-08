@@ -392,6 +392,10 @@ def heuristic_scores(obs):
     hp_gap_for_ko = max(0, target_hp - current_dmg)
     cards_needed_for_ko = (hp_gap_for_ko + 19) // 20  # ceiling division
 
+    # General Rule: Track if we have >= 2 Kadabra/Abra on bench to conserve hand resources when KO is already guaranteed
+    benched_abra_kadabra_count = sum(1 for fi, p in my_field if fi > 0 and p.id in (Abra, Kadabra))
+    has_kadabra_bench_backup = benched_abra_kadabra_count >= 2
+
     need_dudunsparce_draw = False
     need_draw_supporter = False
     if target_pokemon is not None and hp_gap_for_ko > 0:
@@ -614,12 +618,18 @@ def heuristic_scores(obs):
                     else: score = -1
                 elif cid == Hilda:
                     if overdraw: score = -1
+                    elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
+                        # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
+                        score = -1
                     elif need_draw_supporter: score = W["hilda"] + 25000 + cards_needed_for_ko * 2000
                     elif state.turn <= 3 or abra_line_on_field < 3: score = W["hilda"] + 15000
                     else: score = W["hilda"]
                 elif cid == Dawn:
                     if overdraw: score = -1
                     elif len(my_field) <= 1: score = W["dawn_emergency"] + 20000
+                    elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
+                        # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
+                        score = -1
                     elif need_draw_supporter: score = W["dawn"] + 25000 + cards_needed_for_ko * 2000
                     elif state.turn <= 3 or abra_line_on_field < 3: score = W["dawn"] + 15000
                     else: score = W["dawn"]
