@@ -293,7 +293,28 @@ def heuristic_scores(obs):
             drag_benched_targets = [c for c in candidates if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)] if op_has_dragapult_line else []
             active_is_dragapult = op_active and op_active.id == Dragapult_ex
 
-            if op_has_dragapult_line and active_is_dragapult:
+            # High-Value Boss Target Evaluation before attacking:
+            # Check if Boss's Orders can KO a benched Pokémon that offers MORE prizes, higher HP, or more energy than active!
+            benched_killable = [c for c in candidates if c[0] != 0 and c[3]]
+            active_prize = prize_count(op_active)
+            active_energy = len(getattr(op_active, "energyCards", getattr(op_active, "energies", [])))
+            
+            better_benched_targets = []
+            for c in benched_killable:
+                pkmn = c[1]
+                pz = c[2]
+                eng = len(getattr(pkmn, "energyCards", getattr(pkmn, "energies", [])))
+                # Target is better if it gives more prizes, or has more energy attached, or has higher HP than active
+                if pz > active_prize or eng > active_energy or pkmn.hp > op_active.hp:
+                    better_benched_targets.append((c, pz, eng, pkmn.hp))
+
+            if hand_counts[Boss_Orders] > 0 and better_benched_targets and len(my_field) > 1:
+                # Force Boss's Orders on the highest-value benched KO target!
+                best_tuple = max(better_benched_targets, key=lambda x: (x[1], x[2], x[3]))
+                best = best_tuple[0]
+                target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                target_use_boss = True
+            elif op_has_dragapult_line and active_is_dragapult:
                 # Active is Dragapult ex -> Focus on digging cards to KO active Dragapult ex!
                 target_idx = 0; target_pokemon = op_active; target_use_boss = False
                 target_can_kill = candidates[0][3]
