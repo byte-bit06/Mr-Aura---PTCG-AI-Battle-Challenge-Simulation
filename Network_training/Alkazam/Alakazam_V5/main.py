@@ -300,26 +300,26 @@ def heuristic_scores(obs):
             drag_benched_targets = [c for c in candidates if c[0] != 0 and (c[1].id in (Drakloak, 755, Dudunsparce, Rotom, Fan_Rotom) or prize_count(c[1]) >= 2)] if op_has_dragapult_line else []
             active_is_dragapult = op_active and op_active.id == Dragapult_ex
 
-            # Enhanced High-Yield Boss's Orders Target Selection:
+            # Enhanced High-Yield & General Prize Boss's Orders Target Selection:
             # 1. Winning KO takes top priority.
-            # 2. If we have Boss's Orders in hand and can KO a benched target (from HIGH_PRIORITY_BOSS_TARGETS or high prize yield):
-            #    - NEVER use Boss's Orders if the target is ALREADY in the active spot!
-            #    - Prioritize benched Pokémon with energy attached over un-energized targets.
-            #    - Prioritize high-yield targets (ex / Mega / Stage 2 / high HP / high competition occurrences).
-            benched_killable = [c for c in candidates if c[0] != 0 and c[3]]
+            # 2. Boss's Orders is used on BENCHED targets (NEVER if already active).
+            # 3. High priority targets from boss_targets.csv (or targets with energy attached) get highest priority IF we can KO them.
+            # 4. Weaker benched Pokémon can also be targeted with Boss's Orders to pick up easy prize cards!
+            benched_candidates = [c for c in candidates if c[0] != 0]
+            benched_killable = [c for c in benched_candidates if c[3]]
             
             if win_cands:
                 best = min(win_cands, key=lambda x: (0 if x[0] == 0 else 1, -x[1].hp))
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                 target_use_boss = target_idx != 0
             elif hand_counts[Boss_Orders] > 0 and benched_killable and len(my_field) > 1:
-                # Prioritize benched high-yield targets with energy attached
+                # Prioritize benched targets: High list targets + EnergyAttached > General prize kills
                 def boss_target_score(c):
                     idx, pkmn, pz, ck, hm = c
-                    is_high_target = 1 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
-                    has_energy = 1 if len(pkmn.energyCards) > 0 else 0
+                    is_high_target = 10 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
+                    has_energy = 5 if len(pkmn.energyCards) > 0 else 0
                     energy_cnt = len(pkmn.energyCards)
-                    return (has_energy, is_high_target, pz, energy_cnt, pkmn.hp)
+                    return (is_high_target, has_energy, pz, energy_cnt, -pkmn.hp)
                 
                 best = max(benched_killable, key=boss_target_score)
                 target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
@@ -350,12 +350,21 @@ def heuristic_scores(obs):
                 else:
                     target_idx = 0; target_pokemon = op_active
 
+    # Calculate exact damage gap required to 1-shot target_pokemon
+    target_hp = target_pokemon.hp if target_pokemon is not None else (op_active.hp if op_active else 0)
+    current_dmg = hand_size * 20
+    hp_gap_for_ko = max(0, target_hp - current_dmg)
+    cards_needed_for_ko = (hp_gap_for_ko + 19) // 20  # ceiling division
+
     need_dudunsparce_draw = False
-    if target_pokemon is not None and target_can_kill:
-        if (hand_size - target_hammer_needed) * 20 < target_pokemon.hp:
+    need_draw_supporter = False
+    if target_pokemon is not None and hp_gap_for_ko > 0:
+        if cards_needed_for_ko > 0:
             need_dudunsparce_draw = True
-    if not target_can_kill and any(prize_count(p) >= 2 and p.hp > hand_size * 20 for p in op_all_pokemon):
+            need_draw_supporter = True
+    elif not target_can_kill and any(prize_count(p) >= 2 and p.hp > current_dmg for p in op_all_pokemon):
         need_dudunsparce_draw = True
+        need_draw_supporter = True
 
     fez_contrib = 0
     if field_counts[Fezandipiti_ex] >= 1 and not ability_used_fezandipiti: fez_contrib = 3
@@ -563,12 +572,16 @@ def heuristic_scores(obs):
                     elif target_use_boss and target_can_kill: score = W["boss_kill"]
                     else: score = -1
                 elif cid == Hilda:
-                    score = W["hilda"] if (safe_draws >= 2 and not overdraw) else -1
+                    if overdraw: score = -1
+                    elif need_draw_supporter: score = W["hilda"] + 25000 + cards_needed_for_ko * 2000
+                    elif state.turn <= 3 or abra_line_on_field < 3: score = W["hilda"] + 15000
+                    else: score = W["hilda"]
                 elif cid == Dawn:
                     if overdraw: score = -1
-                    elif len(my_field) <= 1 and safe_draws >= 3: score = W["dawn_emergency"]
-                    elif safe_draws >= 3: score = W["dawn"]
-                    else: score = -1
+                    elif len(my_field) <= 1: score = W["dawn_emergency"] + 20000
+                    elif need_draw_supporter: score = W["dawn"] + 25000 + cards_needed_for_ko * 2000
+                    elif state.turn <= 3 or abra_line_on_field < 3: score = W["dawn"] + 15000
+                    else: score = W["dawn"]
                 elif cid == Lillie_Det:
                     if safe_draws < 6: score = -1
                     elif hand_size <= (5 if my_prize_count == 6 else 4): score = W["lillie"]
@@ -694,9 +707,9 @@ def heuristic_scores(obs):
             if card.id == Dudunsparce:
                 # Phase 3 Checkmate: Evolve & use Run Away Draw after hand disruption to re-explode hand size!
                 if len(my_field) <= 1: score = -1
-                elif safe_draws < 3 or overdraw: score = -1
-                elif op_has_dragapult_line and hand_size < 8: score = W["ability_dudun"] + 2000
-                elif need_dudunsparce_draw: score = W["ability_dudun"]
+                elif overdraw: score = -1
+                elif cards_needed_for_ko > 0: score = W["ability_dudun"] + 25000 + cards_needed_for_ko * 2000
+                elif need_dudunsparce_draw or (op_has_dragapult_line and hand_size < 8): score = W["ability_dudun"] + 15000
                 elif hand_size < (9 if op_has_ex else 6): score = W["ability_dudun"]
                 elif active_id not in ABRA_LINE and o.area == AreaType.ACTIVE: score = W["ability_dudun"]
                 else: score = -1
