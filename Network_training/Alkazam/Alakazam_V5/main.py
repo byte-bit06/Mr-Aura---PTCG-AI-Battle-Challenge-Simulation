@@ -325,7 +325,7 @@ def heuristic_scores(obs):
                 target_use_boss = target_idx != 0
             elif hand_counts[Boss_Orders] > 0 and benched_candidates and len(my_field) > 1:
                 # If we have Boss's Orders, check for benched killable targets with highest priority
-                # Scored by: (is_killable, electric_energy_priority, is_high_priority_target, has_mist_with_hammer, energy_cards_count, hp_value, prize_yield)
+                # Scored by: (is_killable, game_winning_ex_priority, electric_energy_priority, is_high_priority_target, has_mist_with_hammer, energy_cards_count, hp_value, prize_yield)
                 def boss_target_score(c):
                     idx, pkmn, pz, ck, hm = c
                     is_high_target = 100 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
@@ -333,10 +333,18 @@ def heuristic_scores(obs):
                     has_energy = 20 if len(pkmn.energyCards) > 0 else 0
                     energy_cnt = len(pkmn.energyCards)
                     elec_energy_cnt = count_electric_energy(pkmn)
-                    iono_elec_score = (elec_energy_cnt * 1000) if (op_has_iono_deck or elec_energy_cnt > 0) else 0
+                    
+                    # Game-Winning ex Priority Rule:
+                    # If we have <= 2 prize cards left to collect, a benched ex KO wins the game immediately!
+                    # In this situation, taking the winning ex KO takes top priority over disrupting Electric energy.
+                    is_game_winning_ex = 10000 if (my_prize_count <= 2 and pz >= my_prize_count and ck) else 0
+                    
+                    # Electric energy disruption applies during early/mid game when we are NOT in immediate game-winning ex range
+                    iono_elec_score = (elec_energy_cnt * 1000) if (my_prize_count > 2 and (op_has_iono_deck or elec_energy_cnt > 0)) else 0
+                    
                     hp_val = pkmn.hp
                     kill_bonus = 500 if ck else 0
-                    return (kill_bonus, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
+                    return (kill_bonus, is_game_winning_ex, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
                 
                 # Filter benched targets that we can either kill directly or kill after drawing cards
                 valid_benched = [c for c in benched_candidates if c[3] or (c[1].hp <= (max_hand_size * 20))]
