@@ -335,8 +335,6 @@ def heuristic_scores(obs):
                     elec_energy_cnt = count_electric_energy(pkmn)
                     
                     # Game-Winning ex Priority Rule:
-                    # If we have <= 2 prize cards left to collect, a benched ex KO wins the game immediately!
-                    # In this situation, taking the winning ex KO takes top priority over disrupting Electric energy.
                     is_game_winning_ex = 10000 if (my_prize_count <= 2 and pz >= my_prize_count and ck) else 0
                     
                     # Electric energy disruption applies ONLY when facing an Iono deck during early/mid game (when my_prize_count > 2)
@@ -346,12 +344,19 @@ def heuristic_scores(obs):
                     kill_bonus = 500 if ck else 0
                     return (kill_bonus, is_game_winning_ex, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
                 
-                # Filter benched targets that we can either kill directly or kill after drawing cards
-                valid_benched = [c for c in benched_candidates if c[3] or (c[1].hp <= (max_hand_size * 20))]
-                if valid_benched:
-                    best = max(valid_benched, key=boss_target_score)
+                # Filter benched targets: FIRST check killable benched targets
+                benched_killable = [c for c in benched_candidates if c[3]]
+                benched_reachable = [c for c in benched_candidates if c[1].hp <= (max_hand_size * 20)]
+                
+                if benched_killable:
+                    best = max(benched_killable, key=boss_target_score)
                     target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
                     target_use_boss = True
+                elif benched_reachable:
+                    best = max(benched_reachable, key=boss_target_score)
+                    target_idx, target_pokemon, target_prize_gain, target_can_kill, target_hammer_needed = best
+                    # Only use Boss if we need a Supporter draw (Hilda/Dawn) to reach the KO or if current active is filler
+                    target_use_boss = (hand_counts[Hilda] > 0 or hand_counts[Dawn] > 0 or field_counts[Dudunsparce] > 0)
                 else:
                     killable = [c for c in candidates if c[3]]
                     if killable:
@@ -617,13 +622,16 @@ def heuristic_scores(obs):
                     elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
                         # Top Supporter Priority: When holding plenty of cards / ready to KO a benched target, Boss's Orders takes top priority!
                         score = W["boss_kill"] + 50000
+                    elif target_use_boss and need_draw_supporter:
+                        # Holding Boss's Orders for target, but need to draw first: allow draw supporter to fire first
+                        score = W["boss_kill"] + 5000
                     elif target_use_boss:
                         score = W["boss_kill"] + 30000
                     else: score = -1
                 elif cid == Hilda:
                     if overdraw: score = -1
-                    elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
-                        # Save Supporter play for Boss's Orders when we already have enough cards to KO the benched target!
+                    elif target_use_boss and target_can_kill and cards_needed_for_ko <= 0:
+                        # Save Supporter play for Boss's Orders ONLY when we already can 1-shot KO the benched target without drawing!
                         score = -1
                     elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
                         # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
@@ -633,8 +641,8 @@ def heuristic_scores(obs):
                     else: score = W["hilda"]
                 elif cid == Dawn:
                     if overdraw: score = -1
-                    elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
-                        # Save Supporter play for Boss's Orders when we already have enough cards to KO the benched target!
+                    elif target_use_boss and target_can_kill and cards_needed_for_ko <= 0:
+                        # Save Supporter play for Boss's Orders ONLY when we already can 1-shot KO the benched target without drawing!
                         score = -1
                     elif len(my_field) <= 1: score = W["dawn_emergency"] + 20000
                     elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
