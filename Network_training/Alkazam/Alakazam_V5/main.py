@@ -614,10 +614,17 @@ def heuristic_scores(obs):
                     score = W["meddling_memo"] if op_state.handCount >= 5 else -1
                 elif cid == Boss_Orders:
                     if len(my_field) <= 1: score = -1
-                    elif target_use_boss and target_can_kill: score = W["boss_kill"]
+                    elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
+                        # Top Supporter Priority: When holding plenty of cards / ready to KO a benched target, Boss's Orders takes top priority!
+                        score = W["boss_kill"] + 50000
+                    elif target_use_boss:
+                        score = W["boss_kill"] + 30000
                     else: score = -1
                 elif cid == Hilda:
                     if overdraw: score = -1
+                    elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
+                        # Save Supporter play for Boss's Orders when we already have enough cards to KO the benched target!
+                        score = -1
                     elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
                         # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
                         score = -1
@@ -626,6 +633,9 @@ def heuristic_scores(obs):
                     else: score = W["hilda"]
                 elif cid == Dawn:
                     if overdraw: score = -1
+                    elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
+                        # Save Supporter play for Boss's Orders when we already have enough cards to KO the benched target!
+                        score = -1
                     elif len(my_field) <= 1: score = W["dawn_emergency"] + 20000
                     elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
                         # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
