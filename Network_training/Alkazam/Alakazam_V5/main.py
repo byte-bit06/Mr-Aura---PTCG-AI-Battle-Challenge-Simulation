@@ -615,36 +615,24 @@ def heuristic_scores(obs):
                 elif cid == Boss_Orders:
                     if len(my_field) <= 1: score = -1
                     elif target_use_boss and (target_can_kill or cards_needed_for_ko <= 0):
-                        # Top Supporter Priority: When holding plenty of cards / ready to KO a benched target, Boss's Orders takes top priority!
                         score = W["boss_kill"] + 50000
-                    elif target_use_boss and need_draw_supporter:
-                        # Holding Boss's Orders for target, but need to draw first: allow draw supporter to fire first
-                        score = W["boss_kill"] + 5000
                     elif target_use_boss:
-                        score = W["boss_kill"] + 30000
+                        score = W["boss_kill"] + 10000
                     else: score = -1
                 elif cid == Hilda:
                     if overdraw: score = -1
                     elif target_use_boss and target_can_kill and cards_needed_for_ko <= 0:
-                        # Save Supporter play for Boss's Orders ONLY when we already can 1-shot KO the benched target without drawing!
                         score = -1
-                    elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
-                        # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
-                        score = -1
-                    elif need_draw_supporter: score = W["hilda"] + 25000 + cards_needed_for_ko * 2000
-                    elif state.turn <= 3 or abra_line_on_field < 3: score = W["hilda"] + 15000
+                    elif need_draw_supporter or state.turn <= 3 or hand_size < 12:
+                        score = W["hilda"] + 25000 + (15 - hand_size) * 1000
                     else: score = W["hilda"]
                 elif cid == Dawn:
                     if overdraw: score = -1
                     elif target_use_boss and target_can_kill and cards_needed_for_ko <= 0:
-                        # Save Supporter play for Boss's Orders ONLY when we already can 1-shot KO the benched target without drawing!
                         score = -1
                     elif len(my_field) <= 1: score = W["dawn_emergency"] + 20000
-                    elif has_kadabra_bench_backup and cards_needed_for_ko <= 0 and target_can_kill:
-                        # General Rule: With >= 2 Kadabra/Abra on bench, do NOT overdraw beyond KO requirement!
-                        score = -1
-                    elif need_draw_supporter: score = W["dawn"] + 25000 + cards_needed_for_ko * 2000
-                    elif state.turn <= 3 or abra_line_on_field < 3: score = W["dawn"] + 15000
+                    elif need_draw_supporter or state.turn <= 3 or hand_size < 12:
+                        score = W["dawn"] + 25000 + (15 - hand_size) * 1000
                     else: score = W["dawn"]
                 elif cid == Lillie_Det:
                     if safe_draws < 6: score = -1
@@ -791,12 +779,14 @@ def heuristic_scores(obs):
             card = get_card(obs, o.area, o.index, my_index)
             if card is None: scores.append(0); continue
             if card.id == Dudunsparce:
-                # Phase 3 Checkmate: Evolve & use Run Away Draw after hand disruption to re-explode hand size!
+                # Post-Iono & Hand Scaling Engine: Trigger Run Away Draw to re-explode hand size whenever hand < 10!
                 if len(my_field) <= 1: score = -1
                 elif overdraw: score = -1
+                elif hand_size <= 4:
+                    # Post-Iono Re-Explosion: Top Priority!
+                    score = W["ability_dudun"] + 35000
                 elif cards_needed_for_ko > 0: score = W["ability_dudun"] + 25000 + cards_needed_for_ko * 2000
-                elif need_dudunsparce_draw or (op_has_dragapult_line and hand_size < 8): score = W["ability_dudun"] + 15000
-                elif hand_size < (9 if op_has_ex else 6): score = W["ability_dudun"]
+                elif need_dudunsparce_draw or hand_size < 10: score = W["ability_dudun"] + 15000
                 elif active_id not in ABRA_LINE and o.area == AreaType.ACTIVE: score = W["ability_dudun"]
                 else: score = -1
             elif card.id == Fezandipiti_ex:
