@@ -105,6 +105,7 @@ def _worker_eval_genome(genome, games_per_opp=10):
     total_games = 0
     total_prizes_taken = 0
     total_prizes_conceded = 0
+    total_game_fitness = 0.0
 
     for opp_name, opp_agent in opps.items():
         for g in range(games_per_opp):
@@ -143,17 +144,54 @@ def _worker_eval_genome(genome, games_per_opp=10):
                                 p1_conceded = 6 - p0_prz
                             break
 
+            # Parse full trajectory steps to calculate Terminal Rewards & Engine/Setup Milestones
+            match_reward = 0.0
+            if win == 1: match_reward += 2.0
+            elif win == 0: match_reward -= 2.0
+
+            prize_reward = (p1_taken * 0.5) - (p1_conceded * 0.6)
+            milestone_reward = 0.0
+
+            # Scan steps for Engine & Setup Milestones
+            for step in steps:
+                if isinstance(step, list) and len(step) > 0 and isinstance(step[0], dict):
+                    obs_dict = step[0].get("observation", {})
+                    if isinstance(obs_dict, dict) and "current" in obs_dict:
+                        curr = obs_dict["current"]
+                        if isinstance(curr, dict):
+                            my_idx = curr.get("yourIndex", 0) if is_p1 else curr.get("opIndex", 1)
+                            players = curr.get("players", [])
+                            if len(players) > my_idx:
+                                my_p = players[my_idx]
+                                bench = my_p.get("bench", [])
+                                active = my_p.get("active", [])
+                                field_ids = set()
+                                for pk in (active + bench):
+                                    if isinstance(pk, dict) and "id" in pk:
+                                        field_ids.add(pk["id"])
+                                
+                                # Milestone: Evolution (Kadabra: 742, Alakazam: 743 / 245)
+                                if 742 in field_ids or 743 in field_ids or 245 in field_ids:
+                                    milestone_reward += 0.005  # accumulated over turns
+                                # Milestone: Deploying Dudunsparce (66) or Fezandipiti ex (140)
+                                if 66 in field_ids or 140 in field_ids:
+                                    milestone_reward += 0.005
+
+            game_composite_score = match_reward + prize_reward + min(1.0, milestone_reward)
+            
             total_wins += win
             total_prizes_taken += p1_taken
             total_prizes_conceded += p1_conceded
+            total_game_fitness += game_composite_score
             total_games += 1
 
     win_rate = (total_wins / total_games) * 100.0 if total_games > 0 else 0.0
     avg_prizes_taken = total_prizes_taken / total_games if total_games > 0 else 0.0
     avg_prizes_conceded = total_prizes_conceded / total_games if total_games > 0 else 0.0
+    avg_composite_fitness = total_game_fitness / total_games if total_games > 0 else 0.0
 
-    # Composite Multi-Objective Fitness: Win Rate % + 4.0 * (Prizes Taken - Prizes Conceded)
-    fitness_score = win_rate + (avg_prizes_taken - avg_prizes_conceded) * 4.0
+    # Composite Multi-Objective Fitness: Win Rate % + Terminal & Milestone Reward Score
+    fitness_score = win_rate + avg_composite_fitness * 10.0
     return fitness_score, win_rate, avg_prizes_taken, avg_prizes_conceded, genome
 
 
