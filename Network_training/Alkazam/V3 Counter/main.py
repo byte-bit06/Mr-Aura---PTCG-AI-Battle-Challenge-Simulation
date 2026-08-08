@@ -398,7 +398,8 @@ def heuristic_scores(obs):
 
             if context in (SelectContext.SWITCH, SelectContext.TO_ACTIVE):
                 if o.playerIndex == my_index:
-                    if card.id == Alakazam: score += 100 + energy_count * 10
+                    if card.id in RABSCA_LINE: score = -100000  # NEVER promote Rellor/Rabsca to active!
+                    elif card.id == Alakazam: score += 100 + energy_count * 10
                     elif card.id == Kadabra: score += 90 if op_active_hp <= 30 else 30
                     elif card.id == Abra: score += 10
                     elif card.id in DUNSPARCE_LINE: score += 5
@@ -410,7 +411,7 @@ def heuristic_scores(obs):
             elif context == SelectContext.SETUP_ACTIVE_POKEMON:
                 if card.id in DUNSPARCE_IDS: score = 12
                 elif card.id == Abra: score = 10
-                elif card.id in RABSCA_LINE: score = -1
+                elif card.id in RABSCA_LINE: score = -100000  # NEVER setup Rellor/Rabsca active!
                 elif card.id in TECH_BASICS: score = 2
 
             elif context == SelectContext.SETUP_BENCH_POKEMON:
@@ -486,9 +487,11 @@ def heuristic_scores(obs):
                     else: score = -1
                 elif card.id == Rellor:
                     # Rabsca/Rellor Bench Protection Heuristic:
-                    # ONLY play Rellor to bench vs Dragapult or Grimmsnarl spread decks!
-                    # NEVER play vs non-spread decks -> Keep in hand to increase hand size for Alakazam Powerful Hand damage!
-                    if (op_has_dragapult_line or op_has_grimmsnarl) and field_counts[Rellor] == 0 and field_counts[Rabsca] == 0 and bench_free >= 1:
+                    # 1. Strictly MAX 1 Rellor/Rabsca on bench at any time!
+                    # 2. ONLY play Rellor to bench vs Dragapult or Grimmsnarl spread decks!
+                    # 3. NEVER play vs non-spread decks -> Keep in hand to increase hand size for Alakazam Powerful Hand damage!
+                    rabsca_line_on_field = field_counts[Rellor] + field_counts[Rabsca]
+                    if (op_has_dragapult_line or op_has_grimmsnarl) and rabsca_line_on_field == 0 and bench_free >= 1:
                         score = W["play_pokemon_base"] + 22000
                     else:
                         score = -1
