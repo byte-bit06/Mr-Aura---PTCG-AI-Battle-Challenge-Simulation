@@ -552,23 +552,23 @@ def heuristic_scores(obs):
                 score = 10000
                 cid = card.id
                 if cid == Buddy_Buddy_Poffin:
-                    if safe_draws < 2: score = -1
+                    if overdraw: score = -1
                     elif state.turn <= 2:
-                        score = W["poffin_early"] if (abra_line_on_field < 3 or dunsparce_line_on_field < 1) else W["poffin_fallback"]
+                        score = W["poffin_early"] + 20000 if (abra_line_on_field < 3 or dunsparce_line_on_field < 1) else W["poffin_fallback"]
                     else:
-                        score = W["poffin_late"] if (abra_line_on_field < 3 or dunsparce_line_on_field < 2) else (W["poffin_fallback"] if target_can_kill else -1)
+                        score = W["poffin_late"] + 10000 if (abra_line_on_field < 3 or dunsparce_line_on_field < 2) else (W["poffin_fallback"] if target_can_kill else -1)
                 elif cid == Poke_Pad:
-                    if safe_draws < 1 or overdraw: score = -1
-                    elif state.turn <= 2: score = W["pokepad_early"]
+                    if overdraw: score = -1
+                    elif state.turn <= 2: score = W["pokepad_early"] + 15000
                     else: score = W["pokepad_need"] if abra_line_on_field < 3 else W["pokepad_ok"]
                 elif cid == Switch:
                     score = W["boss_kill"] if (attack_locked and bench_ready_alak) else -1
                 elif cid == Rare_Candy:
-                    score = W["rare_candy"] if (field_counts[Abra] >= 1 and hand_counts[Alakazam] >= 1 and safe_draws >= 3) else -1
+                    score = W["rare_candy"] + 30000 if (field_counts[Abra] >= 1 and hand_counts[Alakazam] >= 1) else -1
                 elif cid == Night_Stretcher:
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
-                    if dis_abra >= 1: score = W["night_stretcher_mon"]
-                    elif discard_counts[Basic_Psychic_Energy] + discard_counts[Telepath_Psychic_Energy] >= 1: score = W["night_stretcher_energy"]
+                    if dis_abra >= 1: score = W["night_stretcher_mon"] + 20000
+                    elif discard_counts[Basic_Psychic_Energy] + discard_counts[Telepath_Psychic_Energy] >= 1: score = W["night_stretcher_energy"] + 15000
                     else: score = -1
                 elif cid == Sacred_Ash:
                     dis_abra = sum(discard_counts[x] for x in ABRA_LINE)
@@ -589,15 +589,14 @@ def heuristic_scores(obs):
                     score = W["meddling_memo"] if op_state.handCount >= 5 else -1
                 elif cid == Boss_Orders:
                     if len(my_field) <= 1: score = -1
-                    elif target_use_boss and target_can_kill: score = W["boss_kill"]
+                    elif target_use_boss and target_can_kill: score = W["boss_kill"] + 50000
                     else: score = -1
                 elif cid == Hilda:
-                    score = W["hilda"] if (safe_draws >= 2 and not overdraw) else -1
+                    score = W["hilda"] + 25000 if not overdraw else -1
                 elif cid == Dawn:
                     if overdraw: score = -1
-                    elif len(my_field) <= 1 and safe_draws >= 3: score = W["dawn_emergency"]
-                    elif safe_draws >= 3: score = W["dawn"]
-                    else: score = -1
+                    elif len(my_field) <= 1: score = W["dawn_emergency"] + 20000
+                    else: score = W["dawn"] + 25000
                 elif cid == Lillie_Det:
                     if safe_draws < 6: score = -1
                     elif hand_size <= (5 if my_prize_count == 6 else 4): score = W["lillie"]
