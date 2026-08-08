@@ -10,18 +10,17 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _PARENT = os.path.dirname(_HERE)
 
-# Path to original baseline Alakazam (or Alakazam_V1)
-_PRIMARY_PATH = os.path.join(_HERE, "opponents", "alakazam_agent.py")
+_OPPONENTS_DIR = os.path.join(_HERE, "opponents")
+if not os.path.exists(_OPPONENTS_DIR):
+    _OPPONENTS_DIR = os.path.join(_PARENT, "opponents")
+sys.path.append(_OPPONENTS_DIR)
+
+_PRIMARY_PATH = os.path.join(_OPPONENTS_DIR, "alakazam_agent.py")
 if not os.path.exists(_PRIMARY_PATH):
     _PRIMARY_PATH = os.path.join(_HERE, "Alakazam_V1", "main.py")
 
 _AGENT_DIR = os.path.dirname(_PRIMARY_PATH)
 PRIMARY_NAME = "Alakazam_V1"
-
-_OPPONENTS_DIR = os.path.join(_HERE, "opponents")
-if not os.path.exists(_OPPONENTS_DIR):
-    _OPPONENTS_DIR = os.path.join(_PARENT, "opponents")
-sys.path.append(_OPPONENTS_DIR)
 
 _CG_ROOT = None
 for c in [_AGENT_DIR, os.path.join(_HERE, "Alakazam_V5"), os.path.join(_HERE, "Alakazam_V2"), os.path.join(_HERE, "V3 Counter"), _HERE, _PARENT]:
