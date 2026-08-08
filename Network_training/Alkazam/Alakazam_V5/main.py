@@ -221,12 +221,16 @@ def heuristic_scores(obs):
     op_all_pokemon = [p for p in (op_state.active + op_state.bench) if p is not None]
     op_has_dragapult_line = any(p.id in (Dreepy, Drakloak, Dragapult_ex) for p in op_all_pokemon)
     op_has_grimmsnarl = any(p.id in (Impidimp_G, Morgrem_G, Grimmsnarl_ex, Munkidori, Froslass) for p in op_all_pokemon)
+    op_has_iono_deck = any(p.id in (265, 268, 269, 270, 271) for p in op_all_pokemon)
     op_has_crustle = any(p.id in Crustle_IDs or p.id in Dwebble_IDs for p in op_all_pokemon)
     op_has_bench_spread = op_has_dragapult_line or op_has_grimmsnarl or any(
         p.id in (Duskull, Wellspring_Mask_Ogerpon_ex) or p.id in Froakie_IDs
         for p in op_all_pokemon)
     op_has_ex = any((cd := card_table.get(p.id)) and (cd.ex or cd.megaEx) for p in op_all_pokemon)
     op_has_duskull = any(p.id == Duskull for p in op_all_pokemon)
+
+    def count_electric_energy(pkmn):
+        return sum(1 for ec in pkmn.energyCards if ec.id == 4)  # 4 = Basic Lightning Energy
     op_has_water_threat = any(
         p.id in Slowpoke_IDs or p.id in Froakie_IDs
         or p.id == Wellspring_Mask_Ogerpon_ex or p.id == N_Darumaka
@@ -321,16 +325,18 @@ def heuristic_scores(obs):
                 target_use_boss = target_idx != 0
             elif hand_counts[Boss_Orders] > 0 and benched_candidates and len(my_field) > 1:
                 # If we have Boss's Orders, check for benched killable targets with highest priority
-                # Scored by: (is_killable, is_high_priority_target, has_mist_with_hammer, energy_cards_count, hp_value, prize_yield)
+                # Scored by: (is_killable, electric_energy_priority, is_high_priority_target, has_mist_with_hammer, energy_cards_count, hp_value, prize_yield)
                 def boss_target_score(c):
                     idx, pkmn, pz, ck, hm = c
                     is_high_target = 100 if pkmn.id in HIGH_PRIORITY_BOSS_TARGETS else 0
                     has_mist = 50 if (count_special_defense_energies(pkmn) > 0 and hand_counts[Enhanced_Hammer] >= 1) else 0
                     has_energy = 20 if len(pkmn.energyCards) > 0 else 0
                     energy_cnt = len(pkmn.energyCards)
+                    elec_energy_cnt = count_electric_energy(pkmn)
+                    iono_elec_score = (elec_energy_cnt * 1000) if (op_has_iono_deck or elec_energy_cnt > 0) else 0
                     hp_val = pkmn.hp
                     kill_bonus = 500 if ck else 0
-                    return (kill_bonus, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
+                    return (kill_bonus, iono_elec_score, is_high_target, has_mist, has_energy, energy_cnt, hp_val, pz)
                 
                 # Filter benched targets that we can either kill directly or kill after drawing cards
                 valid_benched = [c for c in benched_candidates if c[3] or (c[1].hp <= (max_hand_size * 20))]
