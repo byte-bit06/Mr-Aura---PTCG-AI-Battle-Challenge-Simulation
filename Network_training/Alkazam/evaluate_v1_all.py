@@ -24,7 +24,7 @@ if not os.path.exists(_OPPONENTS_DIR):
 sys.path.append(_OPPONENTS_DIR)
 
 _CG_ROOT = None
-for c in [_AGENT_DIR, _HERE, _PARENT]:
+for c in [_AGENT_DIR, os.path.join(_HERE, "Alakazam_V5"), os.path.join(_HERE, "Alakazam_V2"), os.path.join(_HERE, "V3 Counter"), _HERE, _PARENT]:
     if os.path.exists(os.path.join(c, "cg", "__init__.py")):
         _CG_ROOT = c
         break
