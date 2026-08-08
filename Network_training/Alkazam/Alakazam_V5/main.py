@@ -822,10 +822,11 @@ def heuristic_scores(obs):
             else: score = -1
 
         elif o.type == OptionType.ATTACK:
-            score = W["attack_base"]
-            if o.attackId == ATTACK_POWERFUL_HAND: score += W["attack_powerful"]
-            elif o.attackId == ATTACK_SUPER_PSY_BOLT: score += W["attack_psybolt_kill"] if op_active_hp <= 30 else W["attack_psybolt"]
-            elif o.attackId == ATTACK_TELEPORTATION: score += W["attack_teleport"]
+            # Maximum Priority: Whenever powered Alakazam ex or Kadabra is in active spot, ATTACK IMMEDIATELY!
+            score = W["attack_base"] + 500000
+            if o.attackId == ATTACK_POWERFUL_HAND: score += 100000
+            elif o.attackId == ATTACK_SUPER_PSY_BOLT: score += (50000 if op_active_hp <= 30 else 20000)
+            elif o.attackId == ATTACK_TELEPORTATION: score += 10000
 
         scores.append(score)
     return scores
