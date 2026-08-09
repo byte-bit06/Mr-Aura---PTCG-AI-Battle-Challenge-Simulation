@@ -1,0 +1,22 @@
+{
+    "play_pokemon_base": 35000,
+    "play_abra_early": 3000,
+    "play_abra_need": 1500,
+    "play_dun_first_early": 500,
+    "play_fez": 60000,
+    "poffin_early": 60000,
+    "poffin_fallback": 10000,
+    "rare_candy": 35000,
+    "hammer_target": 20000,
+    "hammer_any": 15000,
+    "boss_kill": 10000,
+    "hilda": 6000,
+    "dawn": 10000,
+    "energy_retreat": 12000,
+    "energy_abra": 5000,
+    "evolve_base": 10000,
+    "ability_dudun": 50000,
+    "ability_fez": 180000,
+    "boss_drag_drakloak": 200000,
+    "hammer_drag_grimm_strip": 70000
+}
