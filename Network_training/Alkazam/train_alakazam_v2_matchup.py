@@ -155,9 +155,10 @@ def train_matchup(target_opponent="grimmsnarl", target_win_rate=65.0, max_genera
     print(f" Target Win Rate: >= {target_win_rate}% | Profile File: {json_filename}")
     print(f"=========================================================================\n", flush=True)
 
+    print(f"Evaluating Baseline Genome vs {target_opponent.upper()}...", end="", flush=True)
     best_fitness, best_wr, best_taken, best_conc, _ = _worker_eval_matchup(base_genome, target_opponent, games_per_eval)
     best_genome = base_genome
-    print(f"Baseline -> Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} | Fitness: {best_fitness:.2f}\n", flush=True)
+    print(f" Done! -> Win Rate: {best_wr:.1f}% | Prizes: +{best_taken:.2f} / -{best_conc:.2f} | Fitness: {best_fitness:.2f}\n", flush=True)
 
     population = [best_genome] + [mutate_genome(best_genome) for _ in range(pop_size - 1)]
 
@@ -167,8 +168,12 @@ def train_matchup(target_opponent="grimmsnarl", target_win_rate=65.0, max_genera
             futures = {executor.submit(_worker_eval_matchup, g, target_opponent, games_per_eval): i for i, g in enumerate(population)}
 
             results = []
+            completed_cnt = 0
             for future in as_completed(futures):
-                results.append(future.result())
+                cand_res = future.result()
+                results.append(cand_res)
+                completed_cnt += 1
+                print(f"  [Gen {gen}] Candidate {completed_cnt:2d}/{pop_size} Complete vs {target_opponent.upper()} | Candidate WR: {cand_res[1]:.1f}% | Fitness: {cand_res[0]:.2f}", flush=True)
 
             results.sort(key=lambda x: x[0], reverse=True)
             gen_best_fitness, gen_wr, gen_taken, gen_conc, gen_best_genome = results[0]
@@ -207,10 +212,10 @@ if __name__ == "__main__":
         print("\n=======================================================", flush=True)
         print(" PHASE 1: Training Alakazam V2 Profile vs GRIMMSNARL EX", flush=True)
         print("=======================================================\n", flush=True)
-        train_matchup(target_opponent="grimmsnarl", target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=16, max_workers=12)
+        train_matchup(target_opponent="grimmsnarl", target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=6, max_workers=12)
 
     if args.opp in ("dragapult", "both"):
         print("\n=======================================================", flush=True)
         print(" PHASE 2: Training Alakazam V2 Profile vs DRAGAPULT EX", flush=True)
         print("=======================================================\n", flush=True)
-        train_matchup(target_opponent="dragapult", target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=16, max_workers=12)
+        train_matchup(target_opponent="dragapult", target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=6, max_workers=12)
