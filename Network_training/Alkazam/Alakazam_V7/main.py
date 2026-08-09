@@ -1,4 +1,4 @@
-import os, json
+import os, json, copy
 from collections import defaultdict
 
 from cg.api import AreaType, CardType, EnergyType, Observation, SelectContext, OptionType, Card, Pokemon, all_card_data, to_observation_class
