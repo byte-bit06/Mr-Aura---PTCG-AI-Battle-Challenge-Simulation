@@ -1,10 +1,35 @@
 import os, json, copy
+from collections import defaultdict
 
+from cg.api import AreaType, CardType, EnergyType, Observation, SelectContext, OptionType, Card, Pokemon, all_card_data, to_observation_class
+
+# ---- Tunable priority weights (defaults = alak_evo values) ----
+WEIGHTS = {
+    # PLAY: Pokémon
+    "play_pokemon_base": 20000,
+    "play_abra_early": 500, "play_abra_need": 200, "play_abra_extra": 50,
+    "play_dun_first_early": 400, "play_dun_first_late": 100, "play_dun_second": 50, "play_dun_ex": 30,
+    "play_fez": 20080, "play_genesect": 20100, "play_psyduck": 20300, "play_shaymin": 20300, "play_fanrotom": 20250,
+    "play_bench_penalty": 5000,
+    # PLAY: Trainers
+    "poffin_early": 18000, "poffin_fallback": 8000, "poffin_late": 15000,
+    "pokepad_early": 17000, "pokepad_need": 14000, "pokepad_ok": 12000,
+    "rare_candy": 16000,
+    "night_stretcher_mon": 13000, "night_stretcher_energy": 11000,
+    "sacred_ash_hi": 13500, "sacred_ash_lo": 11000,
+    "hammer_target": 6500, "hammer_any": 5000,
+    "wondrous_patch": 8500, "meddling_memo": 6000,
+    "boss_kill": 3200, "hilda": 3000, "dawn_emergency": 16500, "dawn": 3100,
+    "lillie": 3400, "lana": 3300, "xerosic": 3250, "eri": 3150,
+    "nz_ex": 19500, "nz_counter": 7500,
+    "cage_counter": 19000, "cage_snipe": 18500,
     # MATCHUP STRATEGY WEIGHTS (Grimmsnarl, Dragapult, Iono, Mirror)
     "boss_grimm_froslass": 50000, "boss_grimm_munkidori": 40000, "boss_grimm_pre_evo": 30000,
     "boss_drag_drakloak": 45000, "boss_iono_electric_mult": 1000,
     "hammer_drag_grimm_strip": 35000, "post_iono_dudun_priority": 35000,
 }
+# ---- memetic-tuned overrides (baked, seed for wm4 evo) ----
+WEIGHTS.update({"play_pokemon_base": 20000, "play_abra_early": 604, "play_abra_need": 200, "play_abra_extra": 50, "play_dun_first_early": 178, "play_dun_first_late": 70, "play_dun_second": 50, "play_dun_ex": 59, "play_fez": 20080, "play_genesect": 20100, "play_psyduck": 20300, "play_shaymin": 19807, "play_fanrotom": 20250, "play_bench_penalty": 3923, "poffin_early": 18000, "poffin_fallback": 4083, "poffin_late": 15000, "pokepad_early": 17000, "pokepad_need": 14000, "pokepad_ok": 12000, "rare_candy": 16000, "night_stretcher_mon": 13000, "night_stretcher_energy": 11000, "sacred_ash_hi": 13500, "sacred_ash_lo": 11000, "hammer_target": 6500, "hammer_any": 6993, "wondrous_patch": 8500, "meddling_memo": 6000, "boss_kill": 2262, "hilda": 3000, "dawn_emergency": 16500, "dawn": 3100, "lillie": 3400, "lana": 4249, "xerosic": 3250, "eri": 3150, "nz_ex": 19500, "nz_counter": 7500, "cage_counter": 19000, "cage_snipe": 18500, "mine_counter": 18495, "jamming_tools": 18900, "jamming_counter": 18700, "helmet": 7000, "fan_abra": 4301, "fan_genesect": 5611, "balloon": 7300, "cape_alak": 9800, "cape_kadabra": 9600, "cape_abra": 7500, "energy_retreat": 9500, "energy_abra": 8000, "enriching_2nd": 6249, "enriching_1st": 2000, "mist_2nd": 4200, "mist_retreat": 9400, "evolve_base": 5951, "ability_dudun": 30000, "ability_fez": 38066, "ability_fanrotom": 29500, "ability_default": 38085, "retreat_kadabra": 2500, "retreat_promote": 2000, "attack_base": 1000, "attack_powerful": 655, "attack_psybolt_kill": 600, "attack_psybolt": 127, "attack_teleport": 67})
 
 # Dynamic Weight Profile Manager for Alakazam_V2_train
 _dir = os.path.dirname(os.path.abspath(__file__))
