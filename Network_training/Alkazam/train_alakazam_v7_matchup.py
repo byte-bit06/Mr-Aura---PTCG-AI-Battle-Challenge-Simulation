@@ -200,7 +200,17 @@ def train_matchup(target_opponent="grimmsnarl", target_win_rate=65.0, max_genera
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--opp", choices=["grimmsnarl", "dragapult"], default="grimmsnarl")
+    parser.add_argument("--opp", choices=["grimmsnarl", "dragapult", "both"], default="both")
     args = parser.parse_args()
 
-    train_matchup(target_opponent=args.opp, target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=16, max_workers=12)
+    if args.opp in ("grimmsnarl", "both"):
+        print("\n=======================================================", flush=True)
+        print(" PHASE 1: Training Dedicated Profile vs GRIMMSNARL EX", flush=True)
+        print("=======================================================\n", flush=True)
+        train_matchup(target_opponent="grimmsnarl", target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=16, max_workers=12)
+
+    if args.opp in ("dragapult", "both"):
+        print("\n=======================================================", flush=True)
+        print(" PHASE 2: Training Dedicated Profile vs DRAGAPULT EX", flush=True)
+        print("=======================================================\n", flush=True)
+        train_matchup(target_opponent="dragapult", target_win_rate=65.0, max_generations=100, pop_size=12, games_per_eval=16, max_workers=12)
