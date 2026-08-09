@@ -1,0 +1,23 @@
+{
+    "play_pokemon_base": 25000,
+    "play_abra_early": 2000,
+    "play_abra_need": 1000,
+    "play_fez": 35000,
+    "play_genesect": 30000,
+    "poffin_early": 25000,
+    "rare_candy": 20000,
+    "hammer_target": 15000,
+    "hammer_any": 10000,
+    "boss_kill": 6000,
+    "hilda": 4000,
+    "dawn": 6000,
+    "energy_retreat": 10000,
+    "energy_abra": 5000,
+    "evolve_base": 8000,
+    "ability_dudun": 35000,
+    "ability_fez": 45000,
+    "boss_grimm_froslass": 80000,
+    "boss_grimm_munkidori": 60000,
+    "boss_grimm_pre_evo": 50000,
+    "hammer_drag_grimm_strip": 45000
+}
